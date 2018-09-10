@@ -6,12 +6,12 @@ enum class TopType {
 
 enum class Type(
         val desc: Char,
-        val topType: TopType
+        val topType: TopType = TopType.INT
 ) {
-    INT('i', TopType.INT),
-    STRING('s', TopType.STRING)
-
-    // component, coord?, namedobj?, obj?, boolean?, enum?
-
-    // descs: iIsdzoc1y`gmv
+    INT('i'),
+    STRING('s', TopType.STRING),
+    COMPONENT('I'),
+    BOOLEAN('1'),
+    OBJ('o'),
+    ENUM('g')
 }

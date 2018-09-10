@@ -606,7 +606,7 @@ public final class Opcodes {
 
     public static final int _3400 = 3400;
 
-    public static final int _GET_ENUM_VALUE = 3408;
+    public static final int ENUM = 3408;
 
     public static final int _3411 = 3411;
 
