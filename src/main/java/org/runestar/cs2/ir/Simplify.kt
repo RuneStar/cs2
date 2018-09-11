@@ -27,52 +27,13 @@ fun removeNopInstructions(func: Func) {
     }
 }
 
-fun replaceTrivialAssignments(func: Func) {
-    outer@
-    while (true) {
-        for (i in func.insns.indices) {
-            val insn = func.insns[i]
-            if (insn !is Insn.Assignment) continue
-            val defs = insn.definitions
-            if (defs.size != 1) continue
-            val expr = insn.expr
-            if (expr !is Expr.Const && expr !is Expr.Var) continue
-            val def = defs.single()
-            walk(func, i, HashSet()) { n ->
-                if (n !is Insn.Exprd) return@walk true
-                var last = false
-                if (n is Insn.Assignment && n.definitions == listOf(def)) {
-                    last = true
-                }
-                val nexpr = n.expr
-                when (nexpr) {
-                    is Expr.Var -> {
-                        if (nexpr == def) {
-                            n.expr = expr
-                        }
-                    }
-                    is Expr.Operation -> {
-                        nexpr.arguments.replaceAll {
-                            if (it == def) expr else it
-                        }
-                    }
-                }
-                return@walk !last
-            }
-            func.insns.remove(insn)
-            continue@outer
-        }
-        return
-    }
-}
-
 private fun walk(func: Func, index: Int, seen: MutableSet<Int>, consumer: (Insn) -> Boolean) {
     var pc = index
     while (true) {
         if (pc in seen) return
         val insn = func.insns[pc]
-        seen.add(pc)
         if (index != pc) {
+            seen.add(pc)
             if (!consumer(insn)) return
         }
         when (insn) {
@@ -88,5 +49,71 @@ private fun walk(func: Func, index: Int, seen: MutableSet<Int>, consumer: (Insn)
             }
             is Insn.Return -> return
         }
+    }
+}
+
+fun replaceSingleUseAssignments(func: Func) {
+    outer@
+    while (true) {
+        for (i in func.insns.indices) {
+            val insn = func.insns[i]
+            if (insn !is Insn.Assignment) continue
+            val def = insn.definitions.singleOrNull() ?: continue
+            var use: Insn.Exprd? = null
+            var usesCount = 0
+            walk(func, func.insns.indexOf(insn), HashSet()) { n ->
+                var last = false
+                if (n is Insn.Assignment && n.definitions.contains(def)) {
+                    last = true
+                }
+                if (n is Insn.Exprd) {
+                    val subexprs = subExprs(n.expr)
+                    for (expr in subexprs) {
+                        if (expr == def) {
+                            use = n
+                            usesCount++
+                        }
+                    }
+                }
+                return@walk !last
+            }
+            if (usesCount <= 1) {
+                func.insns.remove(insn)
+                if (usesCount == 1) {
+                    replaceExpr(use!!, def, insn.expr)
+                }
+                continue@outer
+            }
+        }
+        return
+    }
+}
+
+private fun subExprs(expr: Expr): List<Expr> {
+    return when (expr) {
+        is Expr.Const, is Expr.Var -> listOf(expr)
+        is Expr.Operation -> expr.arguments.flatMap { subExprs(it) }
+        else -> error(expr)
+    }
+}
+
+private fun replaceExpr(insn: Insn.Exprd, a: Expr, b: Expr) {
+    val insnExpr = insn.expr
+    if (insnExpr == a) {
+        insn.expr = b
+        return
+    }
+    val op = insnExpr as? Expr.Operation ?: return
+    replaceExpr(op, a, b)
+}
+
+private fun replaceExpr(op: Expr.Operation, a: Expr, b: Expr) {
+    for (arg in op.arguments) {
+        if (arg is Expr.Operation) {
+            replaceExpr(arg, a, b)
+        }
+    }
+    op.arguments.replaceAll {
+        if (it == a) b else it
     }
 }
