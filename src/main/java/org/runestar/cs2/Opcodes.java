@@ -2,6 +2,10 @@ package org.runestar.cs2;
 
 public final class Opcodes {
 
+    public static final int SS_AND = -2;
+
+    public static final int SS_OR = -1;
+
     private Opcodes() {}
 
     public static final int PUSH_CONSTANT_INT = 0;
@@ -556,6 +560,12 @@ public final class Opcodes {
 
     public static final int _3139 = 3139;
 
+    public static final int _3200 = 3200;
+
+    public static final int _3201 = 3201;
+
+    public static final int _3202 = 3202;
+
     public static final int _3300 = 3300;
 
     public static final int _3301 = 3301;
@@ -891,6 +901,46 @@ public final class Opcodes {
     public static final int _6204 = 6204;
 
     public static final int _6205 = 6205;
+
+    public static final int _6500 = 6500;
+
+    public static final int _6501 = 6501;
+
+    public static final int _6502 = 6502;
+
+    public static final int _6506 = 6506;
+
+    public static final int _6507 = 6507;
+
+    public static final int _6511 = 6511;
+
+    public static final int _6512 = 6512;
+
+    public static final int _6513 = 6513;
+
+    public static final int _6514 = 6514;
+
+    public static final int _6515 = 6515;
+
+    public static final int _6516 = 6516;
+
+    public static final int _6518 = 6518;
+
+    public static final int _6519 = 6519;
+
+    public static final int _6520 = 6520;
+
+    public static final int _6521 = 6521;
+
+    public static final int _6522 = 6522;
+
+    public static final int _6523 = 6523;
+
+    public static final int _6524 = 6524;
+
+    public static final int _6525 = 6525;
+
+    public static final int _6526 = 6526;
 
     public static final int _6600 = 6600;
 

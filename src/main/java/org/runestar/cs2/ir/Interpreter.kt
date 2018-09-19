@@ -3,42 +3,55 @@ package org.runestar.cs2.ir
 import org.runestar.cs2.TopType
 import org.runestar.cs2.bin.Script
 import org.runestar.cs2.bin.ScriptLoader
+import org.runestar.cs2.util.Chain
+import org.runestar.cs2.util.HashChain
+import org.runestar.cs2.util.SparseStack
 
 class Interpreter(
         val loader: ScriptLoader
 ) {
 
+    private val cache = HashMap<Int, Func>()
+
     fun interpret(id: Int): Func {
+        val cached = cache[id]
+        if (cached != null) return cached
         val script = checkNotNull(loader.load(id))
         val insns = arrayOfNulls<Insn?>(script.opcodes.size)
         interpret(insns, State(script, loader, 0))
-        val insnList = insns.filterNotNull()
-        val invokedReturn = (insnList.last() as Insn.Return).expr as Expr.Operation
-        val returnedInts = invokedReturn.arguments.count { it is Expr.Var && it.type == TopType.INT }
-        val returnedStrs = invokedReturn.arguments.count { it is Expr.Var && it.type == TopType.STRING }
-        val labels = HashSet<Insn.Label>()
-        insnList.forEachIndexed { i, insn ->
+        val returnInsn = (insns.last { it != null && it is Insn.Return } as Insn.Return).expr as Expr.Operation
+        val returnedInts = returnInsn.arguments.count { it is Expr.Var && it.type == TopType.INT }
+        val returnedStrs = returnInsn.arguments.count { it is Expr.Var && it.type == TopType.STRING }
+        val func = Func(id, script.intArgumentCount, script.stringArgumentCount, addLabels(insns), returnedInts, returnedStrs)
+        cache[id] = func
+        return func
+    }
+
+    private fun addLabels(insns: Array<Insn?>): Chain<Insn> {
+        val chain = HashChain<Insn>()
+        val labels = HashSet<Int>()
+        insns.forEachIndexed { i, insn ->
             when (insn) {
                 is Insn.Branch -> {
-                    labels.add(insn.pass)
+                    labels.add(insn.pass.name.toInt())
                 }
                 is Insn.Goto -> {
-                    labels.add(insn.label)
+                    labels.add(insn.label.name.toInt())
                 }
                 is Insn.Switch -> {
-                    labels.addAll(insn.map.values)
+                    insn.map.values.forEach { labels.add(it.name.toInt()) }
                 }
             }
         }
-        val labelIndices = labels.map { it.name.toInt() }
-        val insnsLabeled = ArrayList<Insn>()
-        insnList.forEachIndexed { index, insn ->
-            if (index in labelIndices) {
-                insnsLabeled.add(Insn.Label(index))
+        insns.forEachIndexed { index, insn ->
+            if (index in labels) {
+                chain.addLast(Insn.Label(index))
             }
-            insnsLabeled.add(insn)
+            if (insn != null) {
+                chain.addLast(insn)
+            }
         }
-        return Func(script.intArgumentCount, script.stringArgumentCount, insnsLabeled, returnedInts, returnedStrs)
+        return chain
     }
 
     private fun interpret(insns: Array<Insn?>, state: State) {
@@ -46,7 +59,6 @@ class Interpreter(
         val opcode = state.script.opcodes[state.pc]
         val op = Op.of(opcode)
         val insn = op.translate(state)
-//        println("${state.pc}\t$insn\n\t${state.intStack} ${state.strStack}")
         insns[state.pc] = insn
         val successors = ArrayList<Int>()
         when (insn) {

@@ -339,12 +339,44 @@ interface Op {
         IF_GETOP(Opcodes.IF_GETOP, ipop = 2, spush = 1),
         IF_GETOPBASE(Opcodes.IF_GETOPBASE, spush = 1, ipop = 1),
 
+        _3115(Opcodes._3115, ipop = 1),
+        _3116(Opcodes._3116, ipop = 1, spop = 2),
+        _3117(Opcodes._3117, ipop = 1),
+        _3118(Opcodes._3118, ipop = 1),
+        _3119(Opcodes._3119, ipop = 1),
+        _3120(Opcodes._3120, ipop = 1),
+        _3121(Opcodes._3121, ipop = 1),
+        _3122(Opcodes._3122, ipop = 1),
+        _3123(Opcodes._3123, ipop = 1),
+        _3124(Opcodes._3124),
+        _3125(Opcodes._3125, ipop = 1),
+        _3126(Opcodes._3126, ipop = 1),
+        _3127(Opcodes._3127, ipop = 1),
+        _3128(Opcodes._3128, ipush = 1),
+        _3129(Opcodes._3129, ipop = 2),
+        _3130(Opcodes._3130, ipop = 2),
+        _3131(Opcodes._3131, ipop = 1),
+        _3132(Opcodes._3132, ipush = 2),
+        _3133(Opcodes._3133, ipop = 1),
+        _3134(Opcodes._3134),
+        _3135(Opcodes._3135, ipop = 2),
+        _3136(Opcodes._3136, ipop = 1),
+        _3137(Opcodes._3137, ipush = 1),
+        _3138(Opcodes._3138, ipop = 1),
+        _3139(Opcodes._3139, ipush = 1),
+
+        _3200(Opcodes._3200, ipop = 3),
+        _3201(Opcodes._3201, ipop = 1),
+        _3202(Opcodes._3202, ipop = 2),
+
         _3300(Opcodes._3300, ipush = 1),
         _3301(Opcodes._3301, ipush = 1, ipop = 2),
         _3303(Opcodes._3303, ipop = 2, ipush = 1),
         _3305(Opcodes._3305, ipop = 1, ipush = 1),
+        _3306(Opcodes._3306, ipop = 1, ipush = 1),
         _3312(Opcodes._3312, ipush = 1),
         _3324(Opcodes._3324, ipush = 1),
+        _3411(Opcodes._3411, ipop = 1, ipush = 1),
 
         ADD(Opcodes.ADD, ipop = 2, ipush = 1),
         SUB(Opcodes.SUB, ipop = 2, ipush = 1),
@@ -394,10 +426,22 @@ interface Op {
         OC_UNCERT(Opcodes.OC_UNCERT, ipop = 1, ipush = 1),
         _4207(Opcodes._4207, ipop = 1, ipush = 1),
 
+        _5000(Opcodes._5000, ipush = 1),
+        _5003(Opcodes._5003, ipop = 2, ipush = 3, spush = 3),
+        _5004(Opcodes._5004, ipop = 1, ipush = 3, spush = 3),
+        _5005(Opcodes._5005, ipush = 1),
+        _5015(Opcodes._5015, spush = 1),
+        _5016(Opcodes._5016, ipush = 1),
+        _5017(Opcodes._5017, ipop = 1, ipush = 1),
+        _5019(Opcodes._5019, ipop = 1, ipush = 1),
+        _5022(Opcodes._5022, spush = 1),
+
         _5306(Opcodes._5306, ipush = 1),
         _5307(Opcodes._5307, ipop = 1),
         _5308(Opcodes._5308, ipush = 1),
-        _5309(Opcodes._5309, ipop = 1);
+        _5309(Opcodes._5309, ipop = 1),
+
+        _6518(Opcodes._6518, ipush = 1);
 
         enum class IOP {
             NONE, CONST, GET_INT, GET_STR, SET_INT, SET_STR, SPOPS, PUSH

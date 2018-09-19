@@ -1,4 +1,4 @@
-package org.runestar.cs2.ir
+package org.runestar.cs2.util
 
 import java.util.*
 

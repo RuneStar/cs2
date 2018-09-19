@@ -25,7 +25,7 @@ interface Insn {
         override fun toString() = expr.toString()
     }
 
-    class Branch(override var expr: Expr, val pass: Label) : Exprd {
+    class Branch(override var expr: Expr, var pass: Label) : Exprd {
 
         override fun toString() = "if $expr goto $pass"
     }
@@ -42,14 +42,14 @@ interface Insn {
         }
     }
 
-    data class Label(val name: String) : Insn {
+    data class Label(var name: String) : Insn {
 
         constructor(line: Int) : this(line.toString())
 
         override fun toString(): String = "@$name"
     }
 
-    class Goto(val label: Label) : Insn {
+    class Goto(var label: Label) : Insn {
 
         override fun toString(): String = "goto $label"
     }

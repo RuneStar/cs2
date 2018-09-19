@@ -1,9 +1,12 @@
 package org.runestar.cs2.ir
 
+import org.runestar.cs2.util.Chain
+
 class Func(
+        val id: Int,
         val intArgumentCount: Int,
         val stringArgumentCount: Int,
-        val insns: MutableList<Insn>,
+        var insns: Chain<Insn>,
         val intReturnCount: Int,
         val stringReturnCount: Int
 ) {
