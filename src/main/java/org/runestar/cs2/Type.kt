@@ -13,5 +13,10 @@ enum class Type(
     COMPONENT('I'),
     BOOLEAN('1'),
     OBJ('o'),
-    ENUM('g')
+    ENUM('g'),
+    STAT('S'),
+    GRAPHIC('d'),
+    INV('v')
 }
+
+// O, R, `, c, l, m, y
