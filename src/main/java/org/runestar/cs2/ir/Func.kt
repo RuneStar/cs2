@@ -1,23 +1,22 @@
 package org.runestar.cs2.ir
 
+import org.runestar.cs2.Type
 import org.runestar.cs2.util.Chain
 
 class Func(
         val id: Int,
-        val intArgumentCount: Int,
-        val stringArgumentCount: Int,
+        val args: MutableList<Expr.Var>,
         var insns: Chain<Insn>,
-        val intReturnCount: Int,
-        val stringReturnCount: Int
+        val returns: MutableList<Type>
 ) {
 
     override fun toString(): String {
         val sb = StringBuilder()
-        sb.append("intArgs=").append(intArgumentCount).append(", strArgs=").appendln(stringArgumentCount)
+        sb.append("args=").appendln(args)
         insns.forEachIndexed { index, insn ->
             sb.appendln(insn)
         }
-        sb.append("intReturns=").append(intReturnCount).append(", strReturns=").appendln(stringReturnCount)
+        sb.append("returns=").append(returns)
         return sb.toString()
     }
 }

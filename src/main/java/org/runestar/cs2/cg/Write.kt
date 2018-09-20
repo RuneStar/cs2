@@ -15,10 +15,7 @@ fun write(
     val writer = LineWriter(appendable)
     val root = reconstruct(func)
     writer.append("script").append(func.id.toString()).append('(')
-    val args = ArrayList<String>()
-    repeat(func.intArgumentCount) { args.add("int \$j$it") }
-    repeat(func.stringArgumentCount) { args.add("string \$z$it") }
-    args.joinTo(writer)
+    func.args.joinTo(writer) { "${it.type.literal} \$${it.name}" }
     writer.append(") {")
     writer.indents++
     writeConstruct(writer, root)
@@ -137,7 +134,7 @@ private fun writeReturn(writer: LineWriter, insn: Insn.Return) {
 private fun writeExpr(writer: LineWriter, expr: Expr) {
     when (expr) {
         is Expr.Var -> writeVar(writer, expr)
-        is Expr.Const -> writeConst(writer, expr)
+        is Expr.Cst -> writeConst(writer, expr)
         is Expr.Operation -> writeOperation(writer, expr)
     }
 }
@@ -146,7 +143,7 @@ private fun writeVar(writer: LineWriter, expr: Expr.Var) {
     writer.append('$').append(expr.name)
 }
 
-private fun writeConst(writer: LineWriter, expr: Expr.Const) {
+private fun writeConst(writer: LineWriter, expr: Expr.Cst) {
     val cst = expr.cst
     when (cst) {
         null -> writer.append(null)

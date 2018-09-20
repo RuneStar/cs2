@@ -1,6 +1,7 @@
 package org.runestar.cs2.ir
 
 import org.runestar.cs2.Opcodes
+import org.runestar.cs2.Type
 
 interface Op {
 
@@ -32,8 +33,7 @@ interface Op {
 
         override fun translate(state: Interpreter.State): Insn {
             val map = state.script.switches[state.script.intOperands[state.pc]]
-            state.intStack.pop()
-            return Insn.Switch(Expr.Var.si(state.intStack.lastIndex + 1), map.mapValues { Insn.Label(it.value + 1 + state.pc) })
+            return Insn.Switch(state.pop(Type.INT), map.mapValues { Insn.Label(it.value + 1 + state.pc) })
         }
     }
 
@@ -54,28 +54,20 @@ interface Op {
             val invokeId = state.script.intOperands[state.pc]
             val invoked = Interpreter(state.loader).interpret(invokeId)
 
+            // todo : script invoking itself
+
             val args = ArrayList<Expr>()
-            args.add(Expr.Const(state.script.intOperands[state.pc]))
-
-            state.intStack.popN(invoked.intArgumentCount)
-            repeat(invoked.intArgumentCount) {
-                args.add(Expr.Var.si(state.intStack.size + it))
-            }
-            state.strStack.popN(invoked.stringArgumentCount)
-            repeat(state.strStack.size) {
-                args.add(Expr.Var.ss(state.strStack.size + it))
+            args.add(Expr.Cst(Type.INT, state.script.intOperands[state.pc]))
+            invoked.args.forEach {
+                args.add(state.pop(it.type))
             }
 
-            val targets = ArrayList<Expr.Var>()
-            repeat(invoked.intReturnCount) {
-                targets.add(Expr.Var.si(state.intStack.size + it))
+            val returns = ArrayList<Expr.Var>()
+            invoked.returns.forEach {
+                returns.add(state.push(it))
             }
-            repeat(invoked.stringReturnCount) {
-                targets.add(Expr.Var.ss(state.strStack.size + it))
-            }
-            state.intStack.pushN(invoked.intReturnCount)
-            state.strStack.pushN(invoked.stringReturnCount)
-            return Insn.Assignment(targets, Expr.Operation(id, args))
+
+            return Insn.Assignment(returns, Expr.Operation(invoked.returns, id, args))
         }
     }
 
@@ -86,14 +78,13 @@ interface Op {
         override fun translate(state: Interpreter.State): Insn {
             val args = ArrayList<Expr>()
             repeat(state.intStack.size) {
-                args.add(Expr.Var.si(it))
+                args.add(state.pop(Type.INT))
             }
             repeat(state.strStack.size) {
-                args.add(Expr.Var.ss(it))
+                args.add(state.pop(Type.STRING))
             }
-            state.intStack.clear()
-            state.strStack.clear()
-            return Insn.Return(Expr.Operation(id, args))
+            args.reverse()
+            return Insn.Return(Expr.Operation(emptyList(), id, args))
         }
     }
 
@@ -102,23 +93,19 @@ interface Op {
         override val id = Opcodes.ENUM
 
         override fun translate(state: Interpreter.State): Insn {
-            state.intStack.popN(2)
-            val type = state.intStack.pop()
-            state.intStack.pop()
-            val args = mutableListOf<Expr>(
-                    Expr.Var.si(state.intStack.lastIndex + 1),
-                    Expr.Var.si(state.intStack.lastIndex + 2),
-                    Expr.Var.si(state.intStack.lastIndex + 3),
-                    Expr.Var.si(state.intStack.lastIndex + 4)
-            )
-            val target = if (type == 115) {
-                state.strStack.push()
-                Expr.Var.ss(state.strStack.lastIndex)
+            val a = state.pop(Type.INT)
+            val b = state.pop(Type.INT)
+            val ctype = state.peekCst(Type.INT)
+            val c = state.pop(Type.INT)
+            val d = state.pop(Type.INT)
+            val args = mutableListOf<Expr>(d, c, b, a)
+            val ctypeDesc = ctype.cst as Int
+            val target = if (ctypeDesc == Type.STRING.desc.toInt()) {
+                state.push(Type.STRING)
             } else {
-                state.intStack.push()
-                Expr.Var.si(state.intStack.lastIndex)
+                state.push(Type.INT)
             }
-            return Insn.Assignment(listOf(target), Expr.Operation(id, args))
+            return Insn.Assignment(listOf(target), Expr.Operation(listOf(target.type), id, args))
         }
     }
 
@@ -133,8 +120,9 @@ interface Op {
 
         override fun translate(state: Interpreter.State): Insn {
             val pc = state.pc
-            state.intStack.popN(2)
-            val expr = Expr.Operation(id, mutableListOf(Expr.Var.si(state.intStack.lastIndex + 1), Expr.Var.si(state.intStack.lastIndex + 2)))
+            val r = state.pop(Type.INT)
+            val l = state.pop(Type.INT)
+            val expr = Expr.Operation(emptyList(), id, mutableListOf(l, r))
             return Insn.Branch(expr, Insn.Label(pc + state.script.intOperands[pc] + 1))
         }
     }
@@ -456,54 +444,49 @@ interface Op {
             val intOperand = script.intOperands[state.pc]
             val strOperand = script.stringOperands[state.pc]
             val args = ArrayList<Expr>()
-            state.intStack.popN(ipop)
             repeat(ipop) {
-                args.add(Expr.Var.si(state.intStack.size + it))
+                args.add(state.pop(Type.INT))
             }
-            state.strStack.popN(spop)
             repeat(spop) {
-                args.add(Expr.Var.ss(state.strStack.size + it))
+                args.add(state.pop(Type.STRING))
             }
             when (iop) {
                 IOP.GET_INT -> args.add(Expr.Var.li(intOperand))
                 IOP.GET_STR -> args.add(Expr.Var.ls(intOperand))
-                IOP.CONST, IOP.PUSH -> args.add(Expr.Const(intOperand))
+                IOP.CONST, IOP.PUSH -> args.add(Expr.Cst(Type.INT, intOperand))
                 IOP.SPOPS -> {
-                    state.strStack.popN(intOperand)
                     repeat(intOperand) {
-                        args.add(Expr.Var.ss(state.strStack.size + it))
+                        args.add(state.pop(Type.STRING))
                     }
                 }
                 else -> {}
             }
             if (sop == SOP.PUSH) {
-                args.add(Expr.Const(strOperand))
+                args.add(Expr.Cst(Type.STRING, strOperand))
             }
 
             val targets = ArrayList<Expr.Var>()
             repeat(ipush) {
-                state.intStack.push()
-                targets.add(Expr.Var.si(state.intStack.lastIndex))
+                targets.add(state.push(Type.INT))
             }
             repeat(spush) {
-                state.strStack.push()
-                targets.add(Expr.Var.ss(state.strStack.lastIndex))
+                targets.add(state.push(Type.STRING))
             }
             when (iop) {
                 IOP.SET_INT -> targets.add(Expr.Var.li(intOperand))
                 IOP.SET_STR -> targets.add(Expr.Var.ls(intOperand))
                 IOP.PUSH -> {
                     state.intStack.pop()
-                    state.intStack.push(intOperand)
+                    state.intStack.push(Expr.Cst(Type.INT, intOperand))
                 }
                 else -> {}
             }
             if (sop == SOP.PUSH) {
                 state.strStack.pop()
-                state.strStack.push(strOperand)
+                state.strStack.push(Expr.Cst(Type.STRING, strOperand))
             }
-
-            return Insn.Assignment(targets, Expr.Operation(id, args))
+            args.reverse()
+            return Insn.Assignment(targets, Expr.Operation(targets.map { it.type }, id, args))
         }
     }
 
@@ -567,17 +550,15 @@ interface Op {
         override fun translate(state: Interpreter.State): Insn {
             val args = ArrayList<Expr>()
             if (id >= 2000) {
-                state.intStack.pop()
-                args.add(Expr.Var.si(state.intStack.lastIndex + 1))
+                args.add(state.pop(Type.INT))
             }
-            var s = checkNotNull(state.strStack.pop())
-//            args.add(Arg.Var.SS(state.strStack.lastIndex + 1))
+            var s = state.peekCst(Type.STRING).cst as String
+            state.pop(Type.STRING)
             if (s.isNotEmpty() && s.last() == 'Y') {
-                val n = state.intStack.pop()
-//                args.add(Arg.Var.IS(state.intStack.lastIndex + 1))
-                state.intStack.popN(n)
+                val n = state.peekCst(Type.INT).cst as Int
+                state.pop(Type.INT)
                 repeat(n) {
-                    args.add(Expr.Var.si(state.intStack.lastIndex + 1 + it))
+                    args.add(state.pop(Type.INT))
                 }
                 s = s.dropLast(1)
             }
@@ -590,17 +571,14 @@ interface Op {
                     intArgs++
                 }
             }
-            state.intStack.popN(intArgs)
             repeat(intArgs) {
-                args.add(Expr.Var.si(state.intStack.lastIndex + 1 + it))
+                args.add(state.pop(Type.INT))
             }
-            state.strStack.popN(strArgs)
             repeat(strArgs) {
-                args.add(Expr.Var.ss(state.strStack.lastIndex + 1 + it))
+                args.add(state.pop(Type.STRING))
             }
-            state.intStack.pop()
-            args.add(Expr.Var.si(state.intStack.lastIndex + 1))
-            return Insn.Assignment(emptyList(), Expr.Operation(id, args))
+            args.add(state.pop(Type.INT))
+            return Insn.Assignment(emptyList(), Expr.Operation(emptyList(), id, args))
         }
     }
 }

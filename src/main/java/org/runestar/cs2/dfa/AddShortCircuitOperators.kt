@@ -1,6 +1,7 @@
 package org.runestar.cs2.dfa
 
 import org.runestar.cs2.Opcodes
+import org.runestar.cs2.Type
 import org.runestar.cs2.ir.Expr
 import org.runestar.cs2.ir.Func
 import org.runestar.cs2.ir.Insn
@@ -20,7 +21,7 @@ object AddShortCircuitOperators : Phase {
             val if2 = itr.next() as? Insn.Branch ?: continue
             if (if1.pass == if2.pass) {
                 itr.remove()
-                if1.expr = Expr.Operation(Opcodes.SS_OR, mutableListOf(if1.expr, if2.expr))
+                if1.expr = Expr.Operation(listOf(Type.BOOLEAN), Opcodes.SS_OR, mutableListOf(if1.expr, if2.expr))
             }
         }
     }
@@ -40,7 +41,7 @@ object AddShortCircuitOperators : Phase {
                 func.insns.remove(if2)
 
                 if1.pass = if2.pass
-                if1.expr = Expr.Operation(Opcodes.SS_AND, mutableListOf(if1.expr, if2.expr))
+                if1.expr = Expr.Operation(listOf(Type.BOOLEAN), Opcodes.SS_AND, mutableListOf(if1.expr, if2.expr))
             }
         }
     }

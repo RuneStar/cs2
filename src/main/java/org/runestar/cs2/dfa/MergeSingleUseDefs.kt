@@ -76,7 +76,7 @@ object MergeSingleUseDefs : Phase {
 
     private fun subExprs(expr: Expr): List<Expr> {
         return when (expr) {
-            is Expr.Const, is Expr.Var -> listOf(expr)
+            is Expr.Cst, is Expr.Var -> listOf(expr)
             is Expr.Operation -> expr.arguments.flatMap { subExprs(it) }
             else -> error(expr)
         }

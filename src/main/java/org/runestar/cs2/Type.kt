@@ -16,7 +16,9 @@ enum class Type(
     ENUM('g'),
     STAT('S'),
     GRAPHIC('d'),
-    INV('v')
+    INV('v');
+
+    val literal = name.toLowerCase()
 }
 
 // O, R, `, c, l, m, y
