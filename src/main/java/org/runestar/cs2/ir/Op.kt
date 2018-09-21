@@ -41,8 +41,7 @@ interface Op {
         override val id = Opcodes.SWITCH
 
         override fun translate(state: Interpreter.State): Insn {
-            val map = state.script.switches[state.script.intOperands[state.pc]]
-            return Insn.Switch(state.pop(Type.INT), map.mapValues { Insn.Label(it.value + 1 + state.pc) })
+            return Insn.Switch(state.pop(Type.INT), state.switch.mapValues { Insn.Label(it.value + 1 + state.pc) })
         }
     }
 
@@ -51,7 +50,7 @@ interface Op {
         override val id = Opcodes.BRANCH
 
         override fun translate(state: Interpreter.State): Insn {
-            return Insn.Goto(Insn.Label(state.pc + state.script.intOperands[state.pc] + 1))
+            return Insn.Goto(Insn.Label(state.pc + state.intOperand + 1))
         }
     }
 
@@ -60,13 +59,13 @@ interface Op {
         override val id = Opcodes.GOSUB_WITH_PARAMS
 
         override fun translate(state: Interpreter.State): Insn {
-            val invokeId = state.script.intOperands[state.pc]
+            val invokeId = state.intOperand
             val invoked = Interpreter(state.loader).interpret(invokeId)
 
             // todo : script invoking itself
 
             val args = ArrayList<Expr>()
-            args.add(Expr.Cst(INT, state.script.intOperands[state.pc]))
+            args.add(Expr.Cst(INT, invokeId))
             invoked.args.forEach {
                 args.add(state.pop(it.type))
             }
@@ -124,11 +123,10 @@ interface Op {
         BRANCH_GREATER_THAN_OR_EQUALS(Opcodes.BRANCH_GREATER_THAN_OR_EQUALS);
 
         override fun translate(state: Interpreter.State): Insn {
-            val pc = state.pc
             val r = state.pop(INT)
             val l = state.pop(INT)
             val expr = Expr.Operation(emptyList(), id, mutableListOf(l, r))
-            return Insn.Branch(expr, Insn.Label(pc + state.script.intOperands[pc] + 1))
+            return Insn.Branch(expr, Insn.Label(state.pc + state.intOperand + 1))
         }
     }
 
@@ -145,11 +143,7 @@ interface Op {
         override val id: Int = namesReverse.getValue(name)
 
         override fun translate(state: Interpreter.State): Insn {
-            val operand: Any? = when (type.topType) {
-                TopType.INT -> state.script.intOperands[state.pc]
-                TopType.STRING -> state.script.stringOperands[state.pc]
-            }
-            val cst = Expr.Cst(type, operand)
+            val cst = state.operand(type)
             return Insn.Assignment(listOf(state.push(cst)), cst)
         }
     }
@@ -449,8 +443,6 @@ interface Op {
         override val id: Int = namesReverse.getValue(name)
 
         override fun translate(state: Interpreter.State): Insn {
-            val intOperand = state.script.intOperands[state.pc]
-            val strOperand = state.script.stringOperands[state.pc]
             val stackArgs = ListStack<Expr.Var>(ArrayList())
             for (i in args.lastIndex downTo 0) {
                 val arg = args[i]
@@ -460,21 +452,15 @@ interface Op {
             for (arg in args) {
                 when (arg.src) {
                     S -> exprArgs.add(stackArgs.pop())
-                    L -> exprArgs.add(Expr.Var.l(intOperand, arg.type))
-                    O -> {
-                        val operand: Any? = when (arg.type.topType) {
-                            TopType.STRING -> strOperand
-                            TopType.INT -> intOperand
-                        }
-                        exprArgs.add(Expr.Cst(arg.type, operand))
-                    }
+                    L -> exprArgs.add(Expr.Var.l(state.intOperand, arg.type))
+                    O -> exprArgs.add(state.operand(arg.type))
                 }
             }
             val exprDefs = ArrayList<Expr.Var>(defs.size)
             for (def in defs) {
                 when (def.src) {
                     S -> exprDefs.add(state.push(def.type))
-                    L -> exprDefs.add(Expr.Var.l(intOperand, def.type))
+                    L -> exprDefs.add(Expr.Var.l(state.intOperand, def.type))
                     O -> throw IllegalStateException()
                 }
             }
@@ -487,7 +473,7 @@ interface Op {
         override val id = Opcodes.JOIN_STRING
 
         override fun translate(state: Interpreter.State): Insn {
-            val intOperand = state.script.intOperands[state.pc]
+            val intOperand = state.intOperand
             val args = ArrayList<Expr>(intOperand)
             repeat(intOperand) {
                 args.add(state.pop(Type.STRING))
@@ -497,62 +483,64 @@ interface Op {
         }
     }
 
-    private enum class CcIfSetOn(override val id: Int) : Op {
+    private enum class CcIfSetOn() : Op {
 
-        CC_SETONCLICK(Opcodes.CC_SETONCLICK),
-        CC_SETONHOLD(Opcodes.CC_SETONHOLD),
-        CC_SETONRELEASE(Opcodes.CC_SETONRELEASE),
-        CC_SETONMOUSEOVER(Opcodes.CC_SETONMOUSEOVER),
-        CC_SETONMOUSELEAVE(Opcodes.CC_SETONMOUSELEAVE),
-        CC_SETONDRAG(Opcodes.CC_SETONDRAG),
-        CC_SETONTARGETLEAVE(Opcodes.CC_SETONTARGETLEAVE),
-        CC_SETONVARTRANSMIT(Opcodes.CC_SETONVARTRANSMIT),
-        CC_SETONTIME(Opcodes.CC_SETONTIME),
-        CC_SETONTOP(Opcodes.CC_SETONTOP),
-        CC_SETONDRAGCOMPLETE(Opcodes.CC_SETONDRAGCOMPLETE),
-        CC_SETONCLICKREPEAT(Opcodes.CC_SETONCLICKREPEAT),
-        CC_SETONMOUSEREPEAT(Opcodes.CC_SETONMOUSEREPEAT),
-        CC_SETONINVTRANSMIT(Opcodes.CC_SETONINVTRANSMIT),
-        CC_SETONSTATTRANSMIT(Opcodes.CC_SETONSTATTRANSMIT),
-        CC_SETONTARGETENTER(Opcodes.CC_SETONTARGETENTER),
-        CC_SETONSCROLLWHEEL(Opcodes.CC_SETONSCROLLWHEEL),
-        CC_SETONCHATTRANSMIT(Opcodes.CC_SETONCHATTRANSMIT),
-        CC_SETONKEY(Opcodes.CC_SETONKEY),
-        _1420(Opcodes._1420),
-        _1421(Opcodes._1421),
-        _1422(Opcodes._1422),
-        _1423(Opcodes._1423),
-        _1424(Opcodes._1424),
-        _1425(Opcodes._1425),
-        _1426(Opcodes._1426),
-        _1427(Opcodes._1427),
-        IF_SETONCLICK(Opcodes.IF_SETONCLICK),
-        IF_SETONHOLD(Opcodes.IF_SETONHOLD),
-        IF_SETONRELEASE(Opcodes.IF_SETONRELEASE),
-        IF_SETONMOUSEOVER(Opcodes.IF_SETONMOUSEOVER),
-        IF_SETONMOUSELEAVE(Opcodes.IF_SETONMOUSELEAVE),
-        IF_SETONDRAG(Opcodes.IF_SETONDRAG),
-        IF_SETONTARGETLEAVE(Opcodes.IF_SETONTARGETLEAVE),
-        IF_SETONVARTRANSMIT(Opcodes.IF_SETONVARTRANSMIT),
-        IF_SETONTIME(Opcodes.IF_SETONTIME),
-        IF_SETONTOP(Opcodes.IF_SETONTOP),
-        IF_SETONDRAGCOMPLETE(Opcodes.IF_SETONDRAGCOMPLETE),
-        IF_SETONCLICKREPEAT(Opcodes.IF_SETONCLICKREPEAT),
-        IF_SETONMOUSEREPEAT(Opcodes.IF_SETONMOUSEREPEAT),
-        IF_SETONINVTRANSMIT(Opcodes.IF_SETONINVTRANSMIT),
-        IF_SETONSTATTRANSMIT(Opcodes.IF_SETONSTATTRANSMIT),
-        IF_SETONTARGETENTER(Opcodes.IF_SETONTARGETENTER),
-        IF_SETONSCROLLWHEEL(Opcodes.IF_SETONSCROLLWHEEL),
-        IF_SETONCHATTRANSMIT(Opcodes.IF_SETONCHATTRANSMIT),
-        IF_SETONKEY(Opcodes.IF_SETONKEY),
-        _2420(Opcodes._2420),
-        _2421(Opcodes._2421),
-        _2422(Opcodes._2422),
-        _2423(Opcodes._2423),
-        _2424(Opcodes._2424),
-        _2425(Opcodes._2425),
-        _2426(Opcodes._2426),
-        _2427(Opcodes._2427);
+        CC_SETONCLICK,
+        CC_SETONHOLD,
+        CC_SETONRELEASE,
+        CC_SETONMOUSEOVER,
+        CC_SETONMOUSELEAVE,
+        CC_SETONDRAG,
+        CC_SETONTARGETLEAVE,
+        CC_SETONVARTRANSMIT,
+        CC_SETONTIME,
+        CC_SETONTOP,
+        CC_SETONDRAGCOMPLETE,
+        CC_SETONCLICKREPEAT,
+        CC_SETONMOUSEREPEAT,
+        CC_SETONINVTRANSMIT,
+        CC_SETONSTATTRANSMIT,
+        CC_SETONTARGETENTER,
+        CC_SETONSCROLLWHEEL,
+        CC_SETONCHATTRANSMIT,
+        CC_SETONKEY,
+        _1420,
+        _1421,
+        _1422,
+        _1423,
+        _1424,
+        _1425,
+        _1426,
+        _1427,
+        IF_SETONCLICK,
+        IF_SETONHOLD,
+        IF_SETONRELEASE,
+        IF_SETONMOUSEOVER,
+        IF_SETONMOUSELEAVE,
+        IF_SETONDRAG,
+        IF_SETONTARGETLEAVE,
+        IF_SETONVARTRANSMIT,
+        IF_SETONTIME,
+        IF_SETONTOP,
+        IF_SETONDRAGCOMPLETE,
+        IF_SETONCLICKREPEAT,
+        IF_SETONMOUSEREPEAT,
+        IF_SETONINVTRANSMIT,
+        IF_SETONSTATTRANSMIT,
+        IF_SETONTARGETENTER,
+        IF_SETONSCROLLWHEEL,
+        IF_SETONCHATTRANSMIT,
+        IF_SETONKEY,
+        _2420,
+        _2421,
+        _2422,
+        _2423,
+        _2424,
+        _2425,
+        _2426,
+        _2427;
+
+        override val id = namesReverse.getValue(name)
 
         override fun translate(state: Interpreter.State): Insn {
             val args = ArrayList<Expr>()

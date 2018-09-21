@@ -20,8 +20,8 @@ class Interpreter(
         interpret(insns, State(script, loader, 0))
         val returnInsn = (insns.last { it != null && it is Insn.Return } as Insn.Return).expr as Expr.Operation
         val args = ArrayList<Expr.Var>()
-        repeat(script.intArgumentCount) { args.add(Expr.Var.li(it)) }
-        repeat(script.stringArgumentCount) { args.add(Expr.Var.ls(it)) }
+        repeat(script.intArgumentCount) { args.add(Expr.Var.l(it, Type.INT)) }
+        repeat(script.stringArgumentCount) { args.add(Expr.Var.l(it, Type.STRING)) }
         val returns = returnInsn.arguments.flatMapTo(ArrayList()) { it.types }
         val func = Func(id, args, addLabels(insns), returns)
         cache[id] = func
@@ -93,9 +93,30 @@ class Interpreter(
             val strStack: ListStack<Expr.Cst> = ListStack(ArrayList())
     ) {
 
+        val intOperand: Int get() = script.intOperands[pc]
+
+        val strOperand: String? get() = script.stringOperands[pc]
+
+        fun operand(type: Type): Expr.Cst {
+            val o: Any? = when (type.topType) {
+                TopType.STRING -> strOperand
+                TopType.INT -> intOperand
+            }
+            return Expr.Cst(type, o)
+        }
+
+        val switch: Map<Int, Int> get() = script.switches[intOperand]
+
         fun pop(type: Type): Expr.Var = when (type.topType) {
-            TopType.INT -> intStack.pop().let { Expr.Var("${it.type.literal}${intStack.size}", it.type) }
-            TopType.STRING -> strStack.pop().let { Expr.Var("${it.type.literal}${strStack.size}", it.type) }
+            TopType.INT -> {
+                val expr = intStack.pop()
+                val t = Type.bottom(expr.type, type)
+                Expr.Var("#${Type.INT.desc}${intStack.size}", t)
+            }
+            TopType.STRING -> {
+                strStack.pop()
+                Expr.Var("#${Type.STRING.desc}${strStack.size}", type)
+            }
         }
 
         fun peekCst(type: Type): Expr.Cst = when (type.topType) {
@@ -107,11 +128,11 @@ class Interpreter(
             return when (cst.type.topType) {
                 TopType.INT -> {
                     intStack.push(cst)
-                    Expr.Var("${cst.type.literal}${intStack.size - 1}", cst.type)
+                    Expr.Var("#${Type.INT.desc}${intStack.size - 1}", cst.type)
                 }
                 TopType.STRING -> {
                     strStack.push(cst)
-                    Expr.Var("${cst.type.literal}${strStack.size - 1}", cst.type)
+                    Expr.Var("#${Type.STRING.desc}${strStack.size - 1}", cst.type)
                 }
             }
         }
