@@ -102,19 +102,15 @@ interface Op {
         override val id = Opcodes.ENUM
 
         override fun translate(state: Interpreter.State): Insn {
-            val a = state.pop(INT)
-            val b = state.pop(INT)
-            val ctype = state.peekCst(INT)
-            val c = state.pop(TYPE)
-            val d = state.pop(TYPE)
-            val args = mutableListOf<Expr>(d, c, b, a)
-            val ctypeDesc = ctype.cst as Int
-            val target = if (ctypeDesc == STRING.desc.toInt()) {
-                state.push(STRING)
-            } else {
-                state.push(INT)
-            }
-            return Insn.Assignment(listOf(target), Expr.Operation(listOf(target.type), id, args))
+            val key = state.pop(INT)
+            val enumId = state.pop(INT)
+            val valueTypeCst = state.peekCst(INT)
+            val valueType = state.pop(TYPE)
+            val keyType = state.pop(TYPE)
+            val args = mutableListOf<Expr>(keyType, valueType, enumId, key)
+            val valueTypeType = Type.of((valueTypeCst.cst as Int).toChar())
+            val value = state.push(valueTypeType)
+            return Insn.Assignment(listOf(value), Expr.Operation(listOf(value.type), id, args))
         }
     }
 
