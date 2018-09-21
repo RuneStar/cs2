@@ -24,6 +24,8 @@ interface Expr {
 
             fun li(index: Int) = Var("i$index", Type.INT)
 
+            fun l(index: Int, type: Type) = Var("${type.topType.type.desc}$index", type)
+
             fun ls(index: Int) = Var("s$index", Type.STRING)
         }
     }
