@@ -15,7 +15,10 @@ enum class Type(val desc: Char) {
     ENUM('g'),
     STAT('S'),
     GRAPHIC('d'),
-    INV('v');
+    INV('v'),
+
+    TYPE('?'),
+    ;
 
     val literal = name.toLowerCase()
 
@@ -25,7 +28,7 @@ enum class Type(val desc: Char) {
 
         private val map = values().associateBy { it.desc }
 
-        fun of(desc: Char): Type = map.getValue(desc)
+        fun of(desc: Char): Type = map.getOrDefault(desc, Type.INT)
 
         fun top(a: Type, b: Type): Type {
             if (a == b) return a

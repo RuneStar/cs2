@@ -1,6 +1,7 @@
 package org.runestar.cs2.cg
 
 import org.runestar.cs2.Opcodes
+import org.runestar.cs2.Type
 import org.runestar.cs2.cfa.Construct
 import org.runestar.cs2.cfa.reconstruct
 import org.runestar.cs2.ir.Expr
@@ -144,11 +145,14 @@ private fun writeVar(writer: LineWriter, expr: Expr.Var) {
 }
 
 private fun writeConst(writer: LineWriter, expr: Expr.Cst) {
-    val cst = expr.cst
-    when (cst) {
-        null -> writer.append(null)
-        is Int -> writer.append(cst.toString())
-        is String -> writer.append('"').append(cst).append('"')
+    when (expr.type) {
+        Type.STRING -> writer.append('"').append(expr.cst.toString()).append('"')
+        Type.TYPE -> writer.append(Type.of((expr.cst as Int).toChar()).literal)
+        Type.COMPONENT -> {
+            val n = expr.cst as Int
+            writer.append("${n ushr 16}").append(':').append("${n and 0xFFFF}")
+        }
+        else -> writer.append(expr.cst.toString())
     }
 }
 

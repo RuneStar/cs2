@@ -105,8 +105,8 @@ interface Op {
             val a = state.pop(INT)
             val b = state.pop(INT)
             val ctype = state.peekCst(INT)
-            val c = state.pop(INT)
-            val d = state.pop(INT)
+            val c = state.pop(TYPE)
+            val d = state.pop(TYPE)
             val args = mutableListOf<Expr>(d, c, b, a)
             val ctypeDesc = ctype.cst as Int
             val target = if (ctypeDesc == STRING.desc.toInt()) {
@@ -573,20 +573,8 @@ interface Op {
                 }
                 s = s.dropLast(1)
             }
-            var intArgs = 0
-            var strArgs = 0
             for (c in s) {
-                if (c == 's') {
-                    strArgs++
-                } else {
-                    intArgs++
-                }
-            }
-            repeat(intArgs) {
-                args.add(state.pop(Type.INT))
-            }
-            repeat(strArgs) {
-                args.add(state.pop(Type.STRING))
+                args.add(state.pop(Type.of(c)))
             }
             args.add(state.pop(Type.INT))
             return Insn.Assignment(emptyList(), Expr.Operation(emptyList(), id, args))
