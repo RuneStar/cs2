@@ -1,5 +1,6 @@
 package org.runestar.cs2.dfa
 
+import org.runestar.cs2.Type
 import org.runestar.cs2.ir.Expr
 import org.runestar.cs2.ir.Func
 import org.runestar.cs2.ir.Insn
@@ -90,6 +91,7 @@ object MergeSingleUseDefs : Phase {
     private fun replaceExpr(insn: Insn.Exprd, a: Expr, by: Expr) {
         val insnExpr = insn.expr
         if (insnExpr == a) {
+            by.type = Type.bottom(insn.expr.type, by.type)
             insn.expr = by
             return
         }
@@ -104,7 +106,12 @@ object MergeSingleUseDefs : Phase {
             }
         }
         op.arguments.replaceAll {
-            if (it == a) by else it
+            if (it == a) {
+                by.type = Type.bottom(it.type, by.type)
+                by
+            } else {
+                it
+            }
         }
     }
 }

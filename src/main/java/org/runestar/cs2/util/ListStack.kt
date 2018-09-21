@@ -1,7 +1,7 @@
 package org.runestar.cs2.util
 
 class ListStack<T : Any>(
-        var delegate: MutableList<T>
+        val delegate: MutableList<T>
 ) {
 
     val size: Int get() = delegate.size

@@ -5,33 +5,34 @@ import org.runestar.cs2.names
 
 interface Expr {
 
-    val types: List<Type>
+    var types: List<Type>
+        get() = listOf(type)
+        set(value) { type = value.single() }
 
-    data class Cst(val type: Type, val cst: Any?) : Expr {
+    var type: Type
+        get() = types.single()
+        set(value) { types = listOf(value) }
 
-        override val types: List<Type> get() = listOf(type)
+    data class Cst(override var type: Type, val cst: Any?) : Expr {
 
         override fun toString(): String = cst.toString()
     }
 
-    data class Var(val name: String, val type: Type) : Expr {
+    class Var(val name: String, override var type: Type) : Expr {
 
-        override val types: List<Type> get() = listOf(type)
+        override fun hashCode(): Int = name.hashCode()
 
-        override fun toString(): String = name
+        override fun equals(other: Any?): Boolean = other is Var && name == other.name
+
+        override fun toString(): String = "(${type.literal})$name"
 
         companion object {
-
-            fun li(index: Int) = Var("i$index", Type.INT)
-
             fun l(index: Int, type: Type) = Var("${type.topType.type.desc}$index", type)
-
-            fun ls(index: Int) = Var("s$index", Type.STRING)
         }
     }
 
     class Operation(
-            override val types: List<Type>,
+            override var types: List<Type>,
             val id: Int,
             val arguments: MutableList<Expr>
     ) : Expr {

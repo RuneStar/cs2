@@ -17,7 +17,7 @@ class Interpreter(
         if (cached != null) return cached
         val script = checkNotNull(loader.load(id))
         val insns = arrayOfNulls<Insn?>(script.opcodes.size)
-        interpret(insns, State(script, loader, 0))
+        interpret(insns, State(id, script, loader, 0))
         val returnInsn = (insns.last { it != null && it is Insn.Return } as Insn.Return).expr as Expr.Operation
         val args = ArrayList<Expr.Var>()
         repeat(script.intArgumentCount) { args.add(Expr.Var.l(it, Type.INT)) }
@@ -86,6 +86,7 @@ class Interpreter(
     }
 
     class State(
+            val id: Int,
             val script: Script,
             val loader: ScriptLoader,
             var pc: Int,
@@ -139,6 +140,6 @@ class Interpreter(
 
         fun push(type: Type): Expr.Var = push(Expr.Cst(type, null))
 
-        fun copy(newPc: Int): State = State(script, loader, newPc, ListStack(intStack.delegate), ListStack(strStack.delegate))
+        fun copy(newPc: Int): State = State(id, script, loader, newPc, ListStack(intStack.delegate), ListStack(strStack.delegate))
     }
 }

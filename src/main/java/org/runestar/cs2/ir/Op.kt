@@ -60,9 +60,9 @@ interface Op {
 
         override fun translate(state: Interpreter.State): Insn {
             val invokeId = state.intOperand
-            val invoked = Interpreter(state.loader).interpret(invokeId)
+            check(invokeId != state.id) // todo
 
-            // todo : script invoking itself
+            val invoked = Interpreter(state.loader).interpret(invokeId)
 
             val args = ArrayList<Expr>()
             args.add(Expr.Cst(INT, invokeId))
@@ -75,7 +75,7 @@ interface Op {
                 returns.add(state.push(it))
             }
 
-            return Insn.Assignment(returns, Expr.Operation(invoked.returns, id, args))
+            return Insn.Assignment(returns, Expr.Operation(returns.map { it.type }, id, args))
         }
     }
 
