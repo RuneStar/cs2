@@ -28,7 +28,7 @@ enum class Type(val desc: Char) {
 
         private val map = values().associateBy { it.desc }
 
-        fun of(desc: Char): Type = map.getOrDefault(desc, Type.INT)
+        fun of(desc: Char): Type = map.getValue(desc)
 
         fun top(a: Type, b: Type): Type {
             if (a == b) return a

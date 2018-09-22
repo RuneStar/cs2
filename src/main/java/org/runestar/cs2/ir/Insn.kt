@@ -42,11 +42,9 @@ interface Insn {
         }
     }
 
-    data class Label(var name: String) : Insn {
+    data class Label(var id: Int) : Insn {
 
-        constructor(line: Int) : this(line.toString())
-
-        override fun toString(): String = "@$name"
+        override fun toString(): String = "@$id"
     }
 
     class Goto(var label: Label) : Insn {

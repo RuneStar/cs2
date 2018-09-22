@@ -545,7 +545,7 @@ interface Op {
         override fun translate(state: Interpreter.State): Insn {
             val args = ArrayList<Expr>()
             if (id >= 2000) {
-                args.add(state.pop(Type.INT))
+                args.add(state.pop(Type.COMPONENT))
             }
             var s = state.peekCst(Type.STRING).cst as String
             state.pop(Type.STRING)

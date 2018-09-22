@@ -28,19 +28,51 @@ class Interpreter(
         return func
     }
 
+    private fun interpret(insns: Array<Insn?>, state: State) {
+        if (insns[state.pc] != null) return
+        val op = Op.of(state.script.opcodes[state.pc])
+        val insn = op.translate(state)
+        insns[state.pc] = insn
+        val successorPcs = successorPcs(state.pc, insn).iterator()
+        if (successorPcs.hasNext()) {
+            state.pc = successorPcs.next()
+            interpret(insns, state)
+        }
+        while (successorPcs.hasNext()) {
+            interpret(insns, state.copy(successorPcs.next()))
+        }
+    }
+
+    private fun successorPcs(pc: Int, insn: Insn): Iterable<Int> {
+        return when (insn) {
+            is Insn.Assignment -> listOf(pc + 1)
+            is Insn.Goto -> listOf(insn.label.id)
+            is Insn.Branch -> {
+                listOf(pc + 1, insn.pass.id)
+            }
+            is Insn.Return -> return emptyList()
+            is Insn.Switch -> {
+                val list = ArrayList<Int>(1 + insn.map.size)
+                list.add(pc + 1)
+                insn.map.values.mapTo(list) { it.id }
+            }
+            else -> error(insn)
+        }
+    }
+
     private fun addLabels(insns: Array<Insn?>): Chain<Insn> {
         val chain = HashChain<Insn>()
         val labels = HashSet<Int>()
-        insns.forEachIndexed { i, insn ->
+        insns.forEach { insn ->
             when (insn) {
                 is Insn.Branch -> {
-                    labels.add(insn.pass.name.toInt())
+                    labels.add(insn.pass.id)
                 }
                 is Insn.Goto -> {
-                    labels.add(insn.label.name.toInt())
+                    labels.add(insn.label.id)
                 }
                 is Insn.Switch -> {
-                    insn.map.values.forEach { labels.add(it.name.toInt()) }
+                    insn.map.values.mapTo(labels) { it.id }
                 }
             }
         }
@@ -53,36 +85,6 @@ class Interpreter(
             }
         }
         return chain
-    }
-
-    private fun interpret(insns: Array<Insn?>, state: State) {
-        if (insns[state.pc] != null) return
-        val opcode = state.script.opcodes[state.pc]
-        val op = Op.of(opcode)
-        val insn = op.translate(state)
-        insns[state.pc] = insn
-        val successors = ArrayList<Int>()
-        when (insn) {
-            is Insn.Assignment -> successors.add(state.pc + 1)
-            is Insn.Goto -> successors.add(insn.label.name.toInt())
-            is Insn.Branch -> {
-                successors.add(state.pc + 1)
-                successors.add(insn.pass.name.toInt())
-            }
-            is Insn.Return -> return
-            is Insn.Switch -> {
-                successors.add(state.pc + 1)
-                successors.addAll(insn.map.values.map { it.name.toInt() })
-            }
-        }
-        val itr = successors.iterator()
-        if (itr.hasNext()) {
-            state.pc = itr.next()
-            interpret(insns, state)
-        }
-        while (itr.hasNext()) {
-            interpret(insns, state.copy(itr.next()))
-        }
     }
 
     class State(
