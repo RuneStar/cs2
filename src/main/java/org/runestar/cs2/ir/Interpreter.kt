@@ -4,6 +4,7 @@ import org.runestar.cs2.TopType
 import org.runestar.cs2.Type
 import org.runestar.cs2.bin.Script
 import org.runestar.cs2.bin.ScriptLoader
+import org.runestar.cs2.dfa.Phase
 import org.runestar.cs2.util.*
 
 class Interpreter(
@@ -24,6 +25,7 @@ class Interpreter(
         repeat(script.stringArgumentCount) { args.add(Expr.Var.l(it, Type.STRING)) }
         val returns = returnInsn.arguments.flatMapTo(ArrayList()) { it.types }
         val func = Func(id, args, addLabels(insns), returns)
+        Phase.DEFAULT.transform(func)
         cache[id] = func
         return func
     }
@@ -33,24 +35,24 @@ class Interpreter(
         val op = Op.of(state.script.opcodes[state.pc])
         val insn = op.translate(state)
         insns[state.pc] = insn
-        val successorPcs = successorPcs(state.pc, insn).iterator()
-        if (successorPcs.hasNext()) {
-            state.pc = successorPcs.next()
+        val successors = successorPcs(state.pc, insn)
+        if (successors.size == 1) {
+            state.pc = successors.single()
             interpret(insns, state)
-        }
-        while (successorPcs.hasNext()) {
-            interpret(insns, state.copy(successorPcs.next()))
+        } else if (successors.size > 1) {
+            val copy = state.copy()
+            for (s in successors) {
+                interpret(insns, copy.copy(s))
+            }
         }
     }
 
-    private fun successorPcs(pc: Int, insn: Insn): Iterable<Int> {
+    private fun successorPcs(pc: Int, insn: Insn): Collection<Int> {
         return when (insn) {
             is Insn.Assignment -> listOf(pc + 1)
             is Insn.Goto -> listOf(insn.label.id)
-            is Insn.Branch -> {
-                listOf(pc + 1, insn.pass.id)
-            }
-            is Insn.Return -> return emptyList()
+            is Insn.Branch -> listOf(pc + 1, insn.pass.id)
+            is Insn.Return -> emptyList()
             is Insn.Switch -> {
                 val list = ArrayList<Int>(1 + insn.map.size)
                 list.add(pc + 1)
@@ -65,15 +67,9 @@ class Interpreter(
         val labels = HashSet<Int>()
         insns.forEach { insn ->
             when (insn) {
-                is Insn.Branch -> {
-                    labels.add(insn.pass.id)
-                }
-                is Insn.Goto -> {
-                    labels.add(insn.label.id)
-                }
-                is Insn.Switch -> {
-                    insn.map.values.mapTo(labels) { it.id }
-                }
+                is Insn.Branch -> labels.add(insn.pass.id)
+                is Insn.Goto -> labels.add(insn.label.id)
+                is Insn.Switch -> insn.map.values.mapTo(labels) { it.id }
             }
         }
         insns.forEachIndexed { index, insn ->
@@ -142,6 +138,6 @@ class Interpreter(
 
         fun push(type: Type): Expr.Var = push(Expr.Cst(type, null))
 
-        fun copy(newPc: Int): State = State(id, script, loader, newPc, ListStack(intStack.delegate), ListStack(strStack.delegate))
+        fun copy(newPc: Int = pc) = State(id, script, loader, newPc, ListStack(ArrayList(intStack.delegate)), ListStack(ArrayList(strStack.delegate)))
     }
 }

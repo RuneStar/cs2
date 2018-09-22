@@ -10,9 +10,7 @@ data class Decompiler(val scriptLoader: ScriptLoader) {
     private val interpreter = Interpreter(scriptLoader)
 
     fun decompile(id: Int, appendable: Appendable): Appendable {
-        val func = interpreter.interpret(id)
-        Phase.DEFAULT.transform(func)
-        write(appendable, func)
+        write(appendable, interpreter.interpret(id))
         return appendable
     }
 }

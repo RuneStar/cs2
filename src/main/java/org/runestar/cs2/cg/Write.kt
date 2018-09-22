@@ -17,6 +17,8 @@ fun write(
     val root = reconstruct(func)
     writer.append("script").append(func.id.toString()).append('(')
     func.args.joinTo(writer) { "${it.type.literal} \$${it.name}" }
+    writer.append(")(")
+    func.returns.joinTo(writer) { it.literal }
     writer.append(") {")
     writer.indents++
     writeConstruct(writer, root)
@@ -97,10 +99,13 @@ private fun writeSwitch(writer: LineWriter, construct: Construct.Switch) {
     for ((n, con) in construct.map) {
         writer.indents++
         writer.nextLine()
-        writer.append("case ").append(n.toString()).append(" :")
+        writer.append("case ").append(n.toString()).append(" {")
         writer.indents++
         writeConstruct(writer, con)
-        writer.indents -= 2
+        writer.indents--
+        writer.nextLine()
+        writer.append('}')
+        writer.indents--
     }
     writer.nextLine()
     writer.append('}')
