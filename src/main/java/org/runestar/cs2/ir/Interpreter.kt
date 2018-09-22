@@ -2,13 +2,15 @@ package org.runestar.cs2.ir
 
 import org.runestar.cs2.TopType
 import org.runestar.cs2.Type
+import org.runestar.cs2.bin.ParamTypeLoader
 import org.runestar.cs2.bin.Script
 import org.runestar.cs2.bin.ScriptLoader
 import org.runestar.cs2.dfa.Phase
 import org.runestar.cs2.util.*
 
 class Interpreter(
-        val loader: ScriptLoader
+        val scriptLoader: ScriptLoader,
+        val paramTypeLoader: ParamTypeLoader
 ) {
 
     private val cache = HashMap<Int, Func>()
@@ -16,9 +18,9 @@ class Interpreter(
     fun interpret(id: Int): Func {
         val cached = cache[id]
         if (cached != null) return cached
-        val script = checkNotNull(loader.load(id))
+        val script = checkNotNull(scriptLoader.load(id))
         val insns = arrayOfNulls<Insn?>(script.opcodes.size)
-        interpret(insns, State(id, script, loader, 0))
+        interpret(insns, State(this, id, script, 0))
         val returnInsn = (insns.last { it != null && it is Insn.Return } as Insn.Return).expr as Expr.Operation
         val args = ArrayList<Expr.Var>()
         repeat(script.intArgumentCount) { args.add(Expr.Var.l(it, Type.INT)) }
@@ -84,9 +86,9 @@ class Interpreter(
     }
 
     class State(
+            val interpreter: Interpreter,
             val id: Int,
             val script: Script,
-            val loader: ScriptLoader,
             var pc: Int,
             val intStack: ListStack<Expr.Cst> = ListStack(ArrayList()),
             val strStack: ListStack<Expr.Cst> = ListStack(ArrayList())
@@ -110,11 +112,11 @@ class Interpreter(
             TopType.INT -> {
                 val expr = intStack.pop()
                 val t = Type.bottom(expr.type, type)
-                Expr.Var("#${Type.INT.desc}${intStack.size}", t)
+                Expr.Var("_${Type.INT.desc}${intStack.size}", t)
             }
             TopType.STRING -> {
                 strStack.pop()
-                Expr.Var("#${Type.STRING.desc}${strStack.size}", type)
+                Expr.Var("_${Type.STRING.desc}${strStack.size}", type)
             }
         }
 
@@ -127,17 +129,17 @@ class Interpreter(
             return when (cst.type.topType) {
                 TopType.INT -> {
                     intStack.push(cst)
-                    Expr.Var("#${Type.INT.desc}${intStack.size - 1}", cst.type)
+                    Expr.Var("_${Type.INT.desc}${intStack.size - 1}", cst.type)
                 }
                 TopType.STRING -> {
                     strStack.push(cst)
-                    Expr.Var("#${Type.STRING.desc}${strStack.size - 1}", cst.type)
+                    Expr.Var("_${Type.STRING.desc}${strStack.size - 1}", cst.type)
                 }
             }
         }
 
         fun push(type: Type): Expr.Var = push(Expr.Cst(type, null))
 
-        fun copy(newPc: Int = pc) = State(id, script, loader, newPc, ListStack(ArrayList(intStack.delegate)), ListStack(ArrayList(strStack.delegate)))
+        fun copy(newPc: Int = pc) = State(interpreter, id, script, newPc, ListStack(ArrayList(intStack.delegate)), ListStack(ArrayList(strStack.delegate)))
     }
 }

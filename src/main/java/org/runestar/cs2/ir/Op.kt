@@ -29,6 +29,7 @@ interface Op {
             list.addAll(BranchCompare.values().asList())
             list.addAll(Basic.values().asList())
             list.addAll(SetOn.values().asList())
+            list.addAll(ParamKey.values().asList())
             list.associateBy { it.id }
         }
 
@@ -59,21 +60,25 @@ interface Op {
 
         override fun translate(state: Interpreter.State): Insn {
             val invokeId = state.intOperand
-            check(invokeId != state.id) // todo
-
-            val invoked = Interpreter(state.loader).interpret(invokeId)
 
             val args = ArrayList<Expr>()
             args.add(Expr.Cst(INT, invokeId))
-            val stackArgs = ArrayList<Expr>()
-            invoked.args.forEach {
-                stackArgs.add(state.pop(it.type))
-            }
-            args.addAll(stackArgs.asReversed())
-
             val returns = ArrayList<Expr.Var>()
-            invoked.returns.forEach {
-                returns.add(state.push(it))
+            if (invokeId == state.id) {
+                // todo
+                repeat(state.script.intArgumentCount) { args.add(state.pop(Type.INT)) }
+                repeat(state.script.stringArgumentCount) { args.add(state.pop(Type.STRING)) }
+            } else {
+                val invoked = state.interpreter.interpret(invokeId)
+                val stackArgs = ArrayList<Expr>()
+                invoked.args.forEach {
+                    stackArgs.add(state.pop(it.type))
+                }
+
+
+                invoked.returns.forEach {
+                    returns.add(state.push(it))
+                }
             }
 
             return Insn.Assignment(returns, Expr.Operation(returns.map { it.type }, id, args))
@@ -177,9 +182,9 @@ interface Op {
 
         CC_SETPOSITION(arrayOf(INT u S, INT u S, INT u S, INT u S)),
         CC_SETSIZE(arrayOf(INT u S, INT u S, INT u S, INT u S)),
-        CC_SETHIDE(arrayOf(INT u S)),
-        _1005(arrayOf(INT u S)),
-        _1006(arrayOf(INT u S)),
+        CC_SETHIDE(arrayOf(BOOLEAN u S)),
+        _1005(arrayOf(BOOLEAN u S)),
+        _1006(arrayOf(BOOLEAN u S)),
 
         CC_SETSCROLLPOS(arrayOf(INT u S, INT u S)),
         CC_SETCOLOUR(arrayOf(INT u S)),
@@ -258,9 +263,9 @@ interface Op {
 
         IF_SETPOSITION(arrayOf(INT u S, INT u S, INT u S, INT u S, COMPONENT u S)),
         IF_SETSIZE(arrayOf(INT u S, INT u S, INT u S, INT u S, COMPONENT u S)),
-        IF_SETHIDE(arrayOf(INT u S, COMPONENT u S)),
-        _2005(arrayOf(INT u S, COMPONENT u S)),
-        _2006(arrayOf(INT u S, COMPONENT u S)),
+        IF_SETHIDE(arrayOf(BOOLEAN u S, COMPONENT u S)),
+        _2005(arrayOf(BOOLEAN u S, COMPONENT u S)),
+        _2006(arrayOf(BOOLEAN u S, COMPONENT u S)),
 
         IF_SETSCROLLPOS(arrayOf(INT u S, INT u S, COMPONENT u S)),
         IF_SETCOLOUR(arrayOf(INT u S, COMPONENT u S)),
@@ -490,9 +495,9 @@ interface Op {
         FROMDATE(arrayOf(INT u S), arrayOf(STRING u S)),
         TEXT_GENDER(arrayOf(STRING u S, STRING u S), arrayOf(STRING u S)),
         TOSTRING(arrayOf(INT u S), arrayOf(STRING u S)),
-        COMPARE(arrayOf(INT u S, STRING u S, STRING u S), arrayOf(INT u S)),
-        PARAHEIGHT(arrayOf(INT u S, INT u S), arrayOf(INT u S)),
-        PARAWIDTH(arrayOf(INT u S, INT u S), arrayOf(INT u S)),
+        COMPARE(arrayOf(STRING u S, STRING u S), arrayOf(INT u S)),
+        PARAHEIGHT(arrayOf(INT u S, INT u S, STRING u S), arrayOf(INT u S)),
+        PARAWIDTH(arrayOf(INT u S, INT u S, STRING u S), arrayOf(INT u S)),
         TEXT_SWITCH(arrayOf(INT u S, STRING u S, STRING u S), arrayOf(STRING u S)),
         ESCAPE(arrayOf(STRING u S), arrayOf(STRING u S)),
         APPEND_CHAR(arrayOf(INT u S, STRING u S), arrayOf(STRING u S)),
@@ -530,7 +535,72 @@ interface Op {
         _5308(defs = arrayOf(INT u S)),
         _5309(arrayOf(INT u S)),
 
+        _6500(defs = arrayOf(BOOLEAN u S)),
+        _6501(defs = arrayOf(INT u S, INT u S, STRING u S, INT u S, INT u S, STRING u S)),
+        _6502(defs = arrayOf(INT u S, INT u S, STRING u S, INT u S, INT u S, STRING u S)),
+        _6506(arrayOf(INT u S), arrayOf(INT u S, INT u S, STRING u S, INT u S, INT u S, STRING u S)),
+        _6507(arrayOf(INT u S, BOOLEAN u S, INT u S, BOOLEAN u S)),
+        _6511(arrayOf(INT u S), arrayOf(INT u S, INT u S, STRING u S, INT u S, INT u S, STRING u S)),
+        _6512(arrayOf(BOOLEAN u S)),
+
         _6518(defs = arrayOf(INT u S)),
+        _6519(defs = arrayOf(INT u S)),
+        _6520(),
+        _6521(),
+        _6522(arrayOf(INT u S, STRING u S)),
+        _6523(arrayOf(INT u S, STRING u S)),
+        _6524(defs = arrayOf(INT u S)),
+        _6525(defs = arrayOf(INT u S)),
+        _6526(defs = arrayOf(INT u S)),
+
+        _6600(),
+        _6601(arrayOf(INT u S), arrayOf(STRING u S)),
+        _6602(arrayOf(INT u S)),
+        _6603(defs = arrayOf(INT u S)),
+        _6604(arrayOf(INT u S)),
+        _6605(defs = arrayOf(BOOLEAN u S)),
+        _6606(arrayOf(INT u S)),
+        _6607(arrayOf(INT u S)),
+        _6608(arrayOf(INT u S)),
+        _6609(arrayOf(INT u S)),
+        _6610(defs = arrayOf(INT u S, INT u S)),
+        _6611(arrayOf(INT u S), arrayOf(INT u S)),
+        _6612(arrayOf(INT u S), arrayOf(INT u S, INT u S)),
+        _6613(arrayOf(INT u S), arrayOf(INT u S, INT u S, INT u S, INT u S)),
+        _6614(arrayOf(INT u S), arrayOf(INT u S)),
+        _6615(defs = arrayOf(INT u S, INT u S)),
+        _6616(defs = arrayOf(INT u S)),
+        _6617(arrayOf(INT u S), arrayOf(INT u S, INT u S)),
+        _6618(arrayOf(INT u S), arrayOf(INT u S, INT u S)),
+        _6619(arrayOf(INT u S, INT u S)),
+        _6620(arrayOf(INT u S, INT u S)),
+        _6621(arrayOf(INT u S, INT u S), arrayOf(INT u S)),
+        _6622(defs = arrayOf(INT u S, INT u S)),
+        _6623(arrayOf(INT u S), arrayOf(INT u S)),
+        _6624(arrayOf(INT u S)),
+        _6625(),
+        _6626(arrayOf(INT u S)),
+        _6627(),
+        _6628(arrayOf(INT u S)),
+        _6629(arrayOf(INT u S)),
+        _6630(arrayOf(INT u S)),
+        _6631(),
+        _6632(arrayOf(BOOLEAN u S)),
+        _6633(arrayOf(INT u S, BOOLEAN u S)),
+        _6634(arrayOf(INT u S, INT u S)),
+        _6635(defs = arrayOf(BOOLEAN u S)),
+        _6636(arrayOf(INT u S), arrayOf(BOOLEAN u S)),
+        _6637(arrayOf(INT u S), arrayOf(BOOLEAN u S)),
+        _6638(arrayOf(INT u S, INT u S), arrayOf(INT u S)),
+        _6639(defs = arrayOf(INT u S, INT u S)),
+        _6640(defs = arrayOf(INT u S, INT u S)),
+        _6693(arrayOf(INT u S), arrayOf(STRING u S)),
+        _6694(arrayOf(INT u S), arrayOf(INT u S)),
+        _6695(arrayOf(INT u S), arrayOf(INT u S)),
+        _6696(arrayOf(INT u S), arrayOf(INT u S)),
+        _6697(defs = arrayOf(INT u S)),
+        _6698(defs = arrayOf(INT u S)),
+        _6699(defs = arrayOf(INT u S)),
         ;
 
         override val id: Int = namesReverse.getValue(name)
@@ -656,6 +726,23 @@ interface Op {
             args.add(state.pop(Type.INT))
             args.reverse()
             return Insn.Assignment(emptyList(), Expr.Operation(emptyList(), id, args))
+        }
+    }
+
+    enum class ParamKey : Op {
+        _6513,
+        _6514,
+        _6515,
+        _6516,
+        ;
+
+        override val id = namesReverse.getValue(name)
+
+        override fun translate(state: Interpreter.State): Insn {
+            val paramKeyId = state.peekCst(Type.INT).cst as Int
+            val args = mutableListOf<Expr>(state.pop(Type.INT), state.pop(INT))
+            val paramType = state.interpreter.paramTypeLoader.load(paramKeyId)
+            return Insn.Assignment(listOf(state.push(paramType)), Expr.Operation(listOf(paramType), id, args))
         }
     }
 }

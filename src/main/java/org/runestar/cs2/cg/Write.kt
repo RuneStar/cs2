@@ -125,6 +125,7 @@ private fun writeAssignment(writer: LineWriter, insn: Insn.Assignment) {
         writeExpr(writer, defs.next())
     }
     while (defs.hasNext()) {
+        writer.append(", ")
         writeExpr(writer, defs.next())
     }
     if (insn.definitions.isNotEmpty()) {
@@ -160,7 +161,7 @@ private fun writeConst(writer: LineWriter, expr: Expr.Cst) {
         Type.BOOLEAN -> when (expr.cst as Int) {
             0 -> writer.append("false")
             1 -> writer.append("true")
-            else -> error(expr)
+            else -> writer.append(expr.cst.toString()) // todo
         }
         else -> writer.append(expr.cst.toString())
     }
