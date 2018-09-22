@@ -24,6 +24,7 @@ enum class Type(val desc: Char) {
     LOC('l'),
     AREA('R'),
     MAPAREA('`'),
+    OBJECT('O'),
 
     TYPE('?'),
     ;
@@ -53,5 +54,3 @@ enum class Type(val desc: Char) {
         }
     }
 }
-
-// O
