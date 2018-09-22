@@ -1,7 +1,6 @@
 package org.runestar.cs2.ir
 
 import org.runestar.cs2.Opcodes
-import org.runestar.cs2.TopType
 import org.runestar.cs2.Type.*
 import org.runestar.cs2.Type
 import org.runestar.cs2.ir.Op.Src.*
@@ -29,7 +28,7 @@ interface Op {
             list.addAll(PushCst.values().asList())
             list.addAll(BranchCompare.values().asList())
             list.addAll(Basic.values().asList())
-            list.addAll(CcIfSetOn.values().asList())
+            list.addAll(SetOn.values().asList())
             list.associateBy { it.id }
         }
 
@@ -66,9 +65,11 @@ interface Op {
 
             val args = ArrayList<Expr>()
             args.add(Expr.Cst(INT, invokeId))
+            val stackArgs = ArrayList<Expr>()
             invoked.args.forEach {
-                args.add(state.pop(it.type))
+                stackArgs.add(state.pop(it.type))
             }
+            args.addAll(stackArgs.asReversed())
 
             val returns = ArrayList<Expr.Var>()
             invoked.returns.forEach {
@@ -113,14 +114,16 @@ interface Op {
         }
     }
 
-    private enum class BranchCompare(override val id: Int) : Op {
+    private enum class BranchCompare : Op {
 
-        BRANCH_NOT(Opcodes.BRANCH_NOT),
-        BRANCH_EQUALS(Opcodes.BRANCH_EQUALS),
-        BRANCH_LESS_THAN(Opcodes.BRANCH_LESS_THAN),
-        BRANCH_GREATER_THAN(Opcodes.BRANCH_GREATER_THAN),
-        BRANCH_LESS_THAN_OR_EQUALS(Opcodes.BRANCH_LESS_THAN_OR_EQUALS),
-        BRANCH_GREATER_THAN_OR_EQUALS(Opcodes.BRANCH_GREATER_THAN_OR_EQUALS);
+        BRANCH_NOT,
+        BRANCH_EQUALS,
+        BRANCH_LESS_THAN,
+        BRANCH_GREATER_THAN,
+        BRANCH_LESS_THAN_OR_EQUALS,
+        BRANCH_GREATER_THAN_OR_EQUALS;
+
+        override val id = namesReverse.getValue(name)
 
         override fun translate(state: Interpreter.State): Insn {
             val r = state.pop(INT)
@@ -128,12 +131,6 @@ interface Op {
             val expr = Expr.Operation(emptyList(), id, mutableListOf(l, r))
             return Insn.Branch(expr, Insn.Label(state.pc + state.intOperand + 1))
         }
-    }
-
-    private data class Arg(val type: Type, val src: Src)
-
-    private enum class Src {
-        L, S, O
     }
 
     private enum class PushCst(val type: Type) : Op {
@@ -146,6 +143,12 @@ interface Op {
             val cst = state.operand(type)
             return Insn.Assignment(listOf(state.push(cst)), cst)
         }
+    }
+
+    private data class Arg(val type: Type, val src: Src)
+
+    private enum class Src {
+        L, S, O
     }
 
     private enum class Basic(val args: Array<Arg> = emptyArray(), val defs: Array<Arg> = emptyArray()) : Op {
@@ -180,32 +183,32 @@ interface Op {
 
         CC_SETSCROLLPOS(arrayOf(INT u S, INT u S)),
         CC_SETCOLOUR(arrayOf(INT u S)),
-        CC_SETFILL(arrayOf(INT u S)),
+        CC_SETFILL(arrayOf(BOOLEAN u S)),
         CC_SETTRANS(arrayOf(INT u S)),
         CC_SETLINEWID(arrayOf(INT u S)),
         CC_SETGRAPHIC(arrayOf(INT u S)),
         CC_SET2DANGLE(arrayOf(INT u S)),
-        CC_SETTILING(arrayOf(INT u S)),
+        CC_SETTILING(arrayOf(BOOLEAN u S)),
         CC_SETMODEL(arrayOf(INT u S)),
         CC_SETMODELANGLE(arrayOf(INT u S, INT u S, INT u S, INT u S, INT u S, INT u S)),
         CC_SETMODELANIM(arrayOf(INT u S)),
-        CC_SETMODELORTHOG(arrayOf(INT u S)),
+        CC_SETMODELORTHOG(arrayOf(BOOLEAN u S)),
         CC_SETTEXT(arrayOf(STRING u S)),
         CC_SETTEXTFONT(arrayOf(INT u S)),
         CC_SETTEXTALIGN(arrayOf(INT u S, INT u S, INT u S)),
-        CC_SETTEXTANTIMACRO(arrayOf(INT u S)),
+        CC_SETTEXTANTIMACRO(arrayOf(BOOLEAN u S)),
         CC_SETOUTLINE(arrayOf(INT u S)),
         CC_SETGRAPHICSHADOW(arrayOf(INT u S)),
-        CC_SETVFLIP(arrayOf(INT u S)),
-        CC_SETHFLIP(arrayOf(INT u S)),
+        CC_SETVFLIP(arrayOf(BOOLEAN u S)),
+        CC_SETHFLIP(arrayOf(BOOLEAN u S)),
         CC_SETSCROLLSIZE(arrayOf(INT u S, INT u S)),
         _1121(),
         _1122(arrayOf(INT u S)),
         _1123(arrayOf(INT u S)),
         _1124(arrayOf(INT u S)),
         _1125(arrayOf(INT u S)),
-        _1126(arrayOf(INT u S)),
-        _1127(arrayOf(INT u S)),
+        _1126(arrayOf(BOOLEAN u S)),
+        _1127(arrayOf(BOOLEAN u S)),
 
         CC_SETOBJECT(arrayOf(INT u S, INT u S)),
         CC_SETNPCHEAD(arrayOf(INT u S)),
@@ -261,31 +264,32 @@ interface Op {
 
         IF_SETSCROLLPOS(arrayOf(INT u S, INT u S, COMPONENT u S)),
         IF_SETCOLOUR(arrayOf(INT u S, COMPONENT u S)),
+        IF_SETFILL(arrayOf(BOOLEAN u S, COMPONENT u S)),
         IF_SETTRANS(arrayOf(INT u S, COMPONENT u S)),
         IF_SETLINEWID(arrayOf(INT u S, COMPONENT u S)),
         IF_SETGRAPHIC(arrayOf(INT u S, COMPONENT u S)),
         IF_SET2DANGLE(arrayOf(INT u S, COMPONENT u S)),
-        IF_SETTILING(arrayOf(INT u S, COMPONENT u S)),
+        IF_SETTILING(arrayOf(BOOLEAN u S, COMPONENT u S)),
         IF_SETMODEL(arrayOf(INT u S, COMPONENT u S)),
         IF_SETMODELANGLE(arrayOf(INT u S, INT u S, INT u S, INT u S, INT u S, INT u S, COMPONENT u S)),
         IF_SETMODELANIM(arrayOf(INT u S, COMPONENT u S)),
-        IF_SETMODELORTHOG(arrayOf(INT u S, COMPONENT u S)),
+        IF_SETMODELORTHOG(arrayOf(BOOLEAN u S, COMPONENT u S)),
         IF_SETTEXT(arrayOf(STRING u S, COMPONENT u S)),
         IF_SETTEXTFONT(arrayOf(INT u S, COMPONENT u S)),
         IF_SETTEXTALIGN(arrayOf(INT u S, INT u S, INT u S, COMPONENT u S)),
-        IF_SETTEXTANTIMACRO(arrayOf(INT u S, COMPONENT u S)),
+        IF_SETTEXTANTIMACRO(arrayOf(BOOLEAN u S, COMPONENT u S)),
         IF_SETOUTLINE(arrayOf(INT u S, COMPONENT u S)),
         IF_SETGRAPHICSHADOW(arrayOf(INT u S, COMPONENT u S)),
-        IF_SETVFLIP(arrayOf(INT u S, COMPONENT u S)),
-        IF_SETHFLIP(arrayOf(INT u S, COMPONENT u S)),
+        IF_SETVFLIP(arrayOf(BOOLEAN u S, COMPONENT u S)),
+        IF_SETHFLIP(arrayOf(BOOLEAN u S, COMPONENT u S)),
         IF_SETSCROLLSIZE(arrayOf(INT u S, INT u S, COMPONENT u S)),
         _2121(arrayOf(COMPONENT u S)),
         _2122(arrayOf(INT u S, COMPONENT u S)),
         _2123(arrayOf(INT u S, COMPONENT u S)),
         _2124(arrayOf(INT u S, COMPONENT u S)),
         _2125(arrayOf(INT u S, COMPONENT u S)),
-        _2126(arrayOf(INT u S, COMPONENT u S)),
-        _2127(arrayOf(INT u S, COMPONENT u S)),
+        _2126(arrayOf(BOOLEAN u S, COMPONENT u S)),
+        _2127(arrayOf(BOOLEAN u S, COMPONENT u S)),
 
         IF_SETOBJECT(arrayOf(INT u S, INT u S, COMPONENT u S)),
         IF_SETNPCHEAD(arrayOf(INT u S, COMPONENT u S)),
@@ -572,7 +576,7 @@ interface Op {
         }
     }
 
-    private enum class CcIfSetOn() : Op {
+    private enum class SetOn : Op {
 
         CC_SETONCLICK,
         CC_SETONHOLD,
