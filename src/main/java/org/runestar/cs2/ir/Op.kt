@@ -654,6 +654,7 @@ interface Op {
                 args.add(state.pop(Type.of(c)))
             }
             args.add(state.pop(Type.INT))
+            args.reverse()
             return Insn.Assignment(emptyList(), Expr.Operation(emptyList(), id, args))
         }
     }
