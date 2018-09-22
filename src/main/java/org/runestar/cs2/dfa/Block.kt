@@ -39,7 +39,7 @@ fun buildBlocks(func: Func): DirectedGraph<BasicBlock> {
                 graph.addSuccessor(block, blockSet.blocks[i + 1])
             }
             is Insn.Return -> {}
-            is Insn.Assignment -> graph.addSuccessor(block, blockSet.blocks[i + 1])
+            is Insn.Assignment, is Insn.Label -> graph.addSuccessor(block, blockSet.blocks[i + 1])
             else -> error(last)
         }
     }

@@ -99,6 +99,10 @@ private fun reconstructBlock(
             val suc = graph.immediateSuccessors(block).single()
             return reconstructBlock(graph, dtree, seq, dominator, suc)
         }
+        is Insn.Label -> {
+            val suc = graph.immediateSuccessors(block).single()
+            return reconstructBlock(graph, dtree, seq, dominator, suc)
+        }
     }
     return null
 }
