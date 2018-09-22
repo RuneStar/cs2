@@ -25,6 +25,7 @@ enum class Type(val desc: Char) {
     AREA('R'),
     MAPAREA('`'),
     OBJECT('O'),
+    FONTMETRICS('f'),
 
     TYPE('?'),
     ;
