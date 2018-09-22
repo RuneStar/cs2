@@ -1,12 +1,14 @@
 package org.runestar.cs2
 
 enum class TopType {
+
     INT, STRING;
 
     val type: Type get() = if (this == INT) Type.INT else Type.STRING
 }
 
 enum class Type(val desc: Char) {
+
     INT('i'),
     STRING('s'),
     COMPONENT('I'),
@@ -16,6 +18,12 @@ enum class Type(val desc: Char) {
     STAT('S'),
     GRAPHIC('d'),
     INV('v'),
+    MODEL('m'),
+    COORDGRID('c'),
+    CATEGORY('y'),
+    LOC('l'),
+    AREA('R'),
+    MAPAREA('`'),
 
     TYPE('?'),
     ;
@@ -46,4 +54,4 @@ enum class Type(val desc: Char) {
     }
 }
 
-// O, R, `, c, l, m, y
+// O
