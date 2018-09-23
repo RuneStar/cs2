@@ -29,13 +29,13 @@ public final class Opcodes {
     public static final int POP_INT_DISCARD = 38;
     public static final int POP_STRING_DISCARD = 39;
     public static final int GOSUB_WITH_PARAMS = 40;
-    public static final int _42 = 42;
-    public static final int _43 = 43;
+    public static final int GET_VARC_INT = 42;
+    public static final int SET_VARC_INT = 43;
     public static final int DEFINE_ARRAY = 44;
     public static final int PUSH_ARRAY_INT = 45;
     public static final int POP_ARRAY_INT = 46;
-    public static final int _47 = 47;
-    public static final int _48 = 48;
+    public static final int GET_VARC_STRING = 47;
+    public static final int SET_VARC_STRING = 48;
     public static final int SWITCH = 60;
     public static final int CC_CREATE = 100;
     public static final int CC_DELETE = 101;
