@@ -7,7 +7,7 @@ interface Insn {
         var expr: Expr
     }
 
-    class Assignment(val definitions: List<Expr.Var>, override var expr: Expr) : Exprd {
+    class Assignment(var definitions: List<Expr.Var>, override var expr: Expr) : Exprd {
 
         override fun toString(): String {
             val sb = StringBuilder()

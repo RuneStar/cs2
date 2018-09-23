@@ -56,7 +56,7 @@ interface Op {
 
     private object Invoke : Op {
 
-        override val id = Opcodes.GOSUB_WITH_PARAMS
+        override val id = Opcodes.INVOKE
 
         override fun translate(state: Interpreter.State): Insn {
             val invokeId = state.intOperand
@@ -109,7 +109,7 @@ interface Op {
         override fun translate(state: Interpreter.State): Insn {
             val key = state.pop(INT)
             val enumId = state.pop(INT)
-            val valueTypeCst = state.intStack.peek().cst as Int
+            val valueTypeCst = checkNotNull(state.intStack.peek().cst)
             val valueType = state.pop(TYPE)
             val keyType = state.pop(TYPE)
             val args = mutableListOf<Expr>(keyType, valueType, enumId, key)
@@ -762,11 +762,9 @@ interface Op {
             if (id >= 2000) {
                 args.add(state.pop(Type.COMPONENT))
             }
-            var s = state.strStack.peek().cst as String
-            state.pop(Type.STRING)
+            var s = checkNotNull(state.strStack.pop().cst)
             if (s.isNotEmpty() && s.last() == 'Y') {
-                val n = state.intStack.peek().cst as Int
-                state.pop(Type.INT)
+                val n = checkNotNull(state.intStack.pop().cst)
                 repeat(n) {
                     args.add(state.pop(Type.INT))
                 }
@@ -791,7 +789,7 @@ interface Op {
         override val id = namesReverse.getValue(name)
 
         override fun translate(state: Interpreter.State): Insn {
-            val paramKeyId = state.intStack.peek().cst as Int
+            val paramKeyId = checkNotNull(state.intStack.peek().cst)
             val args = mutableListOf<Expr>(state.pop(Type.INT), state.pop(INT))
             val paramType = state.interpreter.paramTypeLoader.load(paramKeyId)
             return Insn.Assignment(listOf(state.push(paramType)), Expr.Operation(listOf(paramType), id, args))

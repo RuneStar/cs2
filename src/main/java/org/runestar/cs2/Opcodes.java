@@ -28,7 +28,7 @@ public final class Opcodes {
     public static final int JOIN_STRING = 37;
     public static final int POP_INT_DISCARD = 38;
     public static final int POP_STRING_DISCARD = 39;
-    public static final int GOSUB_WITH_PARAMS = 40;
+    public static final int INVOKE = 40;
     public static final int GET_VARC_INT = 42;
     public static final int SET_VARC_INT = 43;
     public static final int DEFINE_ARRAY = 44;

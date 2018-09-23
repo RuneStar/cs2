@@ -12,7 +12,7 @@ class Decompiler(
 
     private val interpreter = Interpreter(scriptLoader, paramTypeLoader)
 
-    fun decompile(id: Int, appendable: Appendable): Appendable {
+    fun <A : Appendable> decompile(id: Int, appendable: A): A {
         write(appendable, interpreter.interpret(id))
         return appendable
     }

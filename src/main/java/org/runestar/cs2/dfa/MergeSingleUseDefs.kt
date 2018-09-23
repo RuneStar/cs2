@@ -14,7 +14,11 @@ object MergeSingleUseDefs : Phase {
             val def = insn.singleDef() ?: return@dfsDown false
             val uses = uses(graph, block, insn as Insn.Assignment)
             if (uses.isEmpty()) {
-                block.remove(insn)
+                if (insn.expr is Expr.Operation) {
+                    insn.definitions = emptyList()
+                } else {
+                    block.remove(insn)
+                }
             } else if (uses.size == 1) {
                 val use = uses.first()
                 if (singleDef(graph, use.first, use.second, def)) {
