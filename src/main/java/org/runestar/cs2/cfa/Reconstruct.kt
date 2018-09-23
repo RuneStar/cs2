@@ -80,7 +80,7 @@ private fun reconstructBlock(
                 val afterIf = reconstructBlock(graph, dtree, branch.construct, pass, pass)
                 val elze = Construct.Seq()
                 iff.elze = elze
-                reconstructBlock(graph, dtree, elze, fail, fail)
+                val afterElze = reconstructBlock(graph, dtree, elze, fail, fail)
                 if (elze.insns.isEmpty() && elze.next == null) {
                     iff.elze = null
                 } else if (elze.insns.isEmpty() && elze.next is Construct.If && elze.next!!.next == null) {
@@ -91,6 +91,8 @@ private fun reconstructBlock(
 
                 if (afterIf != null) {
                     return reconstructBlock(graph, dtree, iff, block, afterIf)
+                } else if (afterElze != null) {
+                    return reconstructBlock(graph, dtree, iff, block, afterElze)
                 }
             }
         }
