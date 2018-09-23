@@ -92,8 +92,7 @@ class Interpreter(
             var pc: Int = 0,
             val intStack: ListStack<Val<Int?>> = ListStack(ArrayList()),
             val strStack: ListStack<Val<String?>> = ListStack(ArrayList()),
-            var intVarCounter: Int = 0,
-            var strVarCounter: Int = 0
+            private var stackVarCounter: Int = 0
     ) {
 
         val intOperand: Int get() = script.intOperands[pc]
@@ -118,12 +117,12 @@ class Interpreter(
         fun push(type: Type, cst: Any? = null): Expr.Var {
             return when (type.topType) {
                 TopType.INT -> {
-                    val v = Val(cst as Int?, type, intVarCounter++)
+                    val v = Val(cst as Int?, type, ++stackVarCounter)
                     intStack.push(v)
                     v.toExpr()
                 }
                 TopType.STRING -> {
-                    val v = Val(cst as String?, type, strVarCounter++)
+                    val v = Val(cst as String?, type, ++stackVarCounter)
                     strStack.push(v)
                     v.toExpr()
                 }
@@ -138,8 +137,7 @@ class Interpreter(
                     newPc,
                     ListStack(ArrayList(intStack.delegate)),
                     ListStack(ArrayList(strStack.delegate)),
-                    intVarCounter,
-                    strVarCounter
+                    stackVarCounter
             )
         }
     }

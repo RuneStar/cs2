@@ -11,17 +11,10 @@ typealias BasicBlock = PartitionedChain.Block<Insn>
 fun buildBlocks(func: Func): DirectedGraph<BasicBlock> {
     val blockHeads = ArrayList<Insn>()
     blockHeads.add(func.insns.first)
-    val itr = func.insns.iterator()
-    var addNext = false
-    while (itr.hasNext()) {
-        val insn = itr.next()
-        if (addNext) {
-            blockHeads.add(insn)
-            addNext = false
-        }
+    for (insn in func.insns) {
         when (insn) {
-            is Insn.Label -> blockHeads.add(insn)
-            is Insn.Branch, is Insn.Switch -> addNext = true
+            is Insn.Label -> if (blockHeads.last() != insn) blockHeads.add(insn)
+            is Insn.Branch, is Insn.Switch -> blockHeads.add(func.insns.next(insn)!!)
         }
     }
     val blockSet = PartitionedChain(func.insns, blockHeads)

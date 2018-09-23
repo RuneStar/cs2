@@ -10,7 +10,7 @@ object AddShortCircuitOperators : Phase {
 
     override fun transform(func: Func) {
         ors(func)
-        ands(func)
+//        ands(func)
     }
 
     private fun ors(func: Func) {
