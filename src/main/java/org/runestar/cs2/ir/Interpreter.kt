@@ -20,11 +20,11 @@ class Interpreter(
         if (cached != null) return cached
         val script = checkNotNull(scriptLoader.load(id))
         val insns = arrayOfNulls<Insn?>(script.opcodes.size)
-        interpret(insns, State(this, id, script, 0))
+        interpret(insns, State(this, id, script))
         val returnInsn = (insns.last { it != null && it is Insn.Return } as Insn.Return).expr as Expr.Operation
         val args = ArrayList<Expr.Var>()
-        repeat(script.intArgumentCount) { args.add(Expr.Var.l(it, Type.INT)) }
-        repeat(script.stringArgumentCount) { args.add(Expr.Var.l(it, Type.STRING)) }
+        repeat(script.intArgumentCount) { args.add(Expr.Var(it, Type.INT)) }
+        repeat(script.stringArgumentCount) { args.add(Expr.Var(it, Type.STRING)) }
         val returns = returnInsn.arguments.flatMapTo(ArrayList()) { it.types }
         val func = Func(id, args, addLabels(insns), returns)
         Phase.DEFAULT.transform(func)
@@ -89,9 +89,11 @@ class Interpreter(
             val interpreter: Interpreter,
             val id: Int,
             val script: Script,
-            var pc: Int,
-            val intStack: ListStack<Expr.Cst> = ListStack(ArrayList()),
-            val strStack: ListStack<Expr.Cst> = ListStack(ArrayList())
+            var pc: Int = 0,
+            val intStack: ListStack<Val<Int?>> = ListStack(ArrayList()),
+            val strStack: ListStack<Val<String?>> = ListStack(ArrayList()),
+            var intVarCounter: Int = 0,
+            var strVarCounter: Int = 0
     ) {
 
         val intOperand: Int get() = script.intOperands[pc]
@@ -109,37 +111,36 @@ class Interpreter(
         val switch: Map<Int, Int> get() = script.switches[intOperand]
 
         fun pop(type: Type): Expr.Var = when (type.topType) {
-            TopType.INT -> {
-                val expr = intStack.pop()
-                val t = Type.bottom(expr.type, type)
-                Expr.Var("_${Type.INT.desc}${intStack.size}", t)
-            }
-            TopType.STRING -> {
-                strStack.pop()
-                Expr.Var("_${Type.STRING.desc}${strStack.size}", type)
-            }
+            TopType.INT -> intStack.pop().toExpr(type)
+            TopType.STRING -> strStack.pop().toExpr(type)
         }
 
-        fun peekCst(type: Type): Expr.Cst = when (type.topType) {
-            TopType.INT -> intStack.peek()
-            TopType.STRING -> strStack.peek()
-        }
-
-        fun push(cst: Expr.Cst): Expr.Var {
-            return when (cst.type.topType) {
+        fun push(type: Type, cst: Any? = null): Expr.Var {
+            return when (type.topType) {
                 TopType.INT -> {
-                    intStack.push(cst)
-                    Expr.Var("_${Type.INT.desc}${intStack.size - 1}", cst.type)
+                    val v = Val(cst as Int?, type, intVarCounter++)
+                    intStack.push(v)
+                    v.toExpr()
                 }
                 TopType.STRING -> {
-                    strStack.push(cst)
-                    Expr.Var("_${Type.STRING.desc}${strStack.size - 1}", cst.type)
+                    val v = Val(cst as String?, type, strVarCounter++)
+                    strStack.push(v)
+                    v.toExpr()
                 }
             }
         }
 
-        fun push(type: Type): Expr.Var = push(Expr.Cst(type, null))
-
-        fun copy(newPc: Int = pc) = State(interpreter, id, script, newPc, ListStack(ArrayList(intStack.delegate)), ListStack(ArrayList(strStack.delegate)))
+        fun copy(newPc: Int = pc): State {
+            return State(
+                    interpreter,
+                    id,
+                    script,
+                    newPc,
+                    ListStack(ArrayList(intStack.delegate)),
+                    ListStack(ArrayList(strStack.delegate)),
+                    intVarCounter,
+                    strVarCounter
+            )
+        }
     }
 }

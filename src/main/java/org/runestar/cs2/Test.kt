@@ -8,6 +8,10 @@ fun main(args: Array<String>) {
 
     // interesting : 1320, 982, 20, 454, 170, 183, 1360, 1707, 1717
 
-    val decompiler = Decompiler(ScriptLoader.Binary(Paths.get("scripts"), ""), ParamTypeLoader.IntOnly)
-    println(decompiler.decompile(1707, StringBuilder()))
+    val decompiler = Decompiler(ScriptLoader.Binary(
+            Paths.get("scripts"), ""),
+            ParamTypeLoader.IntOnly
+    )
+
+    println(decompiler.decompile(661, StringBuilder()))
 }

@@ -156,7 +156,10 @@ private fun writeConst(writer: LineWriter, expr: Expr.Cst) {
         Type.TYPE -> writer.append(Type.of((expr.cst as Int).toChar()).literal)
         Type.COMPONENT -> {
             val n = expr.cst as Int
-            writer.append("${n ushr 16}").append(':').append("${n and 0xFFFF}")
+            when (n) {
+                -1 -> writer.append("-1")
+                else -> writer.append("${n ushr 16}").append(':').append("${n and 0xFFFF}")
+            }
         }
         Type.BOOLEAN -> when (expr.cst as Int) {
             0 -> writer.append("false")

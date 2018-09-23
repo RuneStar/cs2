@@ -109,11 +109,11 @@ interface Op {
         override fun translate(state: Interpreter.State): Insn {
             val key = state.pop(INT)
             val enumId = state.pop(INT)
-            val valueTypeCst = state.peekCst(INT)
+            val valueTypeCst = state.intStack.peek().cst as Int
             val valueType = state.pop(TYPE)
             val keyType = state.pop(TYPE)
             val args = mutableListOf<Expr>(keyType, valueType, enumId, key)
-            val valueTypeType = Type.of((valueTypeCst.cst as Int).toChar())
+            val valueTypeType = Type.of(valueTypeCst.toChar())
             val value = state.push(valueTypeType)
             return Insn.Assignment(listOf(value), Expr.Operation(listOf(value.type), id, args))
         }
@@ -146,7 +146,7 @@ interface Op {
 
         override fun translate(state: Interpreter.State): Insn {
             val cst = state.operand(type)
-            return Insn.Assignment(listOf(state.push(cst)), cst)
+            return Insn.Assignment(listOf(state.push(type, cst.cst)), cst)
         }
     }
 
@@ -509,7 +509,7 @@ interface Op {
         SUBSTRING(arrayOf(STRING u S, INT u S, INT u S), arrayOf(STRING u S)),
         REMOVETAGS(arrayOf(STRING u S), arrayOf(STRING u S)),
         STRING_INDEXOF_CHAR(arrayOf(STRING u S, INT u S), arrayOf(INT u S)),
-        STRING_INDEXOF_STRING(arrayOf(STRING u S, STRING u S), arrayOf(INT u S)),
+        STRING_INDEXOF_STRING(arrayOf(STRING u S, STRING u S, INT u S), arrayOf(INT u S)),
 
         OC_NAME(arrayOf(INT u S), arrayOf(STRING u S)),
         OC_OP(arrayOf(INT u S, INT u S), arrayOf(STRING u S)),
@@ -519,6 +519,7 @@ interface Op {
         OC_CERT(arrayOf(INT u S), arrayOf(INT u S)),
         OC_UNCERT(arrayOf(INT u S), arrayOf(INT u S)),
         _4207(arrayOf(INT u S), arrayOf(INT u S)),
+        // 4209
 
         _5000(defs = arrayOf(INT u S)),
         _5003(arrayOf(INT u S, INT u S), arrayOf(INT u S, INT u S, INT u S, STRING u S, STRING u S, STRING u S)),
@@ -615,7 +616,7 @@ interface Op {
             for (arg in args) {
                 when (arg.src) {
                     S -> exprArgs.add(stackArgs.pop())
-                    L -> exprArgs.add(Expr.Var.l(state.intOperand, arg.type))
+                    L -> exprArgs.add(Expr.Var(state.intOperand, arg.type))
                     O -> exprArgs.add(state.operand(arg.type))
                 }
             }
@@ -623,7 +624,7 @@ interface Op {
             for (def in defs) {
                 when (def.src) {
                     S -> exprDefs.add(state.push(def.type))
-                    L -> exprDefs.add(Expr.Var.l(state.intOperand, def.type))
+                    L -> exprDefs.add(Expr.Var(state.intOperand, def.type))
                     O -> throw IllegalStateException()
                 }
             }
@@ -710,10 +711,10 @@ interface Op {
             if (id >= 2000) {
                 args.add(state.pop(Type.COMPONENT))
             }
-            var s = state.peekCst(Type.STRING).cst as String
+            var s = state.strStack.peek().cst as String
             state.pop(Type.STRING)
             if (s.isNotEmpty() && s.last() == 'Y') {
-                val n = state.peekCst(Type.INT).cst as Int
+                val n = state.intStack.peek().cst as Int
                 state.pop(Type.INT)
                 repeat(n) {
                     args.add(state.pop(Type.INT))
@@ -739,7 +740,7 @@ interface Op {
         override val id = namesReverse.getValue(name)
 
         override fun translate(state: Interpreter.State): Insn {
-            val paramKeyId = state.peekCst(Type.INT).cst as Int
+            val paramKeyId = state.intStack.peek().cst as Int
             val args = mutableListOf<Expr>(state.pop(Type.INT), state.pop(INT))
             val paramType = state.interpreter.paramTypeLoader.load(paramKeyId)
             return Insn.Assignment(listOf(state.push(paramType)), Expr.Operation(listOf(paramType), id, args))

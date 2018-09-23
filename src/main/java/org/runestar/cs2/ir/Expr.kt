@@ -2,6 +2,8 @@ package org.runestar.cs2.ir
 
 import org.runestar.cs2.Type
 import org.runestar.cs2.names
+import java.lang.Math.abs
+import java.lang.StringBuilder
 
 interface Expr {
 
@@ -18,17 +20,19 @@ interface Expr {
         override fun toString(): String = cst.toString()
     }
 
-    class Var(val name: String, override var type: Type) : Expr {
+    class Var(val id: Int, override var type: Type) : Expr {
 
-        override fun hashCode(): Int = name.hashCode()
-
-        override fun equals(other: Any?): Boolean = other is Var && name == other.name
-
-        override fun toString(): String = "(${type.literal})$name"
-
-        companion object {
-            fun l(index: Int, type: Type) = Var("${type.topType.type.desc}$index", type)
+        val name: String get() {
+            val sb = StringBuilder()
+            if (id < 0) sb.append('_')
+            return sb.append(type.topType.type.desc).append(abs(id)).toString()
         }
+
+        override fun hashCode(): Int = type.topType.hashCode() xor id
+
+        override fun equals(other: Any?): Boolean = other is Var && id == other.id && type.topType == other.type.topType
+
+        override fun toString(): String = name
     }
 
     class Operation(
