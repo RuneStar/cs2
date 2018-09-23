@@ -74,7 +74,7 @@ interface Op {
                 invoked.args.forEach {
                     stackArgs.add(state.pop(it.type))
                 }
-
+                args.addAll(stackArgs.asReversed())
 
                 invoked.returns.forEach {
                     returns.add(state.push(it))
@@ -174,9 +174,9 @@ interface Op {
         POP_ARRAY_INT(arrayOf(INT u S, INT u S, INT u O)),
         GET_VARC_STRING(arrayOf(INT u O), arrayOf(STRING u S)),
         SET_VARC_STRING(arrayOf(INT u O, STRING u S)),
-        CC_CREATE(arrayOf(INT u S, INT u S, INT u S)),
+        CC_CREATE(arrayOf(COMPONENT u S, INT u S, INT u S)),
         CC_DELETE(),
-        CC_DELETEALL(arrayOf(INT u S)),
+        CC_DELETEALL(arrayOf(COMPONENT u S)),
         _200(arrayOf(INT u S, INT u S), arrayOf(INT u S)),
         _201(arrayOf(INT u S), arrayOf(INT u S)),
 
