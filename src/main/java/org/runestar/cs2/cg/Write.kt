@@ -163,6 +163,7 @@ private fun writeConst(writer: LineWriter, expr: Expr.Cst) {
             1 -> writer.append("true")
             else -> writer.append(expr.cst.toString()) // todo
         }
+        Type.CHAR -> writer.append('\'').append((expr.cst as Int).toChar()).append('\'')
         else -> writer.append(expr.cst.toString())
     }
 }
