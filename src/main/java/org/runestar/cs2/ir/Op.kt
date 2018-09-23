@@ -519,7 +519,11 @@ interface Op {
         OC_CERT(arrayOf(INT u S), arrayOf(INT u S)),
         OC_UNCERT(arrayOf(INT u S), arrayOf(INT u S)),
         _4207(arrayOf(INT u S), arrayOf(INT u S)),
-        // 4209
+        _4208(arrayOf(INT u S), arrayOf(INT u S)),
+        _4209(arrayOf(INT u S), arrayOf(INT u S)),
+        _4210(arrayOf(INT u S, STRING u S), arrayOf(INT u S)),
+        _4211(defs = arrayOf(INT u S)),
+        _4212(),
 
         _5000(defs = arrayOf(INT u S)),
         _5003(arrayOf(INT u S, INT u S), arrayOf(INT u S, INT u S, INT u S, STRING u S, STRING u S, STRING u S)),
@@ -535,6 +539,21 @@ interface Op {
         _5307(arrayOf(INT u S)),
         _5308(defs = arrayOf(INT u S)),
         _5309(arrayOf(INT u S)),
+
+        _5504(arrayOf(INT u S, INT u S)),
+        _5505(defs = arrayOf(INT u S)),
+        _5506(defs = arrayOf(INT u S)),
+        _5530(arrayOf(INT u S)),
+        _5531(defs = arrayOf(INT u S)),
+
+        _5630(),
+
+        _6200(arrayOf(INT u S, INT u S)),
+        _6201(arrayOf(INT u S, INT u S)),
+        _6202(arrayOf(INT u S, INT u S, INT u S, INT u S)),
+        _6203(defs = arrayOf(INT u S, INT u S)),
+        _6204(defs = arrayOf(INT u S, INT u S)),
+        _6205(defs = arrayOf(INT u S, INT u S)),
 
         _6500(defs = arrayOf(BOOLEAN u S)),
         _6501(defs = arrayOf(INT u S, INT u S, STRING u S, INT u S, INT u S, STRING u S)),
