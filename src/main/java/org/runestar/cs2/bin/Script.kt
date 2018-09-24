@@ -9,7 +9,7 @@ data class Script(
         val stringArgumentCount: Int,
         val intOperands: IntArray,
         val stringOperands: Array<String?>,
-        val opcodes: IntArray,
+        val opcodes: ShortArray,
         val switches: Array<Map<Int, Int>>
 ) {
 
@@ -36,17 +36,18 @@ data class Script(
             buffer.position(start)
             buffer.readString()
 
-            val opcodes = IntArray(instructionCount)
+            val opcodes = ShortArray(instructionCount)
             val intOperands = IntArray(instructionCount)
             val stringOperands = arrayOfNulls<String>(instructionCount)
 
             var i = 0
             while (buffer.position() < mid) {
-                val opcode = buffer.short.toUnsignedInt()
-                opcodes[i] = opcode
+                val opcodeShort = buffer.short
+                opcodes[i] = opcodeShort
+                val opcode = opcodeShort.toUnsignedInt()
                 if (opcode == 3) {
                     stringOperands[i] = buffer.readString()
-                } else if (opcode < 100 && opcode != 21 && opcode != 38 && opcode != 39) {
+                } else if (opcodeShort < 100 && opcode != 21 && opcode != 38 && opcode != 39) {
                     intOperands[i] = buffer.int
                 } else {
                     intOperands[i] = buffer.get().toUnsignedInt()

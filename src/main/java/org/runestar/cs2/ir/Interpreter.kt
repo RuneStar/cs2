@@ -5,6 +5,7 @@ import org.runestar.cs2.Type
 import org.runestar.cs2.bin.ParamTypeLoader
 import org.runestar.cs2.bin.Script
 import org.runestar.cs2.bin.ScriptLoader
+import org.runestar.cs2.bin.toUnsignedInt
 import org.runestar.cs2.dfa.Phase
 import org.runestar.cs2.util.*
 
@@ -34,7 +35,7 @@ class Interpreter(
 
     private fun interpret(insns: Array<Insn?>, state: State) {
         if (insns[state.pc] != null) return
-        val op = Op.of(state.script.opcodes[state.pc])
+        val op = Op.of(state.script.opcodes[state.pc].toUnsignedInt())
         val insn = op.translate(state)
         insns[state.pc] = insn
         val successors = successorPcs(state.pc, insn)
