@@ -88,6 +88,12 @@ public final class Opcodes {
     public static final int CC_SETOPBASE = 1305;
     public static final int CC_SETTARGETVERB = 1306;
     public static final int CC_CLEAROPS = 1307;
+    public static final int _1350 = 1350;
+    public static final int _1351 = 1351;
+    public static final int _1352 = 1352;
+    public static final int _1353 = 1353;
+    public static final int _1354 = 1354;
+    public static final int _1355 = 1355;
     public static final int CC_SETONCLICK = 1400;
     public static final int CC_SETONHOLD = 1401;
     public static final int CC_SETONRELEASE = 1402;
@@ -189,6 +195,12 @@ public final class Opcodes {
     public static final int IF_SETOPBASE = 2305;
     public static final int IF_SETTARGETVERB = 2306;
     public static final int IF_CLEAROPS = 2307;
+    public static final int _2350 = 2350;
+    public static final int _2351 = 2351;
+    public static final int _2352 = 2352;
+    public static final int _2353 = 2353;
+    public static final int _2354 = 2354;
+    public static final int _2355 = 2355;
     public static final int IF_SETONCLICK = 2400;
     public static final int IF_SETONHOLD = 2401;
     public static final int IF_SETONRELEASE = 2402;
@@ -283,6 +295,11 @@ public final class Opcodes {
     public static final int _3137 = 3137;
     public static final int _3138 = 3138;
     public static final int _3139 = 3139;
+    public static final int _3140 = 3140;
+    public static final int _3141 = 3141;
+    public static final int _3142 = 3142;
+    public static final int _3143 = 3143;
+    public static final int _3144 = 3144;
     public static final int _3200 = 3200;
     public static final int _3201 = 3201;
     public static final int _3202 = 3202;
