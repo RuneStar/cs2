@@ -58,10 +58,18 @@ private fun reconstructBlock(
                 val nxt = Construct.Seq()
                 map[keys] = nxt
                 val dst = successors.first { it.head == v }
-                reconstructBlock(graph, dtree, nxt, block, dst)
+                reconstructBlock(graph, dtree, nxt, dst, dst)
             }
             val next = successors.first { it.index == block.index + 1 }
-            reconstructBlock(graph, dtree, switch, block, next)
+            val elze = Construct.Seq()
+            switch.elze = elze
+            val afterElze = reconstructBlock(graph, dtree, elze, next, next)
+            if (elze.insns.isEmpty() && elze.next == null) {
+                switch.elze = null
+            }
+            if (afterElze != null) {
+                reconstructBlock(graph, dtree, switch, block, afterElze)
+            }
         }
         is Insn.Branch -> {
             val successors = graph.immediateSuccessors(block)

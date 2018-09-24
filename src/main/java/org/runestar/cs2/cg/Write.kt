@@ -108,6 +108,18 @@ private fun writeSwitch(writer: LineWriter, construct: Construct.Switch) {
         writer.append('}')
         writer.indents--
     }
+    val elze = construct.elze
+    if (elze != null) {
+        writer.indents++
+        writer.nextLine()
+        writer.append("else : {")
+        writer.indents++
+        writeConstruct(writer, elze)
+        writer.indents--
+        writer.nextLine()
+        writer.append('}')
+        writer.indents--
+    }
     writer.nextLine()
     writer.append('}')
     construct.next?.let { writeConstruct(writer, it) }

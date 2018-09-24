@@ -40,6 +40,8 @@ interface Construct {
             val map: Map<SortedSet<Int>, Construct>
     ) : Construct {
 
+        var elze: Construct? = null
+
         override var next: Construct? = null
     }
 }
