@@ -109,12 +109,13 @@ interface Op {
         override fun translate(state: Interpreter.State): Insn {
             val key = state.pop(INT)
             val enumId = state.pop(INT)
-            val valueTypeCst = checkNotNull(state.intStack.peek().cst)
-            val valueType = state.pop(TYPE)
-            val keyType = state.pop(TYPE)
-            val args = mutableListOf<Expr>(keyType, valueType, enumId, key)
-            val valueTypeType = Type.of(valueTypeCst.toChar())
-            val value = state.push(valueTypeType)
+            val valueType = Type.of(checkNotNull(state.intStack.peek().cst).toChar())
+            val valueTypeVar = state.pop(TYPE)
+            val keyType = Type.of(checkNotNull(state.intStack.peek().cst).toChar())
+            val keyTypeVar = state.pop(TYPE)
+            val args = mutableListOf<Expr>(keyTypeVar, valueTypeVar, enumId, key)
+            key.type = keyType
+            val value = state.push(valueType)
             return Insn.Assignment(listOf(value), Expr.Operation(listOf(value.type), id, args))
         }
     }
