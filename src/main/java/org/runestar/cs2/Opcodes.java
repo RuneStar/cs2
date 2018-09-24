@@ -501,10 +501,10 @@ public final class Opcodes {
     public static final int _6507 = 6507;
     public static final int _6511 = 6511;
     public static final int _6512 = 6512;
-    public static final int _6513 = 6513;
-    public static final int _6514 = 6514;
-    public static final int _6515 = 6515;
-    public static final int _6516 = 6516;
+    public static final int NC_PARAM = 6513;
+    public static final int LC_PARAM = 6514;
+    public static final int OC_PARAM = 6515;
+    public static final int STRUCT_PARAM = 6516;
     public static final int _6518 = 6518;
     public static final int _6519 = 6519;
     public static final int _6520 = 6520;

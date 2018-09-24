@@ -805,10 +805,10 @@ interface Op {
     }
 
     enum class ParamKey : Op {
-        _6513,
-        _6514,
-        _6515,
-        _6516,
+        NC_PARAM,
+        LC_PARAM,
+        OC_PARAM,
+        STRUCT_PARAM,
         ;
 
         override val id = namesReverse.getValue(name)
