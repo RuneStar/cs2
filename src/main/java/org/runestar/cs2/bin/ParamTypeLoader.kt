@@ -8,6 +8,6 @@ interface ParamTypeLoader {
 
     data class StringSet(val strings: Set<Int>) : ParamTypeLoader {
 
-        override fun load(id: Int): Type = (if (id in strings) Type.STRING else Type.INT)
+        override fun load(id: Int): Type = if (id in strings) Type.STRING else Type.INT
     }
 }
