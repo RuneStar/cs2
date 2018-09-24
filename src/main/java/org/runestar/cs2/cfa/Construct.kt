@@ -35,7 +35,10 @@ interface Construct {
         override var next: Construct? = null
     }
 
-    class Switch(val expr: Expr, val map: SortedMap<Int, Construct>) : Construct {
+    class Switch(
+            val expr: Expr,
+            val map: Map<SortedSet<Int>, Construct>
+    ) : Construct {
 
         override var next: Construct? = null
     }

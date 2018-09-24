@@ -9,6 +9,7 @@ import org.runestar.cs2.util.DirectedGraph
 import org.runestar.cs2.util.dominatorTree
 import org.runestar.cs2.util.isSuccessor
 import java.util.*
+import kotlin.collections.LinkedHashMap
 
 fun reconstruct(func: Func): Construct {
     val graph = buildBlocks(func)
@@ -48,15 +49,16 @@ private fun reconstructBlock(
             return reconstructBlock(graph, dtree, seq, dominator, suc)
         }
         is Insn.Switch -> {
-            val map = TreeMap<Int, Construct>()
+            val map = LinkedHashMap<SortedSet<Int>, Construct>()
             val switch = Construct.Switch(tail.expr, map)
             seq.next = switch
             val successors = graph.immediateSuccessors(block)
-            for ((k, v) in tail.map.toSortedMap()) {
-                val dst = successors.first { it.head == v }
+            for (v in tail.map.values.toSet()) {
+                val keys = tail.map.filter { it.value == v }.mapTo(TreeSet()) { it.key }
                 val nxt = Construct.Seq()
-                map[k] = nxt
-                reconstructBlock(graph, dtree, nxt, dst, dst)
+                map[keys] = nxt
+                val dst = successors.first { it.head == v }
+                reconstructBlock(graph, dtree, nxt, block, dst)
             }
             val next = successors.first { it.index == block.index + 1 }
             reconstructBlock(graph, dtree, switch, block, next)

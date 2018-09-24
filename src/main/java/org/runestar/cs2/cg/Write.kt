@@ -96,10 +96,11 @@ private fun writeSwitch(writer: LineWriter, construct: Construct.Switch) {
     writer.append("switch (")
     writeExpr(writer, construct.expr)
     writer.append(") {")
-    for ((n, con) in construct.map) {
+    for ((ns, con) in construct.map) {
         writer.indents++
         writer.nextLine()
-        writer.append("case ").append(n.toString()).append(" {")
+        ns.joinTo(writer)
+        writer.append(" : {")
         writer.indents++
         writeConstruct(writer, con)
         writer.indents--
