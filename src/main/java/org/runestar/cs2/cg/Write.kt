@@ -166,7 +166,7 @@ private fun writeVar(writer: LineWriter, expr: Expr.Var) {
 private fun writeConst(writer: LineWriter, expr: Expr.Cst) {
     when (expr.type) {
         Type.STRING -> writer.append('"').append(expr.cst.toString()).append('"')
-        Type.TYPE -> writer.append(Type.of((expr.cst as Int).toChar()).literal)
+        Type.TYPE -> writer.append(Type.of((expr.cst as Int)).literal)
         Type.COMPONENT -> {
             val n = expr.cst as Int
             when (n) {
@@ -179,7 +179,6 @@ private fun writeConst(writer: LineWriter, expr: Expr.Cst) {
             1 -> writer.append("true")
             else -> writer.append(expr.cst.toString()) // todo
         }
-        Type.CHAR -> writer.append('\'').append((expr.cst as Int).toChar()).append('\'')
         else -> writer.append(expr.cst.toString())
     }
 }

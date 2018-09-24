@@ -41,6 +41,8 @@ enum class Type(val desc: Char) {
 
         fun of(desc: Char): Type = map.getValue(desc)
 
+        fun of(desc: Int): Type = of(desc.toChar())
+
         fun top(a: Type, b: Type): Type {
             if (a == b) return a
             require(a.topType == b.topType)
