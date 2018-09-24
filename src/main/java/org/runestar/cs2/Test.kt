@@ -7,18 +7,14 @@ import java.nio.file.Paths
 
 fun main(args: Array<String>) {
 
-    // interesting : 1320, 982, 20, 454, 170, 183, 1360, 1707, 1717
-
-    val loadDir = Paths.get("scripts")
-    val saveDir = Paths.get("cs2")
+    val loadDir = Paths.get("input")
+    val saveDir = Paths.get("scripts")
     Files.createDirectories(saveDir)
 
     val decompiler = Decompiler(
             ScriptLoader.Binary(loadDir, ""),
             ParamTypeLoader.StringSet(setOf(451, 452, 453, 454, 455, 456, 457, 458, 506, 510, 559))
     )
-
-//    println(decompiler.decompile(1320, StringBuilder()))
 
     loadDir.toFile().list().forEach { fileName ->
         println(fileName)
