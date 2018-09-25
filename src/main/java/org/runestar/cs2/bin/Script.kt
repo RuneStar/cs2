@@ -47,7 +47,7 @@ data class Script(
                 val opcode = opcodeShort.toUnsignedInt()
                 if (opcode == 3) {
                     stringOperands[i] = buffer.readString()
-                } else if (opcodeShort < 100 && opcode != 21 && opcode != 38 && opcode != 39) {
+                } else if (opcode < 100 && opcode != 21 && opcode != 38 && opcode != 39) {
                     intOperands[i] = buffer.int
                 } else {
                     intOperands[i] = buffer.get().toUnsignedInt()
