@@ -404,9 +404,9 @@ interface Op {
         _3143(arrayOf(BOOLEAN u S)),
         _3144(defs = arrayOf(BOOLEAN u S)),
 
-        _3200(arrayOf(INT u S, INT u S, INT u S)),
-        _3201(arrayOf(INT u S)),
-        _3202(arrayOf(INT u S, INT u S)),
+        SOUND_SYNTH(arrayOf(INT u S, INT u S, INT u S)),
+        SOUND_SONG(arrayOf(INT u S)),
+        SOUND_JINGLE(arrayOf(INT u S, INT u S)),
 
         _3300(defs = arrayOf(INT u S)),
         _3301(arrayOf(INT u S, INT u S), arrayOf(INT u S)),

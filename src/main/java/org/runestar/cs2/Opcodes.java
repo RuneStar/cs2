@@ -300,9 +300,9 @@ public final class Opcodes {
     public static final int _3142 = 3142;
     public static final int _3143 = 3143;
     public static final int _3144 = 3144;
-    public static final int _3200 = 3200;
-    public static final int _3201 = 3201;
-    public static final int _3202 = 3202;
+    public static final int SOUND_SYNTH = 3200;
+    public static final int SOUND_SONG = 3201;
+    public static final int SOUND_JINGLE = 3202;
     public static final int _3300 = 3300;
     public static final int _3301 = 3301;
     public static final int _3302 = 3302;
