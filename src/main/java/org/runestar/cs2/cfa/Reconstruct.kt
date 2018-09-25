@@ -7,7 +7,7 @@ import org.runestar.cs2.ir.Func
 import org.runestar.cs2.ir.Insn
 import org.runestar.cs2.util.DirectedGraph
 import org.runestar.cs2.util.dominatorTree
-import org.runestar.cs2.util.isSuccessor
+import org.runestar.cs2.util.isSuccessorAcyclic
 import java.util.*
 import kotlin.collections.LinkedHashMap
 
@@ -26,7 +26,7 @@ private fun reconstructBlock(
         dominator: BasicBlock,
         block: BasicBlock
 ): BasicBlock? {
-    if (dominator != block && !dtree.isSuccessor(dominator, block)) return block
+    if (dominator != block && !dtree.isSuccessorAcyclic(dominator, block)) return block
     val seq = if (prev is Construct.Seq) {
         prev
     } else {

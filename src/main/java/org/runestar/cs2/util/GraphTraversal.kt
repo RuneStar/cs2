@@ -49,3 +49,14 @@ fun <N : Any> DirectedGraph<N>.isSuccessor(
     }
     return false
 }
+
+fun <N : Any> DirectedGraph<N>.isSuccessorAcyclic(
+        n: N,
+        successor: N
+): Boolean {
+    for (s in immediateSuccessors(n)) {
+        if (s == successor) return true
+        if (isSuccessorAcyclic(s, successor)) return true
+    }
+    return false
+}
