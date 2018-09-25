@@ -537,7 +537,7 @@ interface Op {
         SCALE(arrayOf(INT u S, INT u S, INT u S), arrayOf(INT u S)),
         APPEND_NUM(arrayOf(INT u S, STRING u S), arrayOf(STRING u S)),
         APPEND(arrayOf(STRING u S, STRING u S), arrayOf(STRING u S)),
-        APPEND_SIGNUM(arrayOf(INT u S, STRING u S), arrayOf(STRING u S)),
+        APPEND_SIGNNUM(arrayOf(INT u S, STRING u S), arrayOf(STRING u S)),
         LOWERCASE(arrayOf(STRING u S), arrayOf(STRING u S)),
         FROMDATE(arrayOf(INT u S), arrayOf(STRING u S)),
         TEXT_GENDER(arrayOf(STRING u S, STRING u S), arrayOf(STRING u S)),

@@ -429,7 +429,7 @@ public final class Opcodes {
     public static final int SCALE = 4018;
     public static final int APPEND_NUM = 4100;
     public static final int APPEND = 4101;
-    public static final int APPEND_SIGNUM = 4102;
+    public static final int APPEND_SIGNNUM = 4102;
     public static final int LOWERCASE = 4103;
     public static final int FROMDATE = 4104;
     public static final int TEXT_GENDER = 4105;
