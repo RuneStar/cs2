@@ -619,7 +619,7 @@ interface Op {
         _6512(arrayOf(BOOLEAN u S)),
 
         HAS_MOBILE(defs = arrayOf(INT u S)),
-        _6519(defs = arrayOf(INT u S)),
+        CLIENTTYPE(defs = arrayOf(INT u S)),
         _6520(),
         _6521(),
         _6522(arrayOf(INT u S, STRING u S)),
