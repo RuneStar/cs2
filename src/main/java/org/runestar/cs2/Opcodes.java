@@ -329,7 +329,7 @@ public final class Opcodes {
     public static final int PLAYERMEMBER = 3325;
     public static final int _3400 = 3400;
     public static final int ENUM = 3408;
-    public static final int _3411 = 3411;
+    public static final int ENUM_GETOUTPUTCOUNT = 3411;
     public static final int FRIEND_COUNT = 3600;
     public static final int FRIEND_GETNAME = 3601;
     public static final int FRIEND_GETWORLD = 3602;

@@ -434,7 +434,7 @@ interface Op {
         PLAYERMEMBER(arrayOf(INT u S, INT u S, INT u S, INT u S), arrayOf(INT u S)),
 
         _3400(arrayOf(INT u S, INT u S), arrayOf(STRING u S)),
-        _3411(arrayOf(INT u S), arrayOf(INT u S)),
+        ENUM_GETOUTPUTCOUNT(arrayOf(INT u S), arrayOf(INT u S)),
 
         FRIEND_COUNT(defs = arrayOf(INT u S)),
         FRIEND_GETNAME(arrayOf(INT u S), arrayOf(STRING u S, STRING u S)),
