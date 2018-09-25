@@ -506,7 +506,7 @@ public final class Opcodes {
     public static final int LC_PARAM = 6514;
     public static final int OC_PARAM = 6515;
     public static final int STRUCT_PARAM = 6516;
-    public static final int _6518 = 6518;
+    public static final int HAS_MOBILE = 6518;
     public static final int _6519 = 6519;
     public static final int _6520 = 6520;
     public static final int _6521 = 6521;
