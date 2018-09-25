@@ -148,7 +148,7 @@ public final class Opcodes {
     public static final int CC_GETTARGETMASK = 1800;
     public static final int CC_GETOP = 1801;
     public static final int CC_GETOPBASE = 1802;
-    public static final int _1927 = 1927;
+    public static final int CC_CALLONRESIZE = 1927;
     public static final int IF_SETPOSITION = 2000;
     public static final int IF_SETSIZE = 2001;
     public static final int IF_SETHIDE = 2003;
@@ -175,7 +175,7 @@ public final class Opcodes {
     public static final int IF_SETVFLIP = 2118;
     public static final int IF_SETHFLIP = 2119;
     public static final int IF_SETSCROLLSIZE = 2120;
-    public static final int _2121 = 2121;
+    public static final int IF_RESUME_PAUSEBUTTON = 2121;
     public static final int _2122 = 2122;
     public static final int _2123 = 2123;
     public static final int _2124 = 2124;
@@ -251,12 +251,12 @@ public final class Opcodes {
     public static final int _2614 = 2614;
     public static final int IF_GETINVOBJECT = 2700;
     public static final int IF_GETINVCOUNT = 2701;
-    public static final int IF_GETID = 2702;
+    public static final int IF_HASSUB = 2702;
     public static final int IF_GETTOP = 2706;
     public static final int IF_GETTARGETMASK = 2800;
     public static final int IF_GETOP = 2801;
     public static final int IF_GETOPBASE = 2802;
-    public static final int _2927 = 2927;
+    public static final int IF_CALLONRESIZE = 2927;
     public static final int MES = 3100;
     public static final int _3101 = 3101;
     public static final int IF_CLOSE = 3103;

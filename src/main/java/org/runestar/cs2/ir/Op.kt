@@ -268,7 +268,7 @@ interface Op {
         CC_GETOP(arrayOf(INT u S, BOOLEAN u O), arrayOf(STRING u S)),
         CC_GETOPBASE(arrayOf(BOOLEAN u O), arrayOf(STRING u S)),
 
-        _1927(arrayOf(BOOLEAN u S)),
+        CC_CALLONRESIZE(arrayOf(BOOLEAN u S)),
 
         IF_SETPOSITION(arrayOf(INT u S, INT u S, INT u S, INT u S, COMPONENT u S)),
         IF_SETSIZE(arrayOf(INT u S, INT u S, INT u S, INT u S, COMPONENT u S)),
@@ -297,7 +297,7 @@ interface Op {
         IF_SETVFLIP(arrayOf(BOOLEAN u S, COMPONENT u S)),
         IF_SETHFLIP(arrayOf(BOOLEAN u S, COMPONENT u S)),
         IF_SETSCROLLSIZE(arrayOf(INT u S, INT u S, COMPONENT u S)),
-        _2121(arrayOf(COMPONENT u S)),
+        IF_RESUME_PAUSEBUTTON(arrayOf(COMPONENT u S)),
         _2122(arrayOf(INT u S, COMPONENT u S)),
         _2123(arrayOf(INT u S, COMPONENT u S)),
         _2124(arrayOf(INT u S, COMPONENT u S)),
@@ -351,14 +351,14 @@ interface Op {
 
         IF_GETINVOBJECT(arrayOf(COMPONENT u S), arrayOf(INT u S)),
         IF_GETINVCOUNT(arrayOf(COMPONENT u S), arrayOf(INT u S)),
-        IF_GETID(arrayOf(COMPONENT u S), arrayOf(INT u S)),
+        IF_HASSUB(arrayOf(COMPONENT u S), arrayOf(INT u S)),
         IF_GETTOP(defs = arrayOf(INT u S)),
 
         IF_GETTARGETMASK(arrayOf(COMPONENT u S), arrayOf(INT u S)),
         IF_GETOP(arrayOf(INT u S, COMPONENT u S), arrayOf(STRING u S)),
         IF_GETOPBASE(arrayOf(COMPONENT u S), arrayOf(STRING u S)),
 
-        _2927(arrayOf(COMPONENT u S, BOOLEAN u O)),
+        IF_CALLONRESIZE(arrayOf(COMPONENT u S, BOOLEAN u O)),
 
         MES(arrayOf(STRING u S)),
         _3101(arrayOf(INT u S, INT u S)),
