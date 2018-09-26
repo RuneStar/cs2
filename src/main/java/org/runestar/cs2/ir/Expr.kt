@@ -20,7 +20,7 @@ interface Expr {
         override fun toString(): String = cst.toString()
     }
 
-    class Var(val id: Int, override var type: Type) : Expr {
+    class Var(var id: Int, override var type: Type) : Expr {
 
         val name: String get() {
             val sb = StringBuilder()

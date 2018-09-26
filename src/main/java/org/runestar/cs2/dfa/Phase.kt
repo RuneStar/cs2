@@ -16,7 +16,9 @@ interface Phase {
                 RemoveIdentityOperations,
                 DeleteNops,
                 MergeSingleUseDefs,
-                AddShortCircuitOperators
+                AddShortCircuitOperators,
+                MergeMultiStackDefs,
+                RenumberVars
         )
     }
 }
