@@ -340,7 +340,6 @@ public final class Opcodes {
     public static final int IGNORE_ADD = 3607;
     public static final int IGNORE_DEL = 3608;
     public static final int FRIEND_TEST = 3609;
-    public static final int FRIEND_GETWORLDNAME = 3610;
     public static final int CLAN_GETCHATDISPLAYNAME = 3611;
     public static final int CLAN_GETCHATCOUNT = 3612;
     public static final int CLAN_GETCHATUSERNAME = 3613;

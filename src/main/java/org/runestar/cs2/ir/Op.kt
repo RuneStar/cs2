@@ -446,7 +446,6 @@ interface Op {
         IGNORE_ADD(arrayOf(STRING u S)),
         IGNORE_DEL(arrayOf(STRING u S)),
         FRIEND_TEST(arrayOf(STRING u S), arrayOf(BOOLEAN u S)),
-        FRIEND_GETWORLDNAME(arrayOf(INT u S), arrayOf(STRING u S)),
         CLAN_GETCHATDISPLAYNAME(defs = arrayOf(STRING u S)),
         CLAN_GETCHATCOUNT(defs = arrayOf(INT u S)),
         CLAN_GETCHATUSERNAME(arrayOf(INT u S), arrayOf(STRING u S)),
