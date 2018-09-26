@@ -6,6 +6,8 @@ class ListStack<T : Any>(
 
     val size: Int get() = delegate.size
 
+    fun isEmpty(): Boolean = delegate.isEmpty()
+
     fun push(element: T) { delegate.add(element) }
 
     fun peek(): T = delegate[delegate.lastIndex]

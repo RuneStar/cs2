@@ -39,14 +39,13 @@ class Interpreter(
         val insn = op.translate(state)
         insns[state.pc] = insn
         val successors = successorPcs(state.pc, insn)
-        if (successors.size == 1) {
-            state.pc = successors.single()
+        if (successors.size != 1) {
+            check(state.intStack.isEmpty())
+            check(state.strStack.isEmpty())
+        }
+        for (s in successors) {
+            state.pc = s
             interpret(insns, state)
-        } else if (successors.size > 1) {
-            val copy = state.copy()
-            for (s in successors) {
-                interpret(insns, copy.copy(s))
-            }
         }
     }
 
@@ -128,18 +127,6 @@ class Interpreter(
                     v.toExpr()
                 }
             }
-        }
-
-        fun copy(newPc: Int = pc): State {
-            return State(
-                    interpreter,
-                    id,
-                    script,
-                    newPc,
-                    ListStack(ArrayList(intStack.delegate)),
-                    ListStack(ArrayList(strStack.delegate)),
-                    stackVarCounter
-            )
         }
     }
 }
