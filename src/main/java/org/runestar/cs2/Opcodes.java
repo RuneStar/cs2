@@ -355,7 +355,7 @@ public final class Opcodes {
     public static final int IGNORE_TEST = 3623;
     public static final int CLAN_ISSELF = 3624;
     public static final int CLAN_GETCHATOWNERNAME = 3625;
-    public static final int CLAN_GETCHATUSERWORLDNAME = 3626;
+    public static final int _3626 = 3626;
     public static final int _3627 = 3627;
     public static final int _3628 = 3628;
     public static final int _3629 = 3629;

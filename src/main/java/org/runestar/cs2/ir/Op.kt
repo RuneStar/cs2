@@ -461,7 +461,7 @@ interface Op {
         IGNORE_TEST(arrayOf(STRING u S), arrayOf(BOOLEAN u S)),
         CLAN_ISSELF(arrayOf(INT u S), arrayOf(BOOLEAN u S)),
         CLAN_GETCHATOWNERNAME(defs = arrayOf(STRING u S)),
-        CLAN_GETCHATUSERWORLDNAME(arrayOf(INT u S), arrayOf(BOOLEAN u S)),
+        _3626(arrayOf(INT u S), arrayOf(BOOLEAN u S)),
         _3627(arrayOf(INT u S), arrayOf(BOOLEAN u S)),
         _3628(),
         _3629(arrayOf(BOOLEAN u S)),
