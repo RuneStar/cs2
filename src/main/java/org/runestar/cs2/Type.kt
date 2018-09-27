@@ -24,7 +24,7 @@ enum class Type(val desc: Char) {
     LOC('l'),
     AREA('R'),
     MAPAREA('`'),
-    OBJECT('O'),
+    NAMEDOBJ('O'),
     FONTMETRICS('f'),
     CHAR('z'),
 
@@ -54,7 +54,7 @@ enum class Type(val desc: Char) {
             require(a.topType == b.topType)
             if (a == a.topType.type) return b
             if (b == b.topType.type) return a
-            if ((a == OBJ || a == OBJECT) && (b == OBJ || b == OBJECT)) return OBJ // todo
+            if ((a == OBJ || a == NAMEDOBJ) && (b == OBJ || b == NAMEDOBJ)) return NAMEDOBJ // todo
             throw IllegalArgumentException("$a $b")
         }
     }
