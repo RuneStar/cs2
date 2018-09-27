@@ -792,8 +792,8 @@ internal interface Op {
                 }
                 s = s.dropLast(1)
             }
-            for (c in s.reversed()) {
-                args.add(state.pop(Type.of(c)))
+            for (i in s.lastIndex downTo 0) {
+                args.add(state.pop(Type.of(s[i])))
             }
             args.add(state.pop(Type.INT))
             args.reverse()
