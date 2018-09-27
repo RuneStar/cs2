@@ -15,7 +15,7 @@ interface Phase {
         val DEFAULT = Composite(
                 RemoveIdentityOperations,
                 DeleteNops,
-                MergeSingleUseDefs,
+                MergeSingleStackDefs,
                 AddShortCircuitOperators,
                 MergeMultiStackDefs,
                 RenumberVars
