@@ -13,7 +13,7 @@ fun main(args: Array<String>) {
 
     val decompiler = Decompiler(
             ScriptLoader.Binary(loadDir, ""),
-            ParamTypeLoader.StringSet(setOf(451, 452, 453, 454, 455, 456, 457, 458, 506, 510, 559))
+            ParamTypeLoader.StringSet(setOf(451, 452, 453, 454, 455, 456, 457, 458, 506, 510, 559, 595))
     )
 
     loadDir.toFile().list().forEach { fileName ->
