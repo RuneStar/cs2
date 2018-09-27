@@ -178,8 +178,8 @@ interface Op {
         CC_CREATE(arrayOf(COMPONENT u S, INT u S, INT u S, BOOLEAN u O)),
         CC_DELETE(arrayOf(BOOLEAN u O)),
         CC_DELETEALL(arrayOf(COMPONENT u S)),
-        CC_FIND(arrayOf(INT u S, INT u S, BOOLEAN u O), arrayOf(INT u S)),
-        IF_FIND(arrayOf(INT u S, BOOLEAN u O), arrayOf(INT u S)),
+        CC_FIND(arrayOf(COMPONENT u S, INT u S, BOOLEAN u O), arrayOf(BOOLEAN u S)),
+        IF_FIND(arrayOf(COMPONENT u S, BOOLEAN u O), arrayOf(BOOLEAN u S)),
 
         CC_SETPOSITION(arrayOf(INT u S, INT u S, INT u S, INT u S, BOOLEAN u O)),
         CC_SETSIZE(arrayOf(INT u S, INT u S, INT u S, INT u S, BOOLEAN u O)),
