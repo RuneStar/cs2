@@ -579,7 +579,7 @@ interface Op {
         CHAT_GETHISTORY_BYUID(arrayOf(INT u S), arrayOf(INT u S, INT u S, INT u S, STRING u S, STRING u S, STRING u S)),
         CHAT_GETFILTER_PRIVATE(defs = arrayOf(INT u S)),
         CHAT_SENDPUBLIC(arrayOf(STRING u S, INT u S)),
-        CHAT_SENDPRIVATE(arrayOf(STRING u S, STRING u S), arrayOf(STRING u S)),
+        CHAT_SENDPRIVATE(arrayOf(STRING u S, STRING u S)),
         CHAT_PLAYERNAME(defs = arrayOf(STRING u S)),
         CHAT_GETFILTER_TRADE(defs = arrayOf(INT u S)),
         CHAT_GETHISTORYLENGTH(arrayOf(INT u S), arrayOf(INT u S)),
