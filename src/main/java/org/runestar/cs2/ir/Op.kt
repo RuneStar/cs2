@@ -71,7 +71,7 @@ interface Op {
             } else {
                 val invoked = state.interpreter.interpret(invokeId)
                 val stackArgs = ArrayList<Expr>()
-                invoked.args.forEach {
+                invoked.args.asReversed().forEach {
                     stackArgs.add(state.pop(it.type))
                 }
                 args.addAll(stackArgs.asReversed())
@@ -116,7 +116,7 @@ interface Op {
             val args = mutableListOf<Expr>(keyTypeVar, valueTypeVar, enumId, key)
             key.type = keyType
             val value = state.push(valueType)
-            return Insn.Assignment(listOf(value), Expr.Operation(listOf(value.type), id, args))
+            return Insn.Assignment(listOf(value), Expr.Operation(listOf(valueType), id, args))
         }
     }
 
@@ -792,7 +792,7 @@ interface Op {
                 }
                 s = s.dropLast(1)
             }
-            for (c in s) {
+            for (c in s.reversed()) {
                 args.add(state.pop(Type.of(c)))
             }
             args.add(state.pop(Type.INT))

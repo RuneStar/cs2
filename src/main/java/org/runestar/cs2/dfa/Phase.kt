@@ -17,7 +17,8 @@ interface Phase {
                 DeleteNops,
                 MergeSingleStackDefs,
                 MergeMultiStackDefs,
-                AddShortCircuitOperators
+                AddShortCircuitOperators,
+                PropagateVarTypes
         )
     }
 }

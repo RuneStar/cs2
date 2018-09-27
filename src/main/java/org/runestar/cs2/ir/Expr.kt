@@ -25,7 +25,7 @@ interface Expr {
         val name: String get() {
             val sb = StringBuilder()
             if (id < 0) sb.append('_')
-            return sb.append(type.topType.type.desc).append(abs(id)).toString()
+            return sb.append(type.literal).append(abs(id)).toString()
         }
 
         override fun hashCode(): Int = type.topType.hashCode() xor id

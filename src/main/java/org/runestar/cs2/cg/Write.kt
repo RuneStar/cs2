@@ -1,6 +1,7 @@
 package org.runestar.cs2.cg
 
 import org.runestar.cs2.Opcodes
+import org.runestar.cs2.TopType
 import org.runestar.cs2.Type
 import org.runestar.cs2.cfa.Construct
 import org.runestar.cs2.cfa.reconstruct
@@ -99,7 +100,12 @@ private fun writeSwitch(writer: LineWriter, construct: Construct.Switch) {
     for ((ns, con) in construct.map) {
         writer.indents++
         writer.nextLine()
-        ns.joinTo(writer)
+        val itr = ns.iterator()
+        writeConstantInt(writer, itr.next(), construct.expr.type)
+        while (itr.hasNext()) {
+            writer.append(", ")
+            writeConstantInt(writer, itr.next(), construct.expr.type)
+        }
         writer.append(" : {")
         writer.indents++
         writeConstruct(writer, con)
@@ -164,23 +170,32 @@ private fun writeVar(writer: LineWriter, expr: Expr.Var) {
 }
 
 private fun writeConst(writer: LineWriter, expr: Expr.Cst) {
-    when (expr.type) {
-        Type.STRING -> writer.append('"').append(expr.cst.toString()).append('"')
-        Type.TYPE -> writer.append(Type.of((expr.cst as Int)).literal)
+    when (expr.type.topType) {
+        TopType.INT -> writeConstantInt(writer, expr.cst as Int, expr.type)
+        TopType.STRING -> writeConstantString(writer, expr.cst as String)
+    }
+}
+
+private fun writeConstantInt(writer: LineWriter, n: Int, type: Type) {
+    when (type) {
+        Type.TYPE -> writer.append(Type.of(n).literal)
         Type.COMPONENT -> {
-            val n = expr.cst as Int
             when (n) {
                 -1 -> writer.append("-1")
                 else -> writer.append("${n ushr 16}").append(':').append("${n and 0xFFFF}")
             }
         }
-        Type.BOOLEAN -> when (expr.cst as Int) {
+        Type.BOOLEAN -> when (n) {
             0 -> writer.append("false")
             1 -> writer.append("true")
-            else -> writer.append(expr.cst.toString()) // todo
+            else -> writer.append(n.toString()) // todo
         }
-        else -> writer.append(expr.cst.toString())
+        else -> writer.append(n.toString())
     }
+}
+
+private fun writeConstantString(writer: LineWriter, s: String) {
+    writer.append('"').append(s).append('"')
 }
 
 private fun writeOperation(writer: LineWriter, expr: Expr.Operation) {

@@ -33,6 +33,9 @@ object MergeSingleStackDefs : Phase {
         if (insn.expr == v) {
             by.type = Type.bottom(insn.expr.type, by.type)
             insn.expr = by
+            if (insn is Insn.Assignment) {
+                insn.definitions.single().type = by.type
+            }
             return true
         }
         val opExpr = insn.expr

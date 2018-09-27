@@ -54,7 +54,8 @@ enum class Type(val desc: Char) {
             require(a.topType == b.topType)
             if (a == a.topType.type) return b
             if (b == b.topType.type) return a
-            throw IllegalArgumentException()
+            if ((a == OBJ || a == OBJECT) && (b == OBJ || b == OBJECT)) return OBJ // todo
+            throw IllegalArgumentException("$a $b")
         }
     }
 }
