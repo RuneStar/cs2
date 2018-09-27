@@ -48,14 +48,6 @@ class HashChain<E : Any> : Chain<E> {
         }
     }
 
-    override val size: Int get() = map.size
-
-    override fun clear() {
-        map.clear()
-        head = null
-        tail = null
-    }
-
     override fun insertAfter(e: E, point: E) {
         map[e] = map.getValue(point).insertAfter(e)
     }
@@ -90,13 +82,7 @@ class HashChain<E : Any> : Chain<E> {
 
     override fun remove(e: E) = map.getValue(e).unlink()
 
-    override fun iterator(): MutableIterator<E> = LinkIterator(head, tail)
-
     override fun iterator(from: E, to: E): MutableIterator<E> = LinkIterator(from, to)
-
-    override fun reverseIterator(): MutableIterator<E> = reverseIterator(last, first)
-
-    override fun reverseIterator(from: E, to: E): MutableIterator<E> = LinkReverseIterator(from, to)
 
     private inner class LinkIterator(
             from: E?,
@@ -115,26 +101,6 @@ class HashChain<E : Any> : Chain<E> {
 
         override fun remove() {
             remove(previous(curr!!)!!)
-        }
-    }
-
-    private inner class LinkReverseIterator(
-            from: E?,
-            val to: E?
-    ) : MutableIterator<E> {
-
-        var curr: E? = from
-
-        override fun hasNext(): Boolean = curr != null
-
-        override fun next(): E {
-            val last = curr!!
-            curr = if (last == to) null else previous(last)
-            return last
-        }
-
-        override fun remove() {
-            remove(next(curr!!)!!)
         }
     }
 }

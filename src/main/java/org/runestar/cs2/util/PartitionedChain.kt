@@ -1,64 +1,49 @@
 package org.runestar.cs2.util
 
 class PartitionedChain<E : Any>(
-        chain: Chain<E>,
+        private val delegate: Chain<E>,
         heads: List<E>
-) {
+) : Iterable<PartitionedChain<E>.Block> {
 
-    val blocks: List<Block<E>>
+    private val blocks = HashChain<Block>()
+
+    private val map = HashMap<E, Block>()
 
     init {
-        val ps = ArrayList<Block<E>>(heads.size)
         for (i in heads.indices) {
             val head: E = heads[i]
             val tail: E = if (i != heads.lastIndex) {
-                chain.previous(heads[i + 1])!!
+                delegate.previous(heads[i + 1])!!
             } else {
-                chain.last
+                delegate.last
             }
-            ps.add(Block(chain, i, head, tail))
+            blocks.addLast(Block(i, head, tail))
         }
-        blocks = ps
+        for (b in blocks) {
+            for (e in b) {
+                map[e] = b
+            }
+        }
     }
 
-    fun of(e: E): Block<E> = blocks.first { e in it }
+    override fun iterator(): Iterator<Block> = blocks.iterator()
 
-    class Block<E : Any>(
-            val chain: Chain<E>,
+    fun block(e: E): Block = map.getValue(e)
+
+    val head: Block get() = blocks.first
+
+    fun next(b: Block): Block = blocks.next(b)!!
+
+    fun previous(b: Block): Block = blocks.previous(b)!!
+
+    inner class Block(
             val index: Int,
             var head: E,
             var tail: E
     ) : Iterable<E> {
 
-        fun prepend(e: E) {
-            chain.insertBefore(e, head)
-            head = e
-        }
+        override fun iterator() = delegate.iterator(head, tail)
 
-        fun append(e: E) {
-            chain.insertAfter(e, tail)
-            tail = e
-        }
-
-        fun remove(e: E) {
-            if (e == head) {
-                head = chain.next(head)!!
-            } else if (e == tail) {
-                tail = chain.previous(tail)!!
-            }
-            chain.remove(e)
-        }
-
-        override fun iterator() = iterator(head, tail)
-
-        fun iterator(from: E, to: E) = chain.iterator(from, to)
-
-        fun reverseIterator(from: E, to: E) = chain.reverseIterator(from, to)
-
-        fun reverseIterator() = reverseIterator(tail, head)
-
-        override fun toString(): String {
-            return index.toString()
-        }
+        override fun toString() = index.toString()
     }
 }

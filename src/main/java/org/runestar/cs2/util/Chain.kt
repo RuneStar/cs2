@@ -18,17 +18,9 @@ interface Chain<E : Any> : MutableIterable<E> {
 
     fun insertBefore(e: E, point: E)
 
-    fun clear()
-
-    fun isEmpty(): Boolean = size == 0
-
-    val size: Int
-
     fun remove(e: E)
 
+    override fun iterator(): MutableIterator<E> = iterator(first, last)
+
     fun iterator(from: E, to: E): MutableIterator<E>
-
-    fun reverseIterator(from: E, to: E): MutableIterator<E>
-
-    fun reverseIterator(): MutableIterator<E>
 }
