@@ -7,7 +7,7 @@ class Func(
         val id: Int,
         val args: MutableList<Expr.Var>,
         var insns: Chain<Insn>,
-        val returns: MutableList<Type>
+        var returns: MutableList<Type>
 ) {
 
     override fun toString(): String {
