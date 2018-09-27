@@ -326,7 +326,7 @@ public final class Opcodes {
     public static final int RUNWEIGHT_VISIBLE = 3322;
     public static final int PLAYERMOD = 3323;
     public static final int _3324 = 3324;
-    public static final int PLAYERMEMBER = 3325;
+    public static final int _3325 = 3325;
     public static final int ENUM_STRING = 3400;
     public static final int ENUM = 3408;
     public static final int ENUM_GETOUTPUTCOUNT = 3411;

@@ -431,7 +431,7 @@ interface Op {
         RUNWEIGHT_VISIBLE(defs = arrayOf(INT u S)),
         PLAYERMOD(defs = arrayOf(BOOLEAN u S)),
         _3324(defs = arrayOf(INT u S)),
-        PLAYERMEMBER(arrayOf(INT u S, INT u S, INT u S, INT u S), arrayOf(INT u S)),
+        _3325(arrayOf(INT u S, INT u S, INT u S, INT u S), arrayOf(INT u S)),
 
         ENUM_STRING(arrayOf(ENUM u S, INT u S), arrayOf(STRING u S)),
         ENUM_GETOUTPUTCOUNT(arrayOf(ENUM u S), arrayOf(INT u S)),
