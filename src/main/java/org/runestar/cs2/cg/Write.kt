@@ -190,6 +190,10 @@ private fun writeConstantInt(writer: LineWriter, n: Int, type: Type) {
             1 -> writer.append("true")
             else -> writer.append(n.toString()) // todo
         }
+        Type.COORDGRID -> when (n) {
+            -1 -> writer.append("-1")
+            else -> writer.append("${n ushr 28}").append(':').append("${(n ushr 14) and 0x3FFF}").append(':').append("${n and 0x3FFF}")
+        }
         else -> writer.append(n.toString())
     }
 }
