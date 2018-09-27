@@ -108,7 +108,7 @@ interface Op {
 
         override fun translate(state: Interpreter.State): Insn {
             val key = state.pop(INT)
-            val enumId = state.pop(INT)
+            val enumId = state.pop(ENUM)
             val valueType = Type.of(checkNotNull(state.intStack.peek().cst))
             val valueTypeVar = state.pop(TYPE)
             val keyType = Type.of(checkNotNull(state.intStack.peek().cst))
@@ -192,7 +192,7 @@ interface Op {
         CC_SETFILL(arrayOf(BOOLEAN u S, BOOLEAN u O)),
         CC_SETTRANS(arrayOf(INT u S, BOOLEAN u O)),
         CC_SETLINEWID(arrayOf(INT u S, BOOLEAN u O)),
-        CC_SETGRAPHIC(arrayOf(INT u S, BOOLEAN u O)),
+        CC_SETGRAPHIC(arrayOf(GRAPHIC u S, BOOLEAN u O)),
         CC_SET2DANGLE(arrayOf(INT u S, BOOLEAN u O)),
         CC_SETTILING(arrayOf(BOOLEAN u S, BOOLEAN u O)),
         CC_SETMODEL(arrayOf(INT u S, BOOLEAN u O)),
@@ -281,7 +281,7 @@ interface Op {
         IF_SETFILL(arrayOf(BOOLEAN u S, COMPONENT u S)),
         IF_SETTRANS(arrayOf(INT u S, COMPONENT u S)),
         IF_SETLINEWID(arrayOf(INT u S, COMPONENT u S)),
-        IF_SETGRAPHIC(arrayOf(INT u S, COMPONENT u S)),
+        IF_SETGRAPHIC(arrayOf(GRAPHIC u S, COMPONENT u S)),
         IF_SET2DANGLE(arrayOf(INT u S, COMPONENT u S)),
         IF_SETTILING(arrayOf(BOOLEAN u S, COMPONENT u S)),
         IF_SETMODEL(arrayOf(INT u S, COMPONENT u S)),
@@ -409,13 +409,13 @@ interface Op {
         SOUND_JINGLE(arrayOf(INT u S, INT u S)),
 
         CLIENTCLOCK(defs = arrayOf(INT u S)),
-        INV_GETOBJ(arrayOf(INT u S, INT u S), arrayOf(INT u S)),
-        INV_GETNUM(arrayOf(INT u S, INT u S), arrayOf(INT u S)),
-        INV_TOTAL(arrayOf(INT u S, INT u S), arrayOf(INT u S)),
+        INV_GETOBJ(arrayOf(INV u S, INT u S), arrayOf(INT u S)),
+        INV_GETNUM(arrayOf(INV u S, INT u S), arrayOf(INT u S)),
+        INV_TOTAL(arrayOf(INV u S, INT u S), arrayOf(INT u S)),
         INV_SIZE(arrayOf(INT u S), arrayOf(INT u S)),
-        STAT(arrayOf(INT u S), arrayOf(INT u S)),
-        STAT_BASE(arrayOf(INT u S), arrayOf(INT u S)),
-        STAT_XP(arrayOf(INT u S), arrayOf(INT u S)),
+        STAT(arrayOf(Type.STAT u S), arrayOf(INT u S)),
+        STAT_BASE(arrayOf(Type.STAT u S), arrayOf(INT u S)),
+        STAT_XP(arrayOf(Type.STAT u S), arrayOf(INT u S)),
         COORD(defs = arrayOf(INT u S)),
         COORDX(arrayOf(INT u S), arrayOf(INT u S)),
         COORDZ(arrayOf(INT u S), arrayOf(INT u S)),
@@ -433,8 +433,8 @@ interface Op {
         _3324(defs = arrayOf(INT u S)),
         PLAYERMEMBER(arrayOf(INT u S, INT u S, INT u S, INT u S), arrayOf(INT u S)),
 
-        ENUM_STRING(arrayOf(INT u S, INT u S), arrayOf(STRING u S)),
-        ENUM_GETOUTPUTCOUNT(arrayOf(INT u S), arrayOf(INT u S)),
+        ENUM_STRING(arrayOf(ENUM u S, INT u S), arrayOf(STRING u S)),
+        ENUM_GETOUTPUTCOUNT(arrayOf(ENUM u S), arrayOf(INT u S)),
 
         FRIEND_COUNT(defs = arrayOf(INT u S)),
         FRIEND_GETNAME(arrayOf(INT u S), arrayOf(STRING u S, STRING u S)),
@@ -643,12 +643,12 @@ interface Op {
         WORLDMAP_GETCONFIGBOUNDS(arrayOf(INT u S), arrayOf(INT u S, INT u S, INT u S, INT u S)),
         WORLDMAP_GETCONFIGZOOM(arrayOf(INT u S), arrayOf(INT u S)),
         _6615(defs = arrayOf(INT u S, INT u S)),
-        WORLDMAP_GETCURRENTMAP(defs = arrayOf(INT u S)),
+        WORLDMAP_GETCURRENTMAP(defs = arrayOf(MAPAREA u S)),
         WORLDMAP_GETDISPLAYCOORD(arrayOf(INT u S), arrayOf(INT u S, INT u S)),
         _6618(arrayOf(INT u S), arrayOf(INT u S, INT u S)),
         _6619(arrayOf(INT u S, INT u S)),
         _6620(arrayOf(INT u S, INT u S)),
-        WORLDMAP_COORDINMAP(arrayOf(INT u S, INT u S), arrayOf(INT u S)),
+        WORLDMAP_COORDINMAP(arrayOf(MAPAREA u S, INT u S), arrayOf(BOOLEAN u S)),
         WORLDMAP_GETSIZE(defs = arrayOf(INT u S, INT u S)),
         _6623(arrayOf(INT u S), arrayOf(INT u S)),
         _6624(arrayOf(INT u S)),
