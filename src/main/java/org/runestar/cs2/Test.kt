@@ -18,7 +18,7 @@ fun main(args: Array<String>) {
 
     loadDir.toFile().list().forEach { fileName ->
         println(fileName)
-        val s = decompiler.decompile(fileName.toInt(), StringBuilder()).toString()
+        val s = decompiler.decompile(fileName.toInt())
         val saveFile = saveDir.resolve("$fileName.cs2")
         Files.write(saveFile, s.toByteArray())
     }
