@@ -9,7 +9,7 @@ import org.runestar.cs2.bin.toUnsignedInt
 import org.runestar.cs2.dfa.Phase
 import org.runestar.cs2.util.*
 
-class Interpreter(
+internal class Interpreter(
         val scriptLoader: ScriptLoader,
         val paramTypeLoader: ParamTypeLoader
 ) {
@@ -85,7 +85,7 @@ class Interpreter(
         return chain
     }
 
-    class State(
+    internal class State(
             val interpreter: Interpreter,
             val id: Int,
             val script: Script,

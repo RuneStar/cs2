@@ -7,7 +7,7 @@ import org.runestar.cs2.ir.Op.Src.*
 import org.runestar.cs2.namesReverse
 import org.runestar.cs2.util.ListStack
 
-interface Op {
+internal interface Op {
 
     val id: Int
 

@@ -7,7 +7,7 @@ import org.runestar.cs2.util.isSuccessorAcyclic
 import java.util.*
 import kotlin.collections.LinkedHashMap
 
-fun reconstruct(func: Func): Construct {
+internal fun reconstruct(func: Func): Construct {
     val fg = FlowGraph(func)
     val root = Construct.Seq()
     reconstructBlock(fg, root, fg.graph.head, fg.graph.head)

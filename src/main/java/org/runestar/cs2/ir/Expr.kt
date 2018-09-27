@@ -5,7 +5,7 @@ import org.runestar.cs2.names
 import java.lang.Math.abs
 import java.lang.StringBuilder
 
-interface Expr {
+internal interface Expr {
 
     var types: List<Type>
         get() = listOf(type)

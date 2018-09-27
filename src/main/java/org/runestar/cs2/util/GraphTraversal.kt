@@ -1,6 +1,6 @@
 package org.runestar.cs2.util
 
-fun <N : Any> DirectedGraph<N>.postOrder(
+internal fun <N : Any> DirectedGraph<N>.postOrder(
         n: N = head,
         seen: MutableSet<N> = HashSet(),
         consumer: (N) -> Unit
@@ -12,7 +12,7 @@ fun <N : Any> DirectedGraph<N>.postOrder(
     consumer(n)
 }
 
-fun <N : Any> DirectedGraph<N>.isSuccessorAcyclic(
+internal fun <N : Any> DirectedGraph<N>.isSuccessorAcyclic(
         n: N,
         successor: N
 ): Boolean {

@@ -1,6 +1,6 @@
 package org.runestar.cs2.ir
 
-interface Insn {
+internal interface Insn {
 
     interface Exprd : Insn {
 

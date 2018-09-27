@@ -3,7 +3,7 @@ package org.runestar.cs2.cfa
 import org.runestar.cs2.ir.Func
 import org.runestar.cs2.util.dominatorTree
 
-class FlowGraph(val func: Func) {
+internal class FlowGraph(val func: Func) {
 
     val blocks = partitionBlocks(func)
 

@@ -10,7 +10,7 @@ import org.runestar.cs2.ir.Func
 import org.runestar.cs2.ir.Insn
 import org.runestar.cs2.names
 
-fun write(
+internal fun write(
         appendable: Appendable,
         func: Func
 ) {

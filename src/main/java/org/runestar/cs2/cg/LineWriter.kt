@@ -1,9 +1,9 @@
 package org.runestar.cs2.cg
 
-class LineWriter(
-        val appendable: Appendable,
-        val indent: CharSequence = "\t",
-        val lineSeparator: CharSequence = "\n"
+internal class LineWriter(
+        private val appendable: Appendable,
+        private val indent: CharSequence = "\t",
+        private val lineSeparator: CharSequence = "\n"
 ) : Appendable {
 
     var indents = 0

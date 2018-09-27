@@ -7,7 +7,7 @@ import org.runestar.cs2.ir.Func
 import org.runestar.cs2.ir.Insn
 import org.runestar.cs2.util.Chain
 
-object AddShortCircuitOperators : Phase {
+internal object AddShortCircuitOperators : Phase {
 
     override fun transform(func: Func) {
         while (ors(func) || ands(func)) {}

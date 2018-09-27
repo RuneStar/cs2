@@ -3,7 +3,7 @@ package org.runestar.cs2.ir
 import org.runestar.cs2.Type
 import org.runestar.cs2.util.Chain
 
-class Func(
+internal class Func(
         val id: Int,
         val args: MutableList<Expr.Var>,
         var insns: Chain<Insn>,

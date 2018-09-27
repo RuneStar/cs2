@@ -3,7 +3,7 @@ package org.runestar.cs2.dfa
 import org.runestar.cs2.ir.Func
 import org.runestar.cs2.ir.Insn
 
-object MergeMultiStackDefs : Phase {
+internal object MergeMultiStackDefs : Phase {
 
     override fun transform(func: Func) {
         for (insn in func.insns) {

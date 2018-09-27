@@ -1,6 +1,6 @@
 package org.runestar.cs2.util
 
-interface Chain<E : Any> : MutableIterable<E> {
+internal interface Chain<E : Any> : MutableIterable<E> {
 
     val first: E
 

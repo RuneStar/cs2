@@ -6,7 +6,7 @@ import org.runestar.cs2.ir.Expr
 import org.runestar.cs2.ir.Func
 import org.runestar.cs2.ir.Insn
 
-object PropagateTypes : Phase {
+internal object PropagateTypes : Phase {
 
     override fun transform(func: Func) {
         while (propagateVars(func) or propagateComparisons(func) or propagateReturns(func)) {  }
@@ -123,7 +123,7 @@ object PropagateTypes : Phase {
         return changed
     }
 
-    fun propagateReturns(func: Func): Boolean {
+    private fun propagateReturns(func: Func): Boolean {
         if (func.returns.isEmpty()) return false
         val returnTypes = scanReturns(func)
         func.returns = returnTypes

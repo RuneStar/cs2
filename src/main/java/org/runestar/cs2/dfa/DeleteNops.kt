@@ -5,7 +5,7 @@ import org.runestar.cs2.ir.Expr
 import org.runestar.cs2.ir.Func
 import org.runestar.cs2.ir.Insn
 
-object DeleteNops : Phase {
+internal object DeleteNops : Phase {
 
     override fun transform(func: Func) {
         val itr = func.insns.iterator()

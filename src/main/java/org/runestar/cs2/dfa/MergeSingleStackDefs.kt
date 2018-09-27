@@ -5,7 +5,7 @@ import org.runestar.cs2.ir.Expr
 import org.runestar.cs2.ir.Func
 import org.runestar.cs2.ir.Insn
 
-object MergeSingleStackDefs : Phase {
+internal object MergeSingleStackDefs : Phase {
 
     override fun transform(func: Func) {
         outer@

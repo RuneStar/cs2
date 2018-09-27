@@ -1,6 +1,6 @@
 package org.runestar.cs2.util
 
-interface DirectedGraph<N : Any> : Iterable<N> {
+internal interface DirectedGraph<N : Any> : Iterable<N> {
 
     val head: N
 

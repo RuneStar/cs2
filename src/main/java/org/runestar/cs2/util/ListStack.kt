@@ -1,6 +1,6 @@
 package org.runestar.cs2.util
 
-class ListStack<T : Any>(
+internal class ListStack<T : Any>(
         val delegate: MutableList<T>
 ) {
 

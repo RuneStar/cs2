@@ -2,7 +2,7 @@ package org.runestar.cs2.dfa
 
 import org.runestar.cs2.ir.Func
 
-interface Phase {
+internal interface Phase {
 
     fun transform(func: Func)
 

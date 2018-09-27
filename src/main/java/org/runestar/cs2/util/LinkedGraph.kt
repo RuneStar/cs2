@@ -1,6 +1,6 @@
 package org.runestar.cs2.util
 
-class LinkedGraph<N : Any> : DirectedGraph<N> {
+internal class LinkedGraph<N : Any> : DirectedGraph<N> {
 
     private val map = HashMap<N, Node<N>>()
 

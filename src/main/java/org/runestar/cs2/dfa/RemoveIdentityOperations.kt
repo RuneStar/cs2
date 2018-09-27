@@ -5,7 +5,7 @@ import org.runestar.cs2.ir.Expr
 import org.runestar.cs2.ir.Func
 import org.runestar.cs2.ir.Insn
 
-object RemoveIdentityOperations : Phase {
+internal object RemoveIdentityOperations : Phase {
 
     override fun transform(func: Func) {
         func.insns.forEach { insn ->
