@@ -39,7 +39,7 @@ class Interpreter(
         val insn = op.translate(state)
         insns[state.pc] = insn
         val successors = successorPcs(state.pc, insn)
-        if (successors.size != 1) {
+        if (insn !is Insn.Assignment) {
             check(state.intStack.isEmpty())
             check(state.strStack.isEmpty())
         }
