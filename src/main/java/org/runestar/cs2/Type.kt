@@ -39,21 +39,16 @@ enum class Type(val desc: Char) {
 
         private val map = values().associateBy { it.desc }
 
-        fun of(desc: Char): Type = map.getValue(desc).let { if (it == NAMEDOBJ) OBJ else it } // todo
+        fun of(desc: Char): Type = map.getValue(desc)
 
         fun of(desc: Int): Type = of(desc.toChar())
-
-        fun top(a: Type, b: Type): Type {
-            if (a == b) return a
-            require(a.topType == b.topType)
-            return a.topType.type
-        }
 
         fun bottom(a: Type, b: Type): Type {
             if (a == b) return a
             require(a.topType == b.topType)
             if (a == a.topType.type) return b
             if (b == b.topType.type) return a
+            if ((a == OBJ || a == NAMEDOBJ) && (b == OBJ || b == NAMEDOBJ)) return OBJ
             throw IllegalArgumentException("$a $b")
         }
     }
