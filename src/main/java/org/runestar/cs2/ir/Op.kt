@@ -242,7 +242,7 @@ internal interface Op {
         CC_GETWIDTH(arrayOf(BOOLEAN u O), arrayOf(INT u S)),
         CC_GETHEIGHT(arrayOf(BOOLEAN u O), arrayOf(INT u S)),
         CC_GETHIDE(arrayOf(BOOLEAN u O), arrayOf(BOOLEAN u S)),
-        CC_GETLAYER(arrayOf(BOOLEAN u O), arrayOf(INT u S)),
+        CC_GETLAYER(arrayOf(BOOLEAN u O), arrayOf(COMPONENT u S)),
 
         CC_GETSCROLLX(arrayOf(BOOLEAN u O), arrayOf(INT u S)),
         CC_GETSCROLLY(arrayOf(BOOLEAN u O), arrayOf(INT u S)),
@@ -260,7 +260,7 @@ internal interface Op {
         _1613(arrayOf(BOOLEAN u O), arrayOf(INT u S)),
         _1614(arrayOf(BOOLEAN u O), arrayOf(BOOLEAN u S)),
 
-        CC_GETINVOBJECT(arrayOf(BOOLEAN u O), arrayOf(INT u S)),
+        CC_GETINVOBJECT(arrayOf(BOOLEAN u O), arrayOf(OBJ u S)),
         CC_GETINVCOUNT(arrayOf(BOOLEAN u O), arrayOf(INT u S)),
         CC_GETID(arrayOf(BOOLEAN u O), arrayOf(INT u S)),
 
@@ -331,7 +331,7 @@ internal interface Op {
         IF_GETWIDTH(arrayOf(COMPONENT u S), arrayOf(INT u S)),
         IF_GETHEIGHT(arrayOf(COMPONENT u S), arrayOf(INT u S)),
         IF_GETHIDE(arrayOf(COMPONENT u S), arrayOf(BOOLEAN u S)),
-        IF_GETLAYER(arrayOf(COMPONENT u S), arrayOf(INT u S)),
+        IF_GETLAYER(arrayOf(COMPONENT u S), arrayOf(COMPONENT u S)),
 
         IF_GETSCROLLX(arrayOf(COMPONENT u S), arrayOf(INT u S)),
         IF_GETSCROLLY(arrayOf(COMPONENT u S), arrayOf(INT u S)),
@@ -349,9 +349,9 @@ internal interface Op {
         _2613(arrayOf(COMPONENT u S), arrayOf(INT u S)),
         _2614(arrayOf(COMPONENT u S), arrayOf(BOOLEAN u S)),
 
-        IF_GETINVOBJECT(arrayOf(COMPONENT u S), arrayOf(INT u S)),
+        IF_GETINVOBJECT(arrayOf(COMPONENT u S), arrayOf(OBJ u S)),
         IF_GETINVCOUNT(arrayOf(COMPONENT u S), arrayOf(INT u S)),
-        IF_HASSUB(arrayOf(COMPONENT u S), arrayOf(INT u S)),
+        IF_HASSUB(arrayOf(COMPONENT u S), arrayOf(BOOLEAN u S)),
         IF_GETTOP(defs = arrayOf(INT u S)),
 
         IF_GETTARGETMASK(arrayOf(COMPONENT u S), arrayOf(INT u S)),
@@ -421,9 +421,9 @@ internal interface Op {
         COORDZ(arrayOf(COORDGRID u S), arrayOf(INT u S)),
         COORDY(arrayOf(COORDGRID u S), arrayOf(INT u S)),
         MAP_MEMBERS(defs = arrayOf(BOOLEAN u S)),
-        INVOTHER_GETOBJ(arrayOf(INV u S, INT u S), arrayOf(INT u S)),
+        INVOTHER_GETOBJ(arrayOf(INV u S, INT u S), arrayOf(OBJ u S)),
         INVOTHER_GETNUM(arrayOf(INV u S, INT u S), arrayOf(INT u S)),
-        INVOTHER_TOTAL(arrayOf(INV u S, INT u S), arrayOf(INT u S)),
+        INVOTHER_TOTAL(arrayOf(INV u S, OBJ u S), arrayOf(INT u S)),
         STAFFMODLEVEL(defs = arrayOf(INT u S)),
         REBOOTTIMER(defs = arrayOf(INT u S)),
         MAP_WORLD(defs = arrayOf(INT u S)),
