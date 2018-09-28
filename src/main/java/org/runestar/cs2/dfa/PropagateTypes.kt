@@ -9,7 +9,29 @@ import org.runestar.cs2.ir.Insn
 internal object PropagateTypes : Phase {
 
     override fun transform(func: Func) {
-        while (propagateVars(func) or propagateComparisons(func) or propagateReturns(func)) {  }
+        while (
+                propagateVars(func) or
+                propagateComparisons(func) or
+                propagateReturns(func) or
+                propagateAssignments(func)
+        ) { }
+    }
+
+    private fun propagateAssignments(func: Func): Boolean {
+        var changed = false
+        for (insn in func.insns) {
+            if (insn !is Insn.Assignment) continue
+            val defs = insn.definitions
+            if (defs.size != 1) continue
+            val expr = insn.expr
+            if (expr !is Expr.Var) continue
+            val def = defs.single()
+            val type = Type.bottom(expr.type, def.type)
+            if (type != expr.type || type != def.type) changed = true
+            expr.type = type
+            def.type = type
+        }
+        return changed
     }
 
     private fun propagateVars(func: Func): Boolean {
