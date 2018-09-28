@@ -409,9 +409,9 @@ internal interface Op {
         SOUND_JINGLE(arrayOf(INT u S, INT u S)),
 
         CLIENTCLOCK(defs = arrayOf(INT u S)),
-        INV_GETOBJ(arrayOf(INV u S, INT u S), arrayOf(INT u S)),
+        INV_GETOBJ(arrayOf(INV u S, INT u S), arrayOf(OBJ u S)),
         INV_GETNUM(arrayOf(INV u S, INT u S), arrayOf(INT u S)),
-        INV_TOTAL(arrayOf(INV u S, INT u S), arrayOf(INT u S)),
+        INV_TOTAL(arrayOf(INV u S, OBJ u S), arrayOf(INT u S)),
         INV_SIZE(arrayOf(INV u S), arrayOf(INT u S)),
         STAT(arrayOf(Type.STAT u S), arrayOf(INT u S)),
         STAT_BASE(arrayOf(Type.STAT u S), arrayOf(INT u S)),
