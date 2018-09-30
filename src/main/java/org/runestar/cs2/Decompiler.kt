@@ -1,20 +1,25 @@
 package org.runestar.cs2
 
+import org.runestar.cs2.bin.NameLoader
 import org.runestar.cs2.bin.ParamTypeLoader
 import org.runestar.cs2.bin.ScriptLoader
-import org.runestar.cs2.cg.write
+import org.runestar.cs2.cg.Generator
 import org.runestar.cs2.ir.Interpreter
-import java.lang.StringBuilder
 
 class Decompiler(
         scriptLoader: ScriptLoader,
-        paramTypeLoader: ParamTypeLoader
+        paramTypeLoader: ParamTypeLoader,
+        fontNameLoader: NameLoader,
+        graphicNameLoader: NameLoader,
+        scriptNameLoader: NameLoader
 ) {
 
     private val interpreter = Interpreter(scriptLoader, paramTypeLoader)
 
+    private val generator = Generator(fontNameLoader, graphicNameLoader, scriptNameLoader)
+
     fun <A : Appendable> decompile(id: Int, appendable: A): A {
-        write(appendable, interpreter.interpret(id))
+        generator.write(appendable, interpreter.interpret(id))
         return appendable
     }
 
