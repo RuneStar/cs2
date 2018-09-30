@@ -24,7 +24,13 @@ internal class Generator(
     ) {
         val writer = LineWriter(appendable)
         val root = reconstruct(func)
-        writer.append("script").append(func.id.toString()).append('(')
+        val scriptName = scriptNameLoader.load(func.id)
+        if (scriptName == null) {
+            writer.append("script").append(func.id.toString())
+        } else {
+            writer.append(scriptName)
+        }
+        writer.append('(')
         func.args.joinTo(writer) { "${it.type.literal} \$${it.name}" }
         writer.append(")(")
         func.returns.joinTo(writer) { it.literal }
@@ -223,6 +229,10 @@ internal class Generator(
 
     private fun writeOperation(writer: LineWriter, expr: Expr.Operation) {
         val op = expr.id
+        if (op == Opcodes.INVOKE) {
+            writeInvoke(writer, expr)
+            return
+        }
         val infixSym = INFIX_MAP[expr.id]
         if (infixSym != null) {
             val a = expr.arguments[0]
@@ -258,6 +268,28 @@ internal class Generator(
             }
             writer.append(')')
         }
+    }
+
+    private fun writeInvoke(writer: LineWriter, invoke: Expr.Operation) {
+        writer.append('~')
+        val invokeId = (invoke.arguments.first() as Expr.Cst).cst as Int
+        val scriptName = scriptNameLoader.load(invokeId)
+        if (scriptName == null) {
+            writer.append("script").append(invokeId.toString())
+        } else {
+            writer.append(scriptName.removePrefix("[proc,").removeSuffix("]"))
+        }
+        writer.append('(')
+        val args = invoke.arguments.iterator()
+        args.next()
+        if (args.hasNext()) {
+            writeExpr(writer, args.next())
+        }
+        while (args.hasNext()) {
+            writer.append(", ")
+            writeExpr(writer, args.next())
+        }
+        writer.append(')')
     }
 
     private val INFIX_MAP = mapOf(

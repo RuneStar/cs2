@@ -21,9 +21,11 @@ fun main(args: Array<String>) {
     )
 
     loadDir.toFile().list().forEach { fileName ->
-        println(fileName)
-        val s = decompiler.decompile(fileName.toInt())
-        val saveFile = saveDir.resolve("$fileName.cs2")
+        val scriptId = fileName.toInt()
+        val s = decompiler.decompile(scriptId)
+        val scriptName = NameLoader.SCRIPTS.load(scriptId) ?: fileName
+        println(scriptName)
+        val saveFile = saveDir.resolve("$scriptName.cs2")
         Files.write(saveFile, s.toByteArray())
     }
 }
