@@ -11,6 +11,7 @@ import org.runestar.cs2.ir.Func
 import org.runestar.cs2.ir.Insn
 import org.runestar.cs2.names
 import java.lang.Appendable
+import java.lang.IllegalStateException
 
 internal class Generator(
         val fontNameLoader: NameLoader,
@@ -246,6 +247,18 @@ internal class Generator(
         if (op == Opcodes.INVOKE) {
             writeInvoke(writer, expr)
             return
+        }
+        if (op == Opcodes.BRANCH_EQUALS) {
+            val right = expr.arguments[1]
+            if (right is Expr.Cst && right.type == Type.BOOLEAN) {
+                when (right.cst) {
+                    1 -> {}
+                    0 -> writer.append('!')
+                    else -> throw IllegalStateException()
+                }
+                writeExpr(writer, expr.arguments[0])
+                return
+            }
         }
         val infixSym = INFIX_MAP[expr.id]
         if (infixSym != null) {
