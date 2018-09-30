@@ -19,7 +19,7 @@ internal class Interpreter(
     fun interpret(id: Int): Func {
         val cached = cache[id]
         if (cached != null) return cached
-        val script = checkNotNull(scriptLoader.load(id))
+        val script = scriptLoader.load(id)
         val insns = arrayOfNulls<Insn?>(script.opcodes.size)
         interpret(insns, State(this, id, script))
         val returnInsn = (insns.last { it != null && it is Insn.Return } as Insn.Return).expr as Expr.Operation
