@@ -217,6 +217,13 @@ internal class Generator(
                     writer.append("0x").append(n.toString(16).toUpperCase().padStart(6, '0'))
                 }
             }
+            Type.INT -> {
+                when (n) {
+                    Int.MAX_VALUE -> writer.append("^int_max")
+                    Int.MIN_VALUE -> writer.append("^int_min")
+                    else -> writer.append(n.toString())
+                }
+            }
             else -> writer.append(n.toString())
         }
     }
