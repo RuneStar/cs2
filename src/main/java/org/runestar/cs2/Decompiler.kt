@@ -8,10 +8,10 @@ import org.runestar.cs2.ir.Interpreter
 
 class Decompiler(
         scriptLoader: ScriptLoader,
-        paramTypeLoader: ParamTypeLoader,
-        fontNameLoader: NameLoader,
-        graphicNameLoader: NameLoader,
-        scriptNameLoader: NameLoader
+        paramTypeLoader: ParamTypeLoader = ParamTypeLoader.DEFAULT,
+        fontNameLoader: NameLoader = NameLoader.FONTS,
+        graphicNameLoader: NameLoader = NameLoader.GRAPHICS,
+        scriptNameLoader: NameLoader = NameLoader.SCRIPTS
 ) {
 
     private val interpreter = Interpreter(scriptLoader, paramTypeLoader)
