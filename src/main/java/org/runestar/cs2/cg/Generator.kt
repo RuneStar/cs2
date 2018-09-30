@@ -210,6 +210,13 @@ internal class Generator(
             }
             Type.FONTMETRICS -> writeNamedInt(writer, fontNameLoader, n)
             Type.GRAPHIC -> writeNamedInt(writer, graphicNameLoader, n)
+            Type.COLOUR -> {
+                if (n == 0) {
+                    writer.append('0')
+                } else {
+                    writer.append("0x").append(n.toString(16).toUpperCase().padStart(6, '0'))
+                }
+            }
             else -> writer.append(n.toString())
         }
     }

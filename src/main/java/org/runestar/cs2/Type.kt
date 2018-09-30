@@ -29,6 +29,7 @@ enum class Type(val desc: Char) {
     CHAR('z'),
 
     TYPE('?'),
+    COLOUR('!'),
     ;
 
     val literal = name.toLowerCase()
