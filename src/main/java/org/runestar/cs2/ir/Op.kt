@@ -200,7 +200,7 @@ internal interface Op {
         CC_SETMODELANIM(arrayOf(INT u S, BOOLEAN u O)),
         CC_SETMODELORTHOG(arrayOf(BOOLEAN u S, BOOLEAN u O)),
         CC_SETTEXT(arrayOf(STRING u S, BOOLEAN u O)),
-        CC_SETTEXTFONT(arrayOf(INT u S, BOOLEAN u O)),
+        CC_SETTEXTFONT(arrayOf(FONTMETRICS u S, BOOLEAN u O)),
         CC_SETTEXTALIGN(arrayOf(INT u S, INT u S, INT u S, BOOLEAN u O)),
         CC_SETTEXTANTIMACRO(arrayOf(BOOLEAN u S, BOOLEAN u O)),
         CC_SETOUTLINE(arrayOf(INT u S, BOOLEAN u O)),

@@ -49,6 +49,7 @@ enum class Type(val desc: Char) {
             if (a == a.topType.type) return b
             if (b == b.topType.type) return a
             if ((a == OBJ || a == NAMEDOBJ) && (b == OBJ || b == NAMEDOBJ)) return OBJ
+            if ((a == FONTMETRICS || a == GRAPHIC) && (b == FONTMETRICS || b == GRAPHIC)) return FONTMETRICS
             throw IllegalArgumentException("$a $b")
         }
     }
