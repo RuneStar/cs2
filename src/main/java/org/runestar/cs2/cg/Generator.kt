@@ -197,6 +197,8 @@ internal class Generator(
             Type.COMPONENT -> {
                 when (n) {
                     -1 -> writer.append("-1")
+                    -2147483645 -> writer.append("?selected")
+                    -2147483642 -> writer.append("?drag_target")
                     else -> writer.append("${n ushr 16}").append(':').append("${n and 0xFFFF}")
                 }
             }
@@ -222,7 +224,20 @@ internal class Generator(
                 when (n) {
                     Int.MAX_VALUE -> writer.append("^int_max")
                     Int.MIN_VALUE -> writer.append("^int_min")
+                    -2147483647 -> writer.append("?mouse_x")
+                    -2147483646 -> writer.append("?mouse_y")
+                    -2147483644 -> writer.append("?op_index")
+                    -2147483643 -> writer.append("?selected_id")
+                    -2147483641 -> writer.append("?drag_target_id")
+                    -2147483640 -> writer.append("?key_typed")
                     else -> writer.append(n.toString())
+                }
+            }
+            Type.CHAR -> {
+                when (n) {
+                    -2147483639 -> writer.append("?key_pressed")
+                    -1 -> writer.append("-1")
+                    else -> error(n)
                 }
             }
             else -> writer.append(n.toString())
