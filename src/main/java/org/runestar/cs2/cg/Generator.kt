@@ -205,7 +205,8 @@ internal class Generator(
             Type.BOOLEAN -> when (n) {
                 0 -> writer.append("false")
                 1 -> writer.append("true")
-                else -> writer.append(n.toString()) // todo
+                -1 -> writer.append("-1")
+                else -> error(n)
             }
             Type.COORDGRID -> when (n) {
                 -1 -> writer.append("-1")
