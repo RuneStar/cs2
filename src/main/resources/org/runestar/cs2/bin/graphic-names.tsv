@@ -744,6 +744,12 @@
 1212	options_radio_buttons,5
 1213	options_radio_buttons,6
 1214	options_radio_buttons,7
+1215	checkbox,0
+1216	checkbox,1
+1217	checkbox,2
+1218	checkbox,3
+1219	checkbox,4
+1220	checkbox,5
 1226	bankbuttons,4
 1227	bankbuttons,5
 1228	logo_deadman_mode
@@ -802,7 +808,9 @@
 1439	worldmap_icon,0
 1440	worldmap_icon,1
 1442	verdana_11pt_regular
+1443	verdana_11pt_bold
 1445	verdana_13pt_regular
+1446	verdana_13pt_bold
 1447	verdana_15pt_regular
 1448	mapfunction,0
 1449	mapfunction,1
