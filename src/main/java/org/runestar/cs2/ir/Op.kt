@@ -783,6 +783,8 @@ internal interface Op {
             val args = ArrayList<Expr>()
             if (id >= 2000) {
                 args.add(state.pop(Type.COMPONENT))
+            } else {
+                args.add(Expr.Cst(Type.BOOLEAN, state.intOperand))
             }
             var s = checkNotNull(state.strStack.pop().cst)
             if (s.isNotEmpty() && s.last() == 'Y') {
@@ -797,9 +799,6 @@ internal interface Op {
             }
             args.add(state.pop(Type.INT))
             args.reverse()
-            if (id < 2000) {
-                args.add(Expr.Cst(Type.BOOLEAN, state.intOperand))
-            }
             return Insn.Assignment(emptyList(), Expr.Operation(emptyList(), id, args))
         }
     }
