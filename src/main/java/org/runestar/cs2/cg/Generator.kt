@@ -255,7 +255,10 @@ internal class Generator(
     }
 
     private fun writeConstantString(writer: LineWriter, s: String) {
-        writer.append('"').append(s).append('"')
+        when (s) {
+            "event_opbase" -> writer.append("?op_base")
+            else -> writer.append('"').append(s).append('"')
+        }
     }
 
     private fun writeOperation(writer: LineWriter, expr: Expr.Operation) {
