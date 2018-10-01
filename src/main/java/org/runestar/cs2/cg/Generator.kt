@@ -266,6 +266,12 @@ internal class Generator(
         if (op == Opcodes.INVOKE) {
             writeInvoke(writer, expr)
             return
+        } else if (
+                (op >= Opcodes.CC_SETONCLICK && op <= Opcodes.CC_SETONRESIZE) ||
+                (op >= Opcodes.IF_SETONCLICK && op <= Opcodes.IF_SETONRESIZE)
+        ) {
+            writeAddHook(writer, expr)
+            return
         }
         if (op == Opcodes.BRANCH_EQUALS) {
             val right = expr.arguments[1]
@@ -314,6 +320,50 @@ internal class Generator(
             }
             writer.append(')')
         }
+    }
+
+    private fun writeAddHook(writer: LineWriter, operation: Expr.Operation) {
+        writer.append(names[operation.id]).append('(')
+
+        val args = operation.arguments.toMutableList()
+        val component = args.removeAt(args.lastIndex)
+        writeExpr(writer, component)
+
+        val invokeId = (args[0] as Expr.Cst).cst as Int
+        if (invokeId == -1) {
+            writer.append(", -1)")
+            return
+        }
+
+        val scriptName = scriptNameLoader.load(invokeId)
+        val triggerCount = (args.removeAt(args.lastIndex) as Expr.Cst).cst as Int
+        val triggers = args.takeLast(triggerCount)
+        repeat(triggerCount) { args.removeAt(args.lastIndex) }
+
+        writer.append(", &")
+        if (scriptName == null) {
+            writer.append("script").append(invokeId.toString())
+        } else {
+            writer.append(scriptName.removePrefix("[clientscript,").removeSuffix("]"))
+        }
+        writer.append('(')
+        val scriptArgs = args.iterator()
+        scriptArgs.next()
+        if (scriptArgs.hasNext()) {
+            writeExpr(writer, scriptArgs.next())
+        }
+        while (scriptArgs.hasNext()) {
+            writer.append(", ")
+            writeExpr(writer, scriptArgs.next())
+        }
+        writer.append(')')
+
+        for (trigger in triggers) {
+            writer.append(", ")
+            writeExpr(writer, trigger)
+        }
+
+        writer.append(')')
     }
 
     private fun writeInvoke(writer: LineWriter, invoke: Expr.Operation) {

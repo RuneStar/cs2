@@ -789,10 +789,13 @@ internal interface Op {
             var s = checkNotNull(state.strStack.pop().cst)
             if (s.isNotEmpty() && s.last() == 'Y') {
                 val n = checkNotNull(state.intStack.pop().cst)
+                args.add(Expr.Cst(Type.INT, n))
                 repeat(n) {
                     args.add(state.pop(Type.INT))
                 }
                 s = s.dropLast(1)
+            } else {
+                args.add(Expr.Cst(Type.INT, 0))
             }
             for (i in s.lastIndex downTo 0) {
                 args.add(state.pop(Type.of(s[i])))
