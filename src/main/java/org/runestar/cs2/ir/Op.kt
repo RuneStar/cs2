@@ -617,7 +617,7 @@ internal interface Op {
         _6511(arrayOf(INT u S), arrayOf(INT u S, INT u S, STRING u S, INT u S, INT u S, STRING u S)),
         _6512(arrayOf(BOOLEAN u S)),
 
-        HAS_MOBILE(defs = arrayOf(BOOLEAN u S)),
+        ON_MOBILE(defs = arrayOf(BOOLEAN u S)),
         CLIENTTYPE(defs = arrayOf(INT u S)),
         _6520(),
         _6521(),
