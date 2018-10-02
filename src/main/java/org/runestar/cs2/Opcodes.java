@@ -62,7 +62,7 @@ public final class Opcodes {
     public static final int CC_SETTEXT = 1112;
     public static final int CC_SETTEXTFONT = 1113;
     public static final int CC_SETTEXTALIGN = 1114;
-    public static final int CC_SETTEXTANTIMACRO = 1115;
+    public static final int CC_SETTEXTSHADOW = 1115;
     public static final int CC_SETOUTLINE = 1116;
     public static final int CC_SETGRAPHICSHADOW = 1117;
     public static final int CC_SETVFLIP = 1118;
@@ -169,7 +169,7 @@ public final class Opcodes {
     public static final int IF_SETTEXT = 2112;
     public static final int IF_SETTEXTFONT = 2113;
     public static final int IF_SETTEXTALIGN = 2114;
-    public static final int IF_SETTEXTANTIMACRO = 2115;
+    public static final int IF_SETTEXTSHADOW = 2115;
     public static final int IF_SETOUTLINE = 2116;
     public static final int IF_SETGRAPHICSHADOW = 2117;
     public static final int IF_SETVFLIP = 2118;
