@@ -594,7 +594,7 @@ internal interface Op {
         _5308(defs = arrayOf(INT u S)),
         _5309(arrayOf(INT u S)),
 
-        _5504(arrayOf(INT u S, INT u S)),
+        CAM_FORCEANGLE(arrayOf(INT u S, INT u S)),
         _5505(defs = arrayOf(INT u S)),
         _5506(defs = arrayOf(INT u S)),
         _5530(arrayOf(INT u S)),
