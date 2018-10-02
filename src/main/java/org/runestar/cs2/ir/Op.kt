@@ -184,7 +184,7 @@ internal interface Op {
         CC_SETPOSITION(arrayOf(INT u S, INT u S, INT u S, INT u S, BOOLEAN u O)),
         CC_SETSIZE(arrayOf(INT u S, INT u S, INT u S, INT u S, BOOLEAN u O)),
         CC_SETHIDE(arrayOf(BOOLEAN u S, BOOLEAN u O)),
-        _1005(arrayOf(BOOLEAN u S, BOOLEAN u O)),
+        CC_SETNOCLICKTHROUGH(arrayOf(BOOLEAN u S, BOOLEAN u O)),
         _1006(arrayOf(BOOLEAN u S, BOOLEAN u O)),
 
         CC_SETSCROLLPOS(arrayOf(INT u S, INT u S, BOOLEAN u O)),
@@ -273,7 +273,7 @@ internal interface Op {
         IF_SETPOSITION(arrayOf(INT u S, INT u S, INT u S, INT u S, COMPONENT u S)),
         IF_SETSIZE(arrayOf(INT u S, INT u S, INT u S, INT u S, COMPONENT u S)),
         IF_SETHIDE(arrayOf(BOOLEAN u S, COMPONENT u S)),
-        _2005(arrayOf(BOOLEAN u S, COMPONENT u S)),
+        IF_SETNOCLICKTHROUGH(arrayOf(BOOLEAN u S, COMPONENT u S)),
         _2006(arrayOf(BOOLEAN u S, COMPONENT u S)),
 
         IF_SETSCROLLPOS(arrayOf(INT u S, INT u S, COMPONENT u S)),
