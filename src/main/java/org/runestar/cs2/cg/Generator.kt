@@ -10,6 +10,7 @@ import org.runestar.cs2.ir.Expr
 import org.runestar.cs2.ir.Func
 import org.runestar.cs2.ir.Insn
 import org.runestar.cs2.names
+import org.runestar.cs2.util.trim
 import java.lang.Appendable
 import java.lang.IllegalStateException
 
@@ -344,7 +345,7 @@ internal class Generator(
         if (scriptName == null) {
             writer.append("script").append(invokeId.toString())
         } else {
-            writer.append(scriptName.removePrefix("[clientscript,").removeSuffix("]"))
+            writer.append(scriptName.trim("[clientscript,", ']'))
         }
         writer.append('(')
         val scriptArgs = args.iterator()
@@ -373,7 +374,7 @@ internal class Generator(
         if (scriptName == null) {
             writer.append("script").append(invokeId.toString())
         } else {
-            writer.append(scriptName.removePrefix("[proc,").removeSuffix("]"))
+            writer.append(scriptName.trim("[proc,", ']'))
         }
         writer.append('(')
         val args = invoke.arguments.iterator()
