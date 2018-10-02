@@ -8,8 +8,8 @@ public final class Opcodes {
     private Opcodes() {}
 
     public static final int PUSH_CONSTANT_INT = 0;
-    public static final int PUSH_VAR = 1;
-    public static final int POP_VAR = 2;
+    public static final int GET_VAR = 1;
+    public static final int SET_VAR = 2;
     public static final int PUSH_CONSTANT_STRING = 3;
     public static final int BRANCH = 6;
     public static final int BRANCH_NOT = 7;
@@ -17,8 +17,8 @@ public final class Opcodes {
     public static final int BRANCH_LESS_THAN = 9;
     public static final int BRANCH_GREATER_THAN = 10;
     public static final int RETURN = 21;
-    public static final int PUSH_VARBIT = 25;
-    public static final int POP_VARBIT = 27;
+    public static final int GET_VARBIT = 25;
+    public static final int SET_VARBIT = 27;
     public static final int BRANCH_LESS_THAN_OR_EQUALS = 31;
     public static final int BRANCH_GREATER_THAN_OR_EQUALS = 32;
     public static final int PUSH_INT_LOCAL = 33;
@@ -32,8 +32,8 @@ public final class Opcodes {
     public static final int GET_VARC_INT = 42;
     public static final int SET_VARC_INT = 43;
     public static final int DEFINE_ARRAY = 44;
-    public static final int PUSH_ARRAY_INT = 45;
-    public static final int POP_ARRAY_INT = 46;
+    public static final int GET_ARRAY_INT = 45;
+    public static final int SET_ARRAY_INT = 46;
     public static final int GET_VARC_STRING = 47;
     public static final int SET_VARC_STRING = 48;
     public static final int SWITCH = 60;

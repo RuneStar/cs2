@@ -158,10 +158,10 @@ internal interface Op {
     }
 
     private enum class Basic(val args: Array<Arg> = emptyArray(), val defs: Array<Arg> = emptyArray()) : Op {
-        PUSH_VAR(arrayOf(INT u O), arrayOf(INT u S)),
-        POP_VAR(arrayOf(INT u O, INT u S)),
-        PUSH_VARBIT(arrayOf(INT u O), arrayOf(INT u S)),
-        POP_VARBIT(arrayOf(INT u O, INT u S)),
+        GET_VAR(arrayOf(INT u O), arrayOf(INT u S)),
+        SET_VAR(arrayOf(INT u O, INT u S)),
+        GET_VARBIT(arrayOf(INT u O), arrayOf(INT u S)),
+        SET_VARBIT(arrayOf(INT u O, INT u S)),
         PUSH_INT_LOCAL(arrayOf(INT u L), arrayOf(INT u S)),
         POP_INT_LOCAL(arrayOf(INT u S), arrayOf(INT u L)),
         PUSH_STRING_LOCAL(arrayOf(STRING u L), arrayOf(STRING u S)),
@@ -171,8 +171,8 @@ internal interface Op {
         GET_VARC_INT(arrayOf(INT u O), arrayOf(INT u S)),
         SET_VARC_INT(arrayOf(INT u O, INT u S)),
         DEFINE_ARRAY(arrayOf(INT u S, INT u O)),
-        PUSH_ARRAY_INT(arrayOf(INT u S, INT u O), arrayOf(INT u S)),
-        POP_ARRAY_INT(arrayOf(INT u S, INT u S, INT u O)),
+        GET_ARRAY_INT(arrayOf(INT u S, INT u O), arrayOf(INT u S)),
+        SET_ARRAY_INT(arrayOf(INT u S, INT u S, INT u O)),
         GET_VARC_STRING(arrayOf(INT u O), arrayOf(STRING u S)),
         SET_VARC_STRING(arrayOf(INT u O, STRING u S)),
         CC_CREATE(arrayOf(COMPONENT u S, INT u S, INT u S, BOOLEAN u O)),
