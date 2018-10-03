@@ -26,6 +26,8 @@ internal interface Op {
             list.add(Return)
             list.add(JoinString)
             list.add(DefineArray)
+            list.add(GetArrayInt)
+            list.add(SetArrayInt)
             list.addAll(PushCst.values().asList())
             list.addAll(BranchCompare.values().asList())
             list.addAll(Basic.values().asList())
@@ -159,9 +161,40 @@ internal interface Op {
         override fun translate(state: Interpreter.State): Insn {
             val length = state.pop(Type.INT)
             val intOperand = state.intOperand
-            val arrayId = Expr.Cst(Type.INT, intOperand shr 16)
-            val type = Expr.Cst(Type.TYPE, intOperand and 0xFFFF)
-            return Insn.Assignment(emptyList(), Expr.Operation(emptyList(), id, mutableListOf(arrayId, type, length)))
+            val arrayId = intOperand shr 16
+            val arrayIdVar = Expr.Cst(Type.INT, arrayId)
+            val typeDesc = intOperand and 0xFFFF
+            val type = Expr.Cst(Type.TYPE, intOperand and typeDesc)
+            state.arrayTypes[arrayId] = Type.of(typeDesc)
+            return Insn.Assignment(emptyList(), Expr.Operation(emptyList(), id, mutableListOf(arrayIdVar, type, length)))
+        }
+    }
+
+    private object GetArrayInt : Op {
+
+        override val id = Opcodes.GET_ARRAY_INT
+
+        override fun translate(state: Interpreter.State): Insn {
+            val arrayId = state.intOperand
+            val arrayIdVar = Expr.Cst(Type.INT, arrayId)
+            val arrayIndex = state.pop(Type.INT)
+            val arrayType = state.arrayTypes[arrayId] ?: Type.INT
+            val def = state.push(arrayType)
+            return Insn.Assignment(listOf(def), Expr.Operation(listOf(arrayType), id, mutableListOf(arrayIdVar, arrayIndex)))
+        }
+    }
+
+    private object SetArrayInt : Op {
+
+        override val id = Opcodes.SET_ARRAY_INT
+
+        override fun translate(state: Interpreter.State): Insn {
+            val arrayId = state.intOperand
+            val arrayType = state.arrayTypes[arrayId] ?: Type.INT
+            val arrayIdVar = Expr.Cst(Type.INT, arrayId)
+            val value = state.pop(arrayType)
+            val arrayIndex = state.pop(Type.INT)
+            return Insn.Assignment(emptyList(), Expr.Operation(emptyList(), id, mutableListOf(arrayIdVar, arrayIndex, value)))
         }
     }
 
@@ -184,8 +217,6 @@ internal interface Op {
         POP_STRING_DISCARD(arrayOf(STRING u S)),
         GET_VARC_INT(arrayOf(INT u O), arrayOf(INT u S)),
         SET_VARC_INT(arrayOf(INT u O, INT u S)),
-        GET_ARRAY_INT(arrayOf(INT u S, INT u O), arrayOf(INT u S)),
-        SET_ARRAY_INT(arrayOf(INT u S, INT u S, INT u O)),
         GET_VARC_STRING(arrayOf(INT u O), arrayOf(STRING u S)),
         SET_VARC_STRING(arrayOf(INT u O, STRING u S)),
         CC_CREATE(arrayOf(COMPONENT u S, INT u S, INT u S, BOOLEAN u O)),

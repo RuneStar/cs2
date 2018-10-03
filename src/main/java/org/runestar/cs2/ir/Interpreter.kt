@@ -88,12 +88,18 @@ internal class Interpreter(
     internal class State(
             val interpreter: Interpreter,
             val id: Int,
-            val script: Script,
-            var pc: Int = 0,
-            val intStack: ListStack<Val<Int?>> = ListStack(ArrayList()),
-            val strStack: ListStack<Val<String?>> = ListStack(ArrayList()),
-            private var stackVarCounter: Int = 0
+            val script: Script
     ) {
+
+        var pc: Int = 0
+
+        val intStack: ListStack<Val<Int?>> = ListStack(ArrayList())
+
+        val strStack: ListStack<Val<String?>> = ListStack(ArrayList())
+
+        private var stackVarCounter: Int = 0
+
+        val arrayTypes: Array<Type?> = arrayOfNulls(5)
 
         val intOperand: Int get() = script.intOperands[pc]
 
