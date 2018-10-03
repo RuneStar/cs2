@@ -602,12 +602,12 @@ internal interface Op {
 
         _5630(),
 
-        _6200(arrayOf(INT u S, INT u S)),
-        _6201(arrayOf(INT u S, INT u S)),
-        _6202(arrayOf(INT u S, INT u S, INT u S, INT u S)),
-        _6203(defs = arrayOf(INT u S, INT u S)),
-        _6204(defs = arrayOf(INT u S, INT u S)),
-        _6205(defs = arrayOf(INT u S, INT u S)),
+        VIEWPORT_SETFOV(arrayOf(INT u S, INT u S)),
+        VIEWPORT_SETZOOM(arrayOf(INT u S, INT u S)),
+        VIEWPORT_CLAMPFOV(arrayOf(INT u S, INT u S, INT u S, INT u S)),
+        VIEWPORT_GETEFFECTIVESIZE(defs = arrayOf(INT u S, INT u S)),
+        VIEWPORT_GETZOOM(defs = arrayOf(INT u S, INT u S)),
+        VIEWPORT_GETFOV(defs = arrayOf(INT u S, INT u S)),
 
         _6500(defs = arrayOf(BOOLEAN u S)),
         _6501(defs = arrayOf(INT u S, INT u S, STRING u S, INT u S, INT u S, STRING u S)),
