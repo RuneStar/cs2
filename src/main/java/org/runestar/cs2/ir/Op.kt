@@ -25,6 +25,7 @@ internal interface Op {
             list.add(Invoke)
             list.add(Return)
             list.add(JoinString)
+            list.add(DefineArray)
             list.addAll(PushCst.values().asList())
             list.addAll(BranchCompare.values().asList())
             list.addAll(Basic.values().asList())
@@ -151,6 +152,19 @@ internal interface Op {
         }
     }
 
+    private object DefineArray : Op {
+
+        override val id = Opcodes.DEFINE_ARRAY
+
+        override fun translate(state: Interpreter.State): Insn {
+            val length = state.pop(Type.INT)
+            val intOperand = state.intOperand
+            val arrayId = Expr.Cst(Type.INT, intOperand shr 16)
+            val type = Expr.Cst(Type.TYPE, intOperand and 0xFFFF)
+            return Insn.Assignment(emptyList(), Expr.Operation(emptyList(), id, mutableListOf(arrayId, type, length)))
+        }
+    }
+
     private data class Arg(val type: Type, val src: Src)
 
     private enum class Src {
@@ -170,7 +184,6 @@ internal interface Op {
         POP_STRING_DISCARD(arrayOf(STRING u S)),
         GET_VARC_INT(arrayOf(INT u O), arrayOf(INT u S)),
         SET_VARC_INT(arrayOf(INT u O, INT u S)),
-        DEFINE_ARRAY(arrayOf(INT u S, INT u O)),
         GET_ARRAY_INT(arrayOf(INT u S, INT u O), arrayOf(INT u S)),
         SET_ARRAY_INT(arrayOf(INT u S, INT u S, INT u O)),
         GET_VARC_STRING(arrayOf(INT u O), arrayOf(STRING u S)),
