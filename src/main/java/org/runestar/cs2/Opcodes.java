@@ -494,11 +494,11 @@ public final class Opcodes {
     public static final int VIEWPORT_GETEFFECTIVESIZE = 6203;
     public static final int VIEWPORT_GETZOOM = 6204;
     public static final int VIEWPORT_GETFOV = 6205;
-    public static final int _6500 = 6500;
-    public static final int _6501 = 6501;
-    public static final int _6502 = 6502;
-    public static final int _6506 = 6506;
-    public static final int _6507 = 6507;
+    public static final int WORLDLIST_FETCH = 6500;
+    public static final int WORLDLIST_START = 6501;
+    public static final int WORLDLIST_NEXT = 6502;
+    public static final int WORLDLIST_SPECIFIC = 6506;
+    public static final int WORLDLIST_SORT = 6507;
     public static final int _6511 = 6511;
     public static final int _6512 = 6512;
     public static final int NC_PARAM = 6513;
