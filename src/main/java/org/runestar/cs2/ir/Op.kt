@@ -609,11 +609,11 @@ internal interface Op {
         VIEWPORT_GETZOOM(defs = arrayOf(INT u S, INT u S)),
         VIEWPORT_GETFOV(defs = arrayOf(INT u S, INT u S)),
 
-        _6500(defs = arrayOf(BOOLEAN u S)),
-        _6501(defs = arrayOf(INT u S, INT u S, STRING u S, INT u S, INT u S, STRING u S)),
-        _6502(defs = arrayOf(INT u S, INT u S, STRING u S, INT u S, INT u S, STRING u S)),
-        _6506(arrayOf(INT u S), arrayOf(INT u S, INT u S, STRING u S, INT u S, INT u S, STRING u S)),
-        _6507(arrayOf(INT u S, BOOLEAN u S, INT u S, BOOLEAN u S)),
+        WORLDLIST_FETCH(defs = arrayOf(BOOLEAN u S)),
+        WORLDLIST_START(defs = arrayOf(INT u S, INT u S, STRING u S, INT u S, INT u S, STRING u S)),
+        WORLDLIST_NEXT(defs = arrayOf(INT u S, INT u S, STRING u S, INT u S, INT u S, STRING u S)),
+        WORLDLIST_SPECIFIC(arrayOf(INT u S), arrayOf(INT u S, INT u S, STRING u S, INT u S, INT u S, STRING u S)),
+        WORLDLIST_SORT(arrayOf(INT u S, BOOLEAN u S, INT u S, BOOLEAN u S)),
         _6511(arrayOf(INT u S), arrayOf(INT u S, INT u S, STRING u S, INT u S, INT u S, STRING u S)),
         _6512(arrayOf(BOOLEAN u S)),
 
