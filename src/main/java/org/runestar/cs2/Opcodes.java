@@ -483,10 +483,10 @@ public final class Opcodes {
     public static final int _5308 = 5308;
     public static final int _5309 = 5309;
     public static final int CAM_FORCEANGLE = 5504;
-    public static final int _5505 = 5505;
-    public static final int _5506 = 5506;
-    public static final int _5530 = 5530;
-    public static final int _5531 = 5531;
+    public static final int CAM_GETANGLE_XA = 5505;
+    public static final int CAM_GETANGLE_YA = 5506;
+    public static final int CAM_SETFOLLOWHEIGHT = 5530;
+    public static final int CAM_GETFOLLOWHEIGHT = 5531;
     public static final int _5630 = 5630;
     public static final int _6200 = 6200;
     public static final int _6201 = 6201;

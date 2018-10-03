@@ -595,10 +595,10 @@ internal interface Op {
         _5309(arrayOf(INT u S)),
 
         CAM_FORCEANGLE(arrayOf(INT u S, INT u S)),
-        _5505(defs = arrayOf(INT u S)),
-        _5506(defs = arrayOf(INT u S)),
-        _5530(arrayOf(INT u S)),
-        _5531(defs = arrayOf(INT u S)),
+        CAM_GETANGLE_XA(defs = arrayOf(INT u S)),
+        CAM_GETANGLE_YA(defs = arrayOf(INT u S)),
+        CAM_SETFOLLOWHEIGHT(arrayOf(INT u S)),
+        CAM_GETFOLLOWHEIGHT(defs = arrayOf(INT u S)),
 
         _5630(),
 
