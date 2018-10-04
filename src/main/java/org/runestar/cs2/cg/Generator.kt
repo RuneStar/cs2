@@ -15,7 +15,6 @@ import java.lang.Appendable
 import java.lang.IllegalStateException
 
 internal class Generator(
-        private val fontNameLoader: NameLoader,
         private val graphicNameLoader: NameLoader,
         private val scriptNameLoader: NameLoader,
         private val statNameLoader: NameLoader,
@@ -215,8 +214,7 @@ internal class Generator(
                 -1 -> writer.append("-1")
                 else -> writer.append("${n ushr 28}").append(':').append("${(n ushr 14) and 0x3FFF}").append(':').append("${n and 0x3FFF}")
             }
-            Type.FONTMETRICS -> writeHashNamedInt(writer, fontNameLoader, n)
-            Type.GRAPHIC -> writeHashNamedInt(writer, graphicNameLoader, n)
+            Type.GRAPHIC, Type.FONTMETRICS -> writeHashNamedInt(writer, graphicNameLoader, n)
             Type.COLOUR -> {
                 if (n == 0) {
                     writer.append('0')

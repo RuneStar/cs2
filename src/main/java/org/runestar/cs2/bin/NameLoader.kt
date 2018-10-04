@@ -29,8 +29,6 @@ interface NameLoader {
 
         val GRAPHICS = readResource("graphic-names.tsv")
 
-        val FONTS = readResource("font-names.tsv")
-
         val SCRIPTS = readResource("script-names.tsv")
 
         val STATS = readResource("stat-names.tsv")

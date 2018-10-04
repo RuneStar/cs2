@@ -9,7 +9,6 @@ import org.runestar.cs2.ir.Interpreter
 class Decompiler(
         scriptLoader: ScriptLoader,
         paramTypeLoader: ParamTypeLoader = ParamTypeLoader.DEFAULT,
-        fontNameLoader: NameLoader = NameLoader.FONTS,
         graphicNameLoader: NameLoader = NameLoader.GRAPHICS,
         scriptNameLoader: NameLoader = NameLoader.SCRIPTS,
         statNameLoader: NameLoader = NameLoader.STATS,
@@ -18,7 +17,7 @@ class Decompiler(
 
     private val interpreter = Interpreter(scriptLoader, paramTypeLoader)
 
-    private val generator = Generator(fontNameLoader, graphicNameLoader, scriptNameLoader, statNameLoader, objNameLoader)
+    private val generator = Generator(graphicNameLoader, scriptNameLoader, statNameLoader, objNameLoader)
 
     fun <A : Appendable> decompile(id: Int, appendable: A): A {
         generator.write(appendable, interpreter.interpret(id))
