@@ -199,8 +199,8 @@ internal class Generator(
             Type.COMPONENT -> {
                 when (n) {
                     -1 -> writer.append("-1")
-                    -2147483645 -> writer.append("?selected")
-                    -2147483642 -> writer.append("?drag_target")
+                    -2147483645 -> writer.append("event_com")
+                    -2147483642 -> writer.append("event_dragtarget")
                     else -> writer.append("${n ushr 16}").append(':').append("${n and 0xFFFF}")
                 }
             }
@@ -226,18 +226,18 @@ internal class Generator(
                 when (n) {
                     Int.MAX_VALUE -> writer.append("^int_max")
                     Int.MIN_VALUE -> writer.append("^int_min")
-                    -2147483647 -> writer.append("?mouse_x")
-                    -2147483646 -> writer.append("?mouse_y")
-                    -2147483644 -> writer.append("?op_index")
-                    -2147483643 -> writer.append("?selected_id")
-                    -2147483641 -> writer.append("?drag_target_id")
-                    -2147483640 -> writer.append("?key_typed")
+                    -2147483647 -> writer.append("event_mousex")
+                    -2147483646 -> writer.append("event_mousey")
+                    -2147483644 -> writer.append("event_opindex")
+                    -2147483643 -> writer.append("event_comid")
+                    -2147483641 -> writer.append("event_dragtargetid")
+                    -2147483640 -> writer.append("event_keytyped")
                     else -> writer.append(n.toString())
                 }
             }
             Type.CHAR -> {
                 when (n) {
-                    -2147483639 -> writer.append("?key_pressed")
+                    -2147483639 -> writer.append("event_keypressed")
                     -1 -> writer.append("-1")
                     else -> error(n)
                 }
@@ -268,7 +268,7 @@ internal class Generator(
 
     private fun writeConstantString(writer: LineWriter, s: String) {
         when (s) {
-            "event_opbase" -> writer.append("?op_base")
+            "event_opbase" -> writer.append(s)
             else -> writer.append('"').append(s).append('"')
         }
     }
