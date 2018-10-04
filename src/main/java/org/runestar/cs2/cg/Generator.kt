@@ -198,7 +198,7 @@ internal class Generator(
             Type.TYPE -> writer.append(Type.of(n).literal)
             Type.COMPONENT -> {
                 when (n) {
-                    -1 -> writer.append("-1")
+                    -1 -> writer.append("null")
                     -2147483645 -> writer.append("event_com")
                     -2147483642 -> writer.append("event_dragtarget")
                     else -> writer.append("${n ushr 16}").append(':').append("${n and 0xFFFF}")
@@ -207,11 +207,11 @@ internal class Generator(
             Type.BOOLEAN -> when (n) {
                 0 -> writer.append("false")
                 1 -> writer.append("true")
-                -1 -> writer.append("-1")
+                -1 -> writer.append("null")
                 else -> error(n)
             }
             Type.COORDGRID -> when (n) {
-                -1 -> writer.append("-1")
+                -1 -> writer.append("null")
                 else -> writer.append("${n ushr 28}").append(':').append("${(n ushr 14) and 0x3FFF}").append(':').append("${n and 0x3FFF}")
             }
             Type.GRAPHIC, Type.FONTMETRICS -> writeHashNamedInt(writer, graphicNameLoader, n)
@@ -238,17 +238,26 @@ internal class Generator(
             Type.CHAR -> {
                 when (n) {
                     -2147483639 -> writer.append("event_keypressed")
-                    -1 -> writer.append("-1")
+                    -1 -> writer.append("null")
                     else -> error(n)
                 }
             }
             Type.STAT -> writeNamedInt(writer, statNameLoader, n)
             Type.OBJ, Type.NAMEDOBJ -> writeNamedInt(writer, objNameLoader, n)
-            else -> writer.append(n.toString())
+            else -> {
+                when (n) {
+                    -1 -> writer.append("null")
+                    else -> writer.append(n.toString())
+                }
+            }
         }
     }
 
     private fun writeHashNamedInt(writer: LineWriter, nameLoader: NameLoader, n: Int) {
+        if (n == -1) {
+            writer.append("null")
+            return
+        }
         val name = nameLoader.load(n)
         if (name == null) {
             writer.append(n.toString())
@@ -258,6 +267,10 @@ internal class Generator(
     }
 
     private fun writeNamedInt(writer: LineWriter, nameLoader: NameLoader, n: Int) {
+        if (n == -1) {
+            writer.append("null")
+            return
+        }
         val name = nameLoader.load(n)
         if (name == null) {
             writer.append(n.toString())
@@ -343,7 +356,7 @@ internal class Generator(
 
         val invokeId = (args[0] as Expr.Cst).cst as Int
         if (invokeId == -1) {
-            writer.append(", -1)")
+            writer.append(", null)")
             return
         }
 
