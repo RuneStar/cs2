@@ -18,7 +18,8 @@ internal class Generator(
         private val fontNameLoader: NameLoader,
         private val graphicNameLoader: NameLoader,
         private val scriptNameLoader: NameLoader,
-        private val statNameLoader: NameLoader
+        private val statNameLoader: NameLoader,
+        private val objNameLoader: NameLoader
 ) {
 
     internal fun write(
@@ -244,6 +245,7 @@ internal class Generator(
                 }
             }
             Type.STAT -> writeNamedInt(writer, statNameLoader, n)
+            Type.OBJ, Type.NAMEDOBJ -> writeNamedInt(writer, objNameLoader, n)
             else -> writer.append(n.toString())
         }
     }

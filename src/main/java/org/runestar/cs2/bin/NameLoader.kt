@@ -34,5 +34,7 @@ interface NameLoader {
         val SCRIPTS = readResource("script-names.tsv")
 
         val STATS = readResource("stat-names.tsv")
+
+        val OBJS = readResource("obj-names.tsv")
     }
 }

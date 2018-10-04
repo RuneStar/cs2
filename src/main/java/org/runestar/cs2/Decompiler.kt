@@ -12,12 +12,13 @@ class Decompiler(
         fontNameLoader: NameLoader = NameLoader.FONTS,
         graphicNameLoader: NameLoader = NameLoader.GRAPHICS,
         scriptNameLoader: NameLoader = NameLoader.SCRIPTS,
-        statNameLoader: NameLoader = NameLoader.STATS
+        statNameLoader: NameLoader = NameLoader.STATS,
+        objNameLoader: NameLoader = NameLoader.OBJS
 ) {
 
     private val interpreter = Interpreter(scriptLoader, paramTypeLoader)
 
-    private val generator = Generator(fontNameLoader, graphicNameLoader, scriptNameLoader, statNameLoader)
+    private val generator = Generator(fontNameLoader, graphicNameLoader, scriptNameLoader, statNameLoader, objNameLoader)
 
     fun <A : Appendable> decompile(id: Int, appendable: A): A {
         generator.write(appendable, interpreter.interpret(id))
