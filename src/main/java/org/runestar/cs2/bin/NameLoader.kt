@@ -32,5 +32,7 @@ interface NameLoader {
         val FONTS = readResource("font-names.tsv")
 
         val SCRIPTS = readResource("script-names.tsv")
+
+        val STATS = readResource("stat-names.tsv")
     }
 }

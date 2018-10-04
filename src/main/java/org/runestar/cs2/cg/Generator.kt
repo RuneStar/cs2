@@ -15,9 +15,10 @@ import java.lang.Appendable
 import java.lang.IllegalStateException
 
 internal class Generator(
-        val fontNameLoader: NameLoader,
-        val graphicNameLoader: NameLoader,
-        val scriptNameLoader: NameLoader
+        private val fontNameLoader: NameLoader,
+        private val graphicNameLoader: NameLoader,
+        private val scriptNameLoader: NameLoader,
+        private val statNameLoader: NameLoader
 ) {
 
     internal fun write(
@@ -213,8 +214,8 @@ internal class Generator(
                 -1 -> writer.append("-1")
                 else -> writer.append("${n ushr 28}").append(':').append("${(n ushr 14) and 0x3FFF}").append(':').append("${n and 0x3FFF}")
             }
-            Type.FONTMETRICS -> writeNamedInt(writer, fontNameLoader, n)
-            Type.GRAPHIC -> writeNamedInt(writer, graphicNameLoader, n)
+            Type.FONTMETRICS -> writeHashNamedInt(writer, fontNameLoader, n)
+            Type.GRAPHIC -> writeHashNamedInt(writer, graphicNameLoader, n)
             Type.COLOUR -> {
                 if (n == 0) {
                     writer.append('0')
@@ -242,7 +243,17 @@ internal class Generator(
                     else -> error(n)
                 }
             }
+            Type.STAT -> writeNamedInt(writer, statNameLoader, n)
             else -> writer.append(n.toString())
+        }
+    }
+
+    private fun writeHashNamedInt(writer: LineWriter, nameLoader: NameLoader, n: Int) {
+        val name = nameLoader.load(n)
+        if (name == null) {
+            writer.append(n.toString())
+        } else {
+            writer.append("#\"").append(name).append('"')
         }
     }
 
@@ -251,7 +262,7 @@ internal class Generator(
         if (name == null) {
             writer.append(n.toString())
         } else {
-            writer.append("#\"").append(name).append('"')
+            writer.append(name)
         }
     }
 
