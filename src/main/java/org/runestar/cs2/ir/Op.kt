@@ -832,10 +832,16 @@ internal interface Op {
             }
             var s = checkNotNull(state.strStack.pop().cst)
             if (s.isNotEmpty() && s.last() == 'Y') {
+                val triggerType = when (id) {
+                    Opcodes.IF_SETONSTATTRANSMIT, Opcodes.CC_SETONSTATTRANSMIT -> Type.STAT
+                    Opcodes.IF_SETONINVTRANSMIT, Opcodes.CC_SETONINVTRANSMIT -> Type.INV
+                    Opcodes.IF_SETONVARTRANSMIT, Opcodes.CC_SETONVARTRANSMIT -> Type.INT
+                    else -> error(this)
+                }
                 val n = checkNotNull(state.intStack.pop().cst)
                 args.add(Expr.Cst(Type.INT, n))
                 repeat(n) {
-                    args.add(state.pop(Type.INT))
+                    args.add(state.pop(triggerType))
                 }
                 s = s.dropLast(1)
             } else {
