@@ -102,7 +102,7 @@ public final class Opcodes {
     public static final int CC_SETONDRAG = 1405;
     public static final int CC_SETONTARGETLEAVE = 1406;
     public static final int CC_SETONVARTRANSMIT = 1407;
-    public static final int CC_SETONTIME = 1408;
+    public static final int CC_SETONTIMER = 1408;
     public static final int CC_SETONOP = 1409;
     public static final int CC_SETONDRAGCOMPLETE = 1410;
     public static final int CC_SETONCLICKREPEAT = 1411;
@@ -209,7 +209,7 @@ public final class Opcodes {
     public static final int IF_SETONDRAG = 2405;
     public static final int IF_SETONTARGETLEAVE = 2406;
     public static final int IF_SETONVARTRANSMIT = 2407;
-    public static final int IF_SETONTIME = 2408;
+    public static final int IF_SETONTIMER = 2408;
     public static final int IF_SETONOP = 2409;
     public static final int IF_SETONDRAGCOMPLETE = 2410;
     public static final int IF_SETONCLICKREPEAT = 2411;
