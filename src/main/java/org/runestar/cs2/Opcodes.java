@@ -137,8 +137,8 @@ public final class Opcodes {
     public static final int CC_GETMODELANGLE_Z = 1607;
     public static final int CC_GETMODELANGLE_Y = 1608;
     public static final int CC_GETTRANS = 1609;
-    public static final int CC_GETMODELXOF = 1610;
-    public static final int CC_GETMODELYOF = 1611;
+    public static final int _1610 = 1610;
+    public static final int CC_GETCOLOUR = 1611;
     public static final int _1612 = 1612;
     public static final int _1613 = 1613;
     public static final int _1614 = 1614;
@@ -244,8 +244,8 @@ public final class Opcodes {
     public static final int IF_GETMODELANGLE_Z = 2607;
     public static final int IF_GETMODELANGLE_Y = 2608;
     public static final int IF_GETTRANS = 2609;
-    public static final int IF_GETMODELXOF = 2610;
-    public static final int IF_GETMODELYOF = 2611;
+    public static final int _2610 = 2610;
+    public static final int IF_GETCOLOUR = 2611;
     public static final int _2612 = 2612;
     public static final int _2613 = 2613;
     public static final int _2614 = 2614;
