@@ -633,10 +633,10 @@ internal interface Op {
         CHAT_SETMESSAGEFILTER(arrayOf(STRING u S)),
         CHAT_GETMESSAGEFILTER(defs = arrayOf(STRING u S)),
 
-        _5306(defs = arrayOf(INT u S)),
-        _5307(arrayOf(INT u S)),
-        _5308(defs = arrayOf(INT u S)),
-        _5309(arrayOf(INT u S)),
+        GETWINDOWMODE(defs = arrayOf(INT u S)),
+        SETWINDOWMODE(arrayOf(INT u S)),
+        GETDEFAULTWINDOWMODE(defs = arrayOf(INT u S)),
+        SETDEFAULTWINDOWMODE(arrayOf(INT u S)),
 
         CAM_FORCEANGLE(arrayOf(INT u S, INT u S)),
         CAM_GETANGLE_XA(defs = arrayOf(INT u S)),

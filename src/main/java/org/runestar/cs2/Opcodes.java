@@ -478,10 +478,10 @@ public final class Opcodes {
     public static final int DOCHEAT = 5020;
     public static final int CHAT_SETMESSAGEFILTER = 5021;
     public static final int CHAT_GETMESSAGEFILTER = 5022;
-    public static final int _5306 = 5306;
-    public static final int _5307 = 5307;
-    public static final int _5308 = 5308;
-    public static final int _5309 = 5309;
+    public static final int GETWINDOWMODE = 5306;
+    public static final int SETWINDOWMODE = 5307;
+    public static final int GETDEFAULTWINDOWMODE = 5308;
+    public static final int SETDEFAULTWINDOWMODE = 5309;
     public static final int CAM_FORCEANGLE = 5504;
     public static final int CAM_GETANGLE_XA = 5505;
     public static final int CAM_GETANGLE_YA = 5506;
