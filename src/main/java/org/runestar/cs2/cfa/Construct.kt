@@ -4,7 +4,7 @@ import org.runestar.cs2.ir.Expr
 import org.runestar.cs2.ir.Insn
 import java.util.*
 
-internal interface Construct {
+interface Construct {
 
     var next: Construct?
 

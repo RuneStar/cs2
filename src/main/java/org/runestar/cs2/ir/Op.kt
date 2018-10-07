@@ -1,8 +1,8 @@
 package org.runestar.cs2.ir
 
 import org.runestar.cs2.Opcodes
-import org.runestar.cs2.Type.*
 import org.runestar.cs2.Type
+import org.runestar.cs2.Type.*
 import org.runestar.cs2.ir.Op.Src.*
 import org.runestar.cs2.namesReverse
 import org.runestar.cs2.util.ListStack

@@ -1,6 +1,6 @@
 package org.runestar.cs2.cg
 
-internal class LineWriter(
+class LineWriter(
         private val appendable: Appendable,
         private val indent: CharSequence = "\t",
         private val lineSeparator: CharSequence = "\n"

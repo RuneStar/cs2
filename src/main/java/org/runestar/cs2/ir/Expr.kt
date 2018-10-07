@@ -5,7 +5,7 @@ import org.runestar.cs2.names
 import java.lang.Math.abs
 import java.lang.StringBuilder
 
-internal interface Expr {
+interface Expr {
 
     var types: List<Type>
         get() = listOf(type)
@@ -25,7 +25,7 @@ internal interface Expr {
         val name: String get() {
             val sb = StringBuilder()
             if (id < 0) sb.append('_')
-            return sb.append(type.literal).append(abs(id)).toString()
+            return sb.append(type.nameLiteral).append(abs(id)).toString()
         }
 
         override fun hashCode(): Int = type.topType.hashCode() xor id

@@ -1,13 +1,14 @@
 package org.runestar.cs2.ir
 
-import org.runestar.cs2.TopType
 import org.runestar.cs2.Type
 import org.runestar.cs2.bin.ParamTypeLoader
 import org.runestar.cs2.bin.Script
 import org.runestar.cs2.bin.ScriptLoader
 import org.runestar.cs2.bin.toUnsignedInt
 import org.runestar.cs2.dfa.Phase
-import org.runestar.cs2.util.*
+import org.runestar.cs2.util.Chain
+import org.runestar.cs2.util.HashChain
+import org.runestar.cs2.util.ListStack
 
 internal class Interpreter(
         val scriptLoader: ScriptLoader,
@@ -106,28 +107,28 @@ internal class Interpreter(
         val strOperand: String? get() = script.stringOperands[pc]
 
         fun operand(type: Type): Expr.Cst {
-            val o: Any? = when (type.topType) {
-                TopType.STRING -> strOperand
-                TopType.INT -> intOperand
+            val o: Any? = when (type.topType == Type.STRING) {
+                true -> strOperand
+                false -> intOperand
             }
             return Expr.Cst(type, o)
         }
 
         val switch: Map<Int, Int> get() = script.switches[intOperand]
 
-        fun pop(type: Type): Expr.Var = when (type.topType) {
-            TopType.INT -> intStack.pop().toExpr(type)
-            TopType.STRING -> strStack.pop().toExpr(type)
+        fun pop(type: Type): Expr.Var = when (type.topType == Type.STRING) {
+            false -> intStack.pop().toExpr(type)
+            true -> strStack.pop().toExpr(type)
         }
 
         fun push(type: Type, cst: Any? = null): Expr.Var {
-            return when (type.topType) {
-                TopType.INT -> {
+            return when (type.topType == Type.STRING) {
+                false -> {
                     val v = Val(cst as Int?, type, ++stackVarCounter)
                     intStack.push(v)
                     v.toExpr()
                 }
-                TopType.STRING -> {
+                true -> {
                     val v = Val(cst as String?, type, ++stackVarCounter)
                     strStack.push(v)
                     v.toExpr()

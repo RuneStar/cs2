@@ -1,13 +1,6 @@
 package org.runestar.cs2
 
-enum class TopType {
-
-    INT, STRING;
-
-    val type: Type get() = if (this == INT) Type.INT else Type.STRING
-}
-
-enum class Type(val desc: Char) {
+enum class Type(val desc: Char, val aliasTo: Type? = null) {
 
     INT('i'),
     STRING('s'),
@@ -28,13 +21,15 @@ enum class Type(val desc: Char) {
     FONTMETRICS('f'),
     CHAR('z'),
 
-    TYPE('?'),
-    COLOUR('!'),
+    TYPE('?', INT),
+    COLOUR('!', INT),
     ;
 
-    val literal = name.toLowerCase()
+    val nameLiteral: String = name.toLowerCase()
 
-    val topType: TopType get() = if (this == STRING) TopType.STRING else TopType.INT
+    val typeLiteral: String get() = aliasTo?.nameLiteral ?: nameLiteral
+
+    val topType: Type get() = if (this == STRING) Type.STRING else Type.INT
 
     companion object {
 
@@ -47,8 +42,8 @@ enum class Type(val desc: Char) {
         fun bottom(a: Type, b: Type): Type {
             if (a == b) return a
             require(a.topType == b.topType)
-            if (a == a.topType.type) return b
-            if (b == b.topType.type) return a
+            if (a == a.topType) return b
+            if (b == b.topType) return a
             if ((a == OBJ || a == NAMEDOBJ) && (b == OBJ || b == NAMEDOBJ)) return OBJ
             if ((a == FONTMETRICS || a == GRAPHIC) && (b == FONTMETRICS || b == GRAPHIC)) return FONTMETRICS
             throw IllegalArgumentException("$a $b")

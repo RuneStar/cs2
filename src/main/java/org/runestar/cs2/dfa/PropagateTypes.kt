@@ -158,12 +158,12 @@ internal object PropagateTypes : Phase {
             if (insn is Insn.Return) {
                 val args = (insn.expr as Expr.Operation).arguments
                 if (list.isEmpty()) {
-                    args.mapTo(list) { it.type }
+                    args.flatMapTo(list) { it.types }
                 } else {
                     val li = list.listIterator()
-                    val ri = args.iterator()
+                    val ri = args.flatMap { it.types }.iterator()
                     while (li.hasNext()) {
-                        li.set(Type.bottom(li.next(), ri.next().type))
+                        li.set(Type.bottom(li.next(), ri.next()))
                     }
                 }
             }
@@ -180,10 +180,13 @@ internal object PropagateTypes : Phase {
                 val li = args.iterator()
                 while (ri.hasNext()) {
                     val next = li.next()
-                    val before = next.type
-                    val after = ri.next()
-                    next.type = after
-                    if (before != after) {
+                    val before = next.types
+                    val w = ArrayList<Type>()
+                    repeat(before.size) {
+                        w.add(ri.next())
+                    }
+                    next.types = w
+                    if (before != next.types) {
                         changed = true
                     }
                 }
