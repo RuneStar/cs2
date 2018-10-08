@@ -608,6 +608,8 @@
 758	emotes_locked,18
 759	emotes_locked,19
 760	combat_shield
+761	options_boxes,0
+762	options_boxes,1
 763	xmas_snowflake
 765	barbassault_icons,0
 766	barbassault_icons,1
@@ -679,6 +681,7 @@
 1033	side_background_left1
 1034	side_background_left2
 1035	side_background_right
+1036	side_background_top
 1039	main_top
 1040	tradebacking_light
 1041	bankbuttons,0
@@ -697,6 +700,10 @@
 1074	bankbuttons,3
 1075	lava_animated_red
 1076	lava_animated_white
+1077	banktabs,0
+1078	banktabs,1
+1079	banktabs,2
+1080	banktabs,3
 1084	options_icons,22
 1085	options_icons,23
 1086	options_icons,24
@@ -973,9 +980,12 @@
 1694	mapfunction,116
 1695	mapfunction,117
 1696	mapfunction,118
+1700	options_buttons
 1708	side_icons,21
 1709	side_icons,22
 1710	side_icons,23
+1726	mobile_stones,0
+1727	mobile_stones,1
 1738	open_buttons,0
 1739	open_buttons,1
 1740	open_buttons,2
