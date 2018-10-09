@@ -518,6 +518,8 @@
 542	close_buttons,7
 643	old_tiles_lighter
 646	quill_caps_large
+647	lunar_alphabet
+648	lunar_alphabet_lrg
 659	options_icons,0
 660	options_icons,1
 661	options_icons,2
@@ -611,6 +613,7 @@
 761	options_boxes,0
 762	options_boxes,1
 763	xmas_snowflake
+764	barbassault_font
 765	barbassault_icons,0
 766	barbassault_icons,1
 767	barbassault_icons,2
@@ -671,6 +674,8 @@
 951	prayeroff,27
 952	tabs,0
 953	tabs,1
+1015	tabs_large,0
+1016	tabs_large,1
 1017	chat_background
 1019	small_button
 1021	small_button_blue
