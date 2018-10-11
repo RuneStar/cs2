@@ -13,6 +13,6 @@ interface ParamTypeLoader {
 
     companion object {
 
-        val DEFAULT: ParamTypeLoader = StringSet(setOf(451, 452, 453, 454, 455, 456, 457, 458, 506, 510, 559, 595))
+        val DEFAULT: ParamTypeLoader = StringSet(setOf(451, 452, 453, 454, 455, 456, 457, 458, 506, 510, 559, 595, 601, 602))
     }
 }
