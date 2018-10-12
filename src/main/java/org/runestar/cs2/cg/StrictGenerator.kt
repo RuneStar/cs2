@@ -371,6 +371,20 @@ class StrictGenerator(
                     writeExpr(expr.arguments[1])
                     return
                 }
+                JOIN_STRING -> {
+                    writer.append('"')
+                    for (a in expr.arguments) {
+                        if (a is Expr.Cst && a.cst is String) {
+                            writer.append(a.cst)
+                        } else {
+                            writer.append('<')
+                            writeExpr(a)
+                            writer.append('>')
+                        }
+                    }
+                    writer.append('"')
+                    return
+                }
             }
             if (op in CC_SETONCLICK..CC_SETONRESIZE || op in IF_SETONCLICK..IF_SETONRESIZE) {
                 writeAddHook(expr)
