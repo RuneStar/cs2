@@ -8,7 +8,7 @@ import org.runestar.cs2.ir.Expr
 import org.runestar.cs2.ir.Func
 import org.runestar.cs2.ir.Insn
 import org.runestar.cs2.names
-import org.runestar.cs2.util.trim
+import org.runestar.cs2.util.strip
 
 class StrictGenerator(
         private val graphicNameLoader: NameLoader = NameLoader.GRAPHICS,
@@ -460,7 +460,7 @@ class StrictGenerator(
                 if (scriptName == null) {
                     writer.append("script").append(invokeId.toString())
                 } else {
-                    writer.append(scriptName.trim("[clientscript,", ']'))
+                    writer.append(scriptName.strip("[clientscript,", ']'))
                 }
                 val triggerCount = (args.removeAt(args.lastIndex) as Expr.Cst).cst as Int
                 val triggers = args.takeLast(triggerCount)
@@ -491,7 +491,7 @@ class StrictGenerator(
             if (scriptName == null) {
                 writer.append("script").append(invokeId.toString())
             } else {
-                writer.append(scriptName.trim("[proc,", ']'))
+                writer.append(scriptName.strip("[proc,", ']'))
             }
             if (invoke.arguments.size > 1) {
                 writer.append('(')
