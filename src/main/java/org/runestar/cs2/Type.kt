@@ -1,6 +1,8 @@
 package org.runestar.cs2
 
-enum class Type(val desc: Char, val aliasTo: Type? = null) {
+enum class Type(
+        val desc: Char? = null
+) {
 
     INT('i'),
     STRING('s'),
@@ -21,19 +23,19 @@ enum class Type(val desc: Char, val aliasTo: Type? = null) {
     FONTMETRICS('f'),
     CHAR('z'),
 
-    TYPE('?', INT),
-    COLOUR('!', INT),
+    TYPE(),
+    COLOUR(),
     ;
 
     val nameLiteral: String = name.toLowerCase()
 
-    val typeLiteral: String get() = aliasTo?.nameLiteral ?: nameLiteral
+    val typeLiteral: String get() = if (desc == null) INT.nameLiteral else nameLiteral
 
     val topType: Type get() = if (this == STRING) Type.STRING else Type.INT
 
     companion object {
 
-        private val map = values().associateBy { it.desc }
+        private val map = values().filter { it.desc != null }.associateBy { it.desc }
 
         fun of(desc: Char): Type = map.getValue(desc)
 
