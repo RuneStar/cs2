@@ -225,8 +225,8 @@ internal interface Op {
         CC_FIND(arrayOf(COMPONENT u S, INT u S, BOOLEAN u O), arrayOf(BOOLEAN u S)),
         IF_FIND(arrayOf(COMPONENT u S, BOOLEAN u O), arrayOf(BOOLEAN u S)),
 
-        CC_SETPOSITION(arrayOf(INT u S, INT u S, INT u S, INT u S, BOOLEAN u O)),
-        CC_SETSIZE(arrayOf(INT u S, INT u S, INT u S, INT u S, BOOLEAN u O)),
+        CC_SETPOSITION(arrayOf(INT u S, INT u S, SETPOSH u S, SETPOSV u S, BOOLEAN u O)),
+        CC_SETSIZE(arrayOf(INT u S, INT u S, SETSIZE u S, SETSIZE u S, BOOLEAN u O)),
         CC_SETHIDE(arrayOf(BOOLEAN u S, BOOLEAN u O)),
         CC_SETNOCLICKTHROUGH(arrayOf(BOOLEAN u S, BOOLEAN u O)),
         _1006(arrayOf(BOOLEAN u S, BOOLEAN u O)),
@@ -314,8 +314,8 @@ internal interface Op {
 
         CC_CALLONRESIZE(arrayOf(BOOLEAN u S)),
 
-        IF_SETPOSITION(arrayOf(INT u S, INT u S, INT u S, INT u S, COMPONENT u S)),
-        IF_SETSIZE(arrayOf(INT u S, INT u S, INT u S, INT u S, COMPONENT u S)),
+        IF_SETPOSITION(arrayOf(INT u S, INT u S, SETPOSH u S, SETPOSV u S, COMPONENT u S)),
+        IF_SETSIZE(arrayOf(INT u S, INT u S, SETSIZE u S, SETSIZE u S, COMPONENT u S)),
         IF_SETHIDE(arrayOf(BOOLEAN u S, COMPONENT u S)),
         IF_SETNOCLICKTHROUGH(arrayOf(BOOLEAN u S, COMPONENT u S)),
         _2006(arrayOf(BOOLEAN u S, COMPONENT u S)),

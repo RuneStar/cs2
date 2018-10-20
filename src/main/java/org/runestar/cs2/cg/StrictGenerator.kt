@@ -269,6 +269,36 @@ class StrictGenerator(
                         else -> error(n)
                     }
                 }
+                Type.SETSIZE -> {
+                    when (n) {
+                        0 -> writer.append("^setsize_abs")
+                        1 -> writer.append("^setsize_minus")
+                        2 -> writer.append("^setsize_2")
+                        else -> error(n)
+                    }
+                }
+                Type.SETPOSH -> {
+                    when (n) {
+                        0 -> writer.append("^setpos_abs_left")
+                        1 -> writer.append("^setpos_abs_centre")
+                        2 -> writer.append("^setpos_abs_right")
+                        3 -> writer.append("^setpos_3")
+                        4 -> writer.append("^setpos_4")
+                        5 -> writer.append("^setpos_5")
+                        else -> error(n)
+                    }
+                }
+                Type.SETPOSV -> {
+                    when (n) {
+                        0 -> writer.append("^setpos_abs_top")
+                        1 -> writer.append("^setpos_abs_centre")
+                        2 -> writer.append("^setpos_abs_bottom")
+                        3 -> writer.append("^setpos_3")
+                        4 -> writer.append("^setpos_4")
+                        5 -> writer.append("^setpos_5")
+                        else -> error(n)
+                    }
+                }
                 else -> {
                     when (n) {
                         -1 -> writer.append("null")
