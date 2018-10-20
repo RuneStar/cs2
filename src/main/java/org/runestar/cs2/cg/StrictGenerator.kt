@@ -299,6 +299,22 @@ class StrictGenerator(
                         else -> error(n)
                     }
                 }
+                Type.SETTEXTALIGNH -> {
+                    when (n) {
+                        0 -> writer.append("^settextalign_left")
+                        1 -> writer.append("^settextalign_centre")
+                        2 -> writer.append("^settextalign_right")
+                        else -> error(n)
+                    }
+                }
+                Type.SETTEXTALIGNV -> {
+                    when (n) {
+                        0 -> writer.append("^settextalign_top")
+                        1 -> writer.append("^settextalign_centre")
+                        2 -> writer.append("^settextalign_bottom")
+                        else -> error(n)
+                    }
+                }
                 else -> {
                     when (n) {
                         -1 -> writer.append("null")

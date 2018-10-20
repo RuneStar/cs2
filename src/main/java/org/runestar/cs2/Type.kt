@@ -29,6 +29,8 @@ enum class Type(
     SETSIZE(),
     SETPOSH(),
     SETPOSV(),
+    SETTEXTALIGNH(),
+    SETTEXTALIGNV(),
     ;
 
     val nameLiteral: String = name.toLowerCase()
