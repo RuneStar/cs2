@@ -219,7 +219,7 @@ internal interface Op {
         SET_VARC_INT(arrayOf(INT u O, INT u S)),
         GET_VARC_STRING(arrayOf(INT u O), arrayOf(STRING u S)),
         SET_VARC_STRING(arrayOf(INT u O, STRING u S)),
-        CC_CREATE(arrayOf(COMPONENT u S, INT u S, INT u S, BOOLEAN u O)),
+        CC_CREATE(arrayOf(COMPONENT u S, IFTYPE u S, INT u S, BOOLEAN u O)),
         CC_DELETE(arrayOf(BOOLEAN u O)),
         CC_DELETEALL(arrayOf(COMPONENT u S)),
         CC_FIND(arrayOf(COMPONENT u S, INT u S, BOOLEAN u O), arrayOf(BOOLEAN u S)),

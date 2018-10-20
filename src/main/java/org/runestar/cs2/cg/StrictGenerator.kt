@@ -259,6 +259,16 @@ class StrictGenerator(
                 }
                 Type.STAT -> writeNamedInt(statNameLoader, n)
                 Type.OBJ, Type.NAMEDOBJ -> writeNamedInt(objNameLoader, n)
+                Type.IFTYPE -> {
+                    when (n) {
+                        3 -> writer.append("^iftype_rectangle")
+                        4 -> writer.append("^iftype_text")
+                        5 -> writer.append("^iftype_graphic")
+                        6 -> writer.append("^iftype_model")
+                        9 -> writer.append("^iftype_line")
+                        else -> error(n)
+                    }
+                }
                 else -> {
                     when (n) {
                         -1 -> writer.append("null")
