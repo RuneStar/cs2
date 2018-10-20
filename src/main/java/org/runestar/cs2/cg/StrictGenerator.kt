@@ -224,7 +224,19 @@ class StrictGenerator(
                 }
                 Type.GRAPHIC -> writeQuoteNamedInt(graphicNameLoader, n)
                 Type.FONTMETRICS -> writeNamedInt(graphicNameLoader, n)
-                Type.COLOUR -> writer.append("0x").append(n.toString(16).padStart(6, '0'))
+                Type.COLOUR -> {
+                    when (n) {
+                        0xFF0000 -> writer.append("^red")
+                        0x00FF00 -> writer.append("^green")
+                        0x0000FF -> writer.append("^blue")
+                        0xFFFF00 -> writer.append("^yellow")
+                        0xFF00FF -> writer.append("^magenta")
+                        0x00FFFF -> writer.append("^cyan")
+                        0xFFFFFF -> writer.append("^white")
+                        0x000000 -> writer.append("^black")
+                        else -> writer.append("0x").append(n.toString(16).padStart(6, '0'))
+                    }
+                }
                 Type.INT -> {
                     when (n) {
                         Int.MAX_VALUE -> writer.append("^int_max")
