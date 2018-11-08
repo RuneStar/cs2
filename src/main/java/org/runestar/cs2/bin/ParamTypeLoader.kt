@@ -6,13 +6,26 @@ interface ParamTypeLoader {
 
     fun load(id: Int): Type
 
-    data class StringSet(val strings: Set<Int>) : ParamTypeLoader {
+    data class Mapping(private val map: Map<Int, Type>): ParamTypeLoader {
 
-        override fun load(id: Int): Type = if (id in strings) Type.STRING else Type.INT
+        override fun load(id: Int): Type = map.getValue(id)
     }
 
     companion object {
 
-        val DEFAULT: ParamTypeLoader = StringSet(setOf(451, 452, 453, 454, 455, 456, 457, 458, 506, 510, 559, 579, 595, 601, 602, 610, 660))
+        private fun readResource(fileName: String): ParamTypeLoader {
+            val map = HashMap<Int, Type>()
+            ParamTypeLoader::class.java.getResource(fileName).openStream().bufferedReader().use { input ->
+                input.lineSequence().forEach { line ->
+                    val split = line.split('\t')
+                    val id = split[0].toInt()
+                    val type = split[1].toInt()
+                    map[id] = if (type == 0) Type.INT else Type.of(type)
+                }
+            }
+            return Mapping(map)
+        }
+
+        val DEFAULT: ParamTypeLoader = readResource("param-types.tsv")
     }
 }
