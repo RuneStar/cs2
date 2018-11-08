@@ -22,6 +22,7 @@ enum class Type(
     NAMEDOBJ('O'),
     FONTMETRICS('f'),
     CHAR('z'),
+    STRUCT('J'),
 
     TYPE(),
     COLOUR(),

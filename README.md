@@ -87,6 +87,7 @@ the plane, the x and y ids of the region, then the x and y coordinates inside of
 * `fontmetrics` : a font
     * `p11_full`
 * `char`
+* `struct`
 
 #### Arrays
 
