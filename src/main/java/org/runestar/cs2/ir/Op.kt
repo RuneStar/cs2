@@ -856,20 +856,21 @@ internal interface Op {
         }
     }
 
-    enum class ParamKey : Op {
-        NC_PARAM,
-        LC_PARAM,
-        OC_PARAM,
-        STRUCT_PARAM,
+    enum class ParamKey(val type: Type) : Op {
+        NC_PARAM(Type.INT),
+        LC_PARAM(Type.LOC),
+        OC_PARAM(Type.OBJ),
+        STRUCT_PARAM(Type.STRUCT),
         ;
 
         override val id = namesReverse.getValue(name)
 
         override fun translate(state: Interpreter.State): Insn {
             val paramKeyId = checkNotNull(state.intStack.peek().cst)
-            val args = mutableListOf<Expr>(state.pop(Type.INT), state.pop(INT))
+            val param = state.pop(Type.INT)
+            val rec = state.pop(type)
             val paramType = state.interpreter.paramTypeLoader.load(paramKeyId)
-            return Insn.Assignment(listOf(state.push(paramType)), Expr.Operation(listOf(paramType), id, args))
+            return Insn.Assignment(listOf(state.push(paramType)), Expr.Operation(listOf(paramType), id, mutableListOf(rec, param)))
         }
     }
 }
