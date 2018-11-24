@@ -300,6 +300,7 @@ public final class Opcodes {
     public static final int GETHIDEUSERNAME = 3142;
     public static final int SETREMEMBERUSERNAME = 3143;
     public static final int GETREMEMBERUSERNAME = 3144;
+    public static final int _3145 = 3145;
     public static final int SOUND_SYNTH = 3200;
     public static final int SOUND_SONG = 3201;
     public static final int SOUND_JINGLE = 3202;

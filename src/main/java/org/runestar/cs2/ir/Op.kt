@@ -447,6 +447,7 @@ internal interface Op {
         GETHIDEUSERNAME(defs = arrayOf(BOOLEAN u S)),
         SETREMEMBERUSERNAME(arrayOf(BOOLEAN u S)),
         GETREMEMBERUSERNAME(defs = arrayOf(BOOLEAN u S)),
+        _3145(),
 
         SOUND_SYNTH(arrayOf(INT u S, INT u S, INT u S)),
         SOUND_SONG(arrayOf(INT u S)),
