@@ -67,23 +67,21 @@ internal interface Op {
             val args = ArrayList<Expr>()
             args.add(Expr.Cst(INT, invokeId))
             val returns = ArrayList<Expr.Var>()
+            val stackArgs = ArrayList<Expr>()
             if (invokeId == state.id) {
                 // todo
-                repeat(state.script.intArgumentCount) { args.add(state.pop(Type.INT)) }
-                repeat(state.script.stringArgumentCount) { args.add(state.pop(Type.STRING)) }
+                repeat(state.script.stringArgumentCount) { stackArgs.add(state.pop(Type.STRING)) }
+                repeat(state.script.intArgumentCount) { stackArgs.add(state.pop(Type.INT)) }
             } else {
                 val invoked = state.interpreter.interpret(invokeId)
-                val stackArgs = ArrayList<Expr>()
                 invoked.args.asReversed().forEach {
                     stackArgs.add(state.pop(it.type))
                 }
-                args.addAll(stackArgs.asReversed())
-
                 invoked.returns.forEach {
                     returns.add(state.push(it))
                 }
             }
-
+            args.addAll(stackArgs.asReversed())
             return Insn.Assignment(returns, Expr.Operation(returns.map { it.type }, id, args))
         }
     }
