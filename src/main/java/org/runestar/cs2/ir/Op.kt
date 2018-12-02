@@ -553,7 +553,7 @@ internal interface Op {
         TRADINGPOST_SORTFILTERBY_WORLD(arrayOf(BOOLEAN u S, BOOLEAN u S)),
         TRADINGPOST_SORTBY_AGE(arrayOf(BOOLEAN u S)),
         TRADINGPOST_SORTBY_COUNT(arrayOf(BOOLEAN u S)),
-        TRADINGPOST_GETTOTALOFFERS(defs = arrayOf(BOOLEAN u S)),
+        TRADINGPOST_GETTOTALOFFERS(defs = arrayOf(INT u S)),
         TRADINGPOST_GETOFFERWORLD(arrayOf(INT u S), arrayOf(INT u S)),
         TRADINGPOST_GETOFFERNAME(arrayOf(INT u S), arrayOf(STRING u S)),
         TRADINGPOST_GETOFFERPREVIOUSNAME(arrayOf(INT u S), arrayOf(STRING u S)),
