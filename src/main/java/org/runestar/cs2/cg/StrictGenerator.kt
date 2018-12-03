@@ -628,7 +628,7 @@ class StrictGenerator(
                 CC_SETFILLCOLOUR,
                 _1124,
                 _1125,
-                _1126,
+                CC_SETLINEDIRECTION,
                 _1127,
                 CC_SETOBJECT,
                 CC_SETNPCHEAD,

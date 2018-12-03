@@ -255,7 +255,7 @@ internal interface Op {
         CC_SETFILLCOLOUR(arrayOf(COLOUR u S, BOOLEAN u O)),
         _1124(arrayOf(INT u S, BOOLEAN u O)),
         _1125(arrayOf(INT u S, BOOLEAN u O)),
-        _1126(arrayOf(BOOLEAN u S, BOOLEAN u O)),
+        CC_SETLINEDIRECTION(arrayOf(BOOLEAN u S, BOOLEAN u O)),
         _1127(arrayOf(BOOLEAN u S, BOOLEAN u O)),
 
         CC_SETOBJECT(arrayOf(OBJ u S, INT u S, BOOLEAN u O)),
@@ -344,7 +344,7 @@ internal interface Op {
         IF_SETFILLCOLOUR(arrayOf(COLOUR u S, COMPONENT u S)),
         _2124(arrayOf(INT u S, COMPONENT u S)),
         _2125(arrayOf(INT u S, COMPONENT u S)),
-        _2126(arrayOf(BOOLEAN u S, COMPONENT u S)),
+        IF_SETLINEDIRECTION(arrayOf(BOOLEAN u S, COMPONENT u S)),
         _2127(arrayOf(BOOLEAN u S, COMPONENT u S)),
 
         IF_SETOBJECT(arrayOf(OBJ u S, INT u S, COMPONENT u S)),
