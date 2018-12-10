@@ -30,6 +30,8 @@ class StrictGenerator(
         private val writer = LineWriter(appendable)
 
         internal fun write() {
+            writer.append("// ").append(func.id.toString())
+            writer.nextLine()
             val scriptName = scriptNameLoader.load(func.id)
             if (scriptName == null) {
                 writer.append("script").append(func.id.toString())
