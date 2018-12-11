@@ -20,10 +20,29 @@ internal class Interpreter(
     fun interpret(id: Int): Func {
         val cached = cache[id]
         if (cached != null) return cached
-        val script = scriptLoader.load(id)
-        val insns = arrayOfNulls<Insn?>(script.opcodes.size)
-        interpret(insns, State(this, id, script))
-        val returnInsn = (insns.last { it != null && it is Insn.Return } as Insn.Return).expr as Expr.Operation
+        return interpret0(id, scriptLoader.load(id))
+    }
+
+    private fun interpret0(id: Int, script: Script): Func {
+        return makeFunc(id, script, interpretInsns(id, script))
+    }
+
+    private fun interpretInsns(id: Int, script: Script): Array<Insn> {
+        val state = State(this, id, script)
+        return Array(script.opcodes.size) {
+            val op = Op.of(state.opcode)
+            val insn = op.translate(state)
+            state.pc++
+            if (insn !is Insn.Assignment) {
+                check(state.intStack.isEmpty())
+                check(state.strStack.isEmpty())
+            }
+            insn
+        }
+    }
+
+    private fun makeFunc(id: Int, script: Script, insns: Array<Insn>): Func {
+        val returnInsn = (insns.last { it is Insn.Return } as Insn.Return).expr as Expr.Operation
         val args = ArrayList<Expr.Var>()
         repeat(script.intArgumentCount) { args.add(Expr.Var(it, Type.INT)) }
         repeat(script.stringArgumentCount) { args.add(Expr.Var(it, Type.STRING)) }
@@ -34,38 +53,7 @@ internal class Interpreter(
         return func
     }
 
-    private fun interpret(insns: Array<Insn?>, state: State) {
-        if (insns[state.pc] != null) return
-        val op = Op.of(state.script.opcodes[state.pc].toUnsignedInt())
-        val insn = op.translate(state)
-        insns[state.pc] = insn
-        val successors = successorPcs(state.pc, insn)
-        if (insn !is Insn.Assignment) {
-            check(state.intStack.isEmpty())
-            check(state.strStack.isEmpty())
-        }
-        for (s in successors) {
-            state.pc = s
-            interpret(insns, state)
-        }
-    }
-
-    private fun successorPcs(pc: Int, insn: Insn): Collection<Int> {
-        return when (insn) {
-            is Insn.Assignment -> listOf(pc + 1)
-            is Insn.Goto -> listOf(insn.label.id)
-            is Insn.Branch -> listOf(pc + 1, insn.pass.id)
-            is Insn.Return -> emptyList()
-            is Insn.Switch -> {
-                val list = ArrayList<Int>(1 + insn.map.size)
-                list.add(pc + 1)
-                insn.map.values.mapTo(list) { it.id }
-            }
-            else -> error(insn)
-        }
-    }
-
-    private fun addLabels(insns: Array<Insn?>): Chain<Insn> {
+    private fun addLabels(insns: Array<Insn>): Chain<Insn> {
         val chain = HashChain<Insn>()
         val labels = HashSet<Int>()
         insns.forEach { insn ->
@@ -79,9 +67,7 @@ internal class Interpreter(
             if (index in labels) {
                 chain.addLast(Insn.Label(index))
             }
-            if (insn != null) {
-                chain.addLast(insn)
-            }
+            chain.addLast(insn)
         }
         return chain
     }
@@ -101,6 +87,8 @@ internal class Interpreter(
         private var stackVarCounter: Int = 0
 
         val arrayTypes: Array<Type?> = arrayOfNulls(5)
+
+        val opcode: Int get() = script.opcodes[pc].toUnsignedInt()
 
         val intOperand: Int get() = script.intOperands[pc]
 
