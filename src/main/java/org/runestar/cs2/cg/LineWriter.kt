@@ -12,11 +12,10 @@ class LineWriter(
 
     override fun append(csq: CharSequence?): LineWriter = apply { appendable.append(csq) }
 
-    override fun append(csq: CharSequence?, start: Int, end: Int): LineWriter = apply { appendable.append(csq, start, end) }
+    override fun append(csq: CharSequence, start: Int, end: Int): LineWriter = apply { appendable.append(csq, start, end) }
 
-    private fun appendIndents(): LineWriter = apply { repeat(indents) { append(indent) } }
-
-    private fun appendLineSeparator(): LineWriter = apply { append(lineSeparator) }
-
-    fun nextLine(): LineWriter = apply { appendLineSeparator().appendIndents() }
+    fun nextLine(): LineWriter = apply {
+        append(lineSeparator)
+        repeat(indents) { append(indent) }
+    }
 }

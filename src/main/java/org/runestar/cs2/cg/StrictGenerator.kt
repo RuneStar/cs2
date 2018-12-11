@@ -8,6 +8,7 @@ import org.runestar.cs2.ir.Expr
 import org.runestar.cs2.ir.Func
 import org.runestar.cs2.ir.Insn
 import org.runestar.cs2.names
+import org.runestar.cs2.util.append
 import org.runestar.cs2.util.strip
 
 class StrictGenerator(
@@ -30,11 +31,11 @@ class StrictGenerator(
         private val writer = LineWriter(appendable)
 
         internal fun write() {
-            writer.append("// ").append(func.id.toString())
+            writer.append("// ").append(func.id)
             writer.nextLine()
             val scriptName = scriptNameLoader.load(func.id)
             if (scriptName == null) {
-                writer.append("script").append(func.id.toString())
+                writer.append("script").append(func.id)
             } else {
                 writer.append(scriptName)
             }
@@ -184,7 +185,7 @@ class StrictGenerator(
         }
 
         private fun writeVar(expr: Expr.Var) {
-            writer.append('$').append(expr.name)
+            writer.append('$').append(expr.type.nameLiteral).append(expr.id)
         }
 
         private fun writeConst(expr: Expr.Cst) {
@@ -199,29 +200,29 @@ class StrictGenerator(
                 Type.TYPE -> writer.append(Type.of(n).nameLiteral)
                 Type.COMPONENT -> {
                     when (n) {
-                        -1 -> writer.append("null")
+                        -1 -> writer.append(null)
                         -2147483645 -> writer.append("event_com")
                         -2147483642 -> writer.append("event_dragtarget")
-                        else -> writer.append("${n ushr 16}").append(':').append("${n and 0xFFFF}")
+                        else -> writer.append(n ushr 16).append(':').append(n and 0xFFFF)
                     }
                 }
                 Type.BOOLEAN -> when (n) {
-                    0 -> writer.append("false")
-                    1 -> writer.append("true")
-                    -1 -> writer.append("null")
+                    0 -> writer.append(false)
+                    1 -> writer.append(true)
+                    -1 -> writer.append(null)
                     else -> error(n)
                 }
                 Type.COORDGRID -> when (n) {
-                    -1 -> writer.append("null")
+                    -1 -> writer.append(null)
                     else -> {
                         val plane = n ushr 28
                         val x = n ushr 14
                         val y = n and 0x3FFF
-                        writer.append(plane.toString()).append('_')
-                        writer.append((x / 64).toString()).append('_')
-                        writer.append((y / 64).toString()).append('_')
-                        writer.append((x and 0x3F).toString()).append('_')
-                        writer.append((y and 0x3F).toString())
+                        writer.append(plane).append('_')
+                        writer.append((x / 64)).append('_')
+                        writer.append((y / 64)).append('_')
+                        writer.append((x and 0x3F)).append('_')
+                        writer.append((y and 0x3F))
                     }
                 }
                 Type.GRAPHIC -> writeQuoteNamedInt(graphicNameLoader, n)
@@ -249,78 +250,84 @@ class StrictGenerator(
                         -2147483643 -> writer.append("event_comid")
                         -2147483641 -> writer.append("event_dragtargetid")
                         -2147483640 -> writer.append("event_keytyped")
-                        else -> writer.append(n.toString())
+                        else -> writer.append(n)
                     }
                 }
                 Type.CHAR -> {
                     when (n) {
                         -2147483639 -> writer.append("event_keypressed")
-                        -1 -> writer.append("null")
+                        -1 -> writer.append(null)
                         else -> error(n)
                     }
                 }
                 Type.STAT -> writeNamedInt(statNameLoader, n)
                 Type.OBJ, Type.NAMEDOBJ -> writeNamedInt(objNameLoader, n)
                 Type.IFTYPE -> {
-                    when (n) {
-                        3 -> writer.append("^iftype_rectangle")
-                        4 -> writer.append("^iftype_text")
-                        5 -> writer.append("^iftype_graphic")
-                        6 -> writer.append("^iftype_model")
-                        9 -> writer.append("^iftype_line")
+                    val s = when (n) {
+                        3 -> "^iftype_rectangle"
+                        4 -> "^iftype_text"
+                        5 -> "^iftype_graphic"
+                        6 -> "^iftype_model"
+                        9 -> "^iftype_line"
                         else -> error(n)
                     }
+                    writer.append(s)
                 }
                 Type.SETSIZE -> {
-                    when (n) {
-                        0 -> writer.append("^setsize_abs")
-                        1 -> writer.append("^setsize_minus")
-                        2 -> writer.append("^setsize_2")
+                    val s = when (n) {
+                        0 -> "^setsize_abs"
+                        1 -> "^setsize_minus"
+                        2 -> "^setsize_2"
                         else -> error(n)
                     }
+                    writer.append(s)
                 }
                 Type.SETPOSH -> {
-                    when (n) {
-                        0 -> writer.append("^setpos_abs_left")
-                        1 -> writer.append("^setpos_abs_centre")
-                        2 -> writer.append("^setpos_abs_right")
-                        3 -> writer.append("^setpos_3")
-                        4 -> writer.append("^setpos_4")
-                        5 -> writer.append("^setpos_5")
+                    val s = when (n) {
+                        0 -> "^setpos_abs_left"
+                        1 -> "^setpos_abs_centre"
+                        2 -> "^setpos_abs_right"
+                        3 -> "^setpos_3"
+                        4 -> "^setpos_4"
+                        5 -> "^setpos_5"
                         else -> error(n)
                     }
+                    writer.append(s)
                 }
                 Type.SETPOSV -> {
-                    when (n) {
-                        0 -> writer.append("^setpos_abs_top")
-                        1 -> writer.append("^setpos_abs_centre")
-                        2 -> writer.append("^setpos_abs_bottom")
-                        3 -> writer.append("^setpos_3")
-                        4 -> writer.append("^setpos_4")
-                        5 -> writer.append("^setpos_5")
+                    val s = when (n) {
+                        0 -> "^setpos_abs_top"
+                        1 -> "^setpos_abs_centre"
+                        2 -> "^setpos_abs_bottom"
+                        3 -> "^setpos_3"
+                        4 -> "^setpos_4"
+                        5 -> "^setpos_5"
                         else -> error(n)
                     }
+                    writer.append(s)
                 }
                 Type.SETTEXTALIGNH -> {
-                    when (n) {
-                        0 -> writer.append("^settextalign_left")
-                        1 -> writer.append("^settextalign_centre")
-                        2 -> writer.append("^settextalign_right")
+                    val s = when (n) {
+                        0 -> "^settextalign_left"
+                        1 -> "^settextalign_centre"
+                        2 -> "^settextalign_right"
                         else -> error(n)
                     }
+                    writer.append(s)
                 }
                 Type.SETTEXTALIGNV -> {
-                    when (n) {
-                        0 -> writer.append("^settextalign_top")
-                        1 -> writer.append("^settextalign_centre")
-                        2 -> writer.append("^settextalign_bottom")
+                    val s = when (n) {
+                        0 -> "^settextalign_top"
+                        1 -> "^settextalign_centre"
+                        2 -> "^settextalign_bottom"
                         else -> error(n)
                     }
+                    writer.append(s)
                 }
                 else -> {
                     when (n) {
-                        -1 -> writer.append("null")
-                        else -> writer.append(n.toString())
+                        -1 -> writer.append(null)
+                        else -> writer.append(n)
                     }
                 }
             }
@@ -328,12 +335,12 @@ class StrictGenerator(
 
         private fun writeQuoteNamedInt(nameLoader: NameLoader, n: Int) {
             if (n == -1) {
-                writer.append("null")
+                writer.append(null)
                 return
             }
             val name = nameLoader.load(n)
             if (name == null) {
-                writer.append(n.toString())
+                writer.append(n)
             } else {
                 writer.append("\"").append(name).append('"')
             }
@@ -341,12 +348,12 @@ class StrictGenerator(
 
         private fun writeNamedInt(nameLoader: NameLoader, n: Int) {
             if (n == -1) {
-                writer.append("null")
+                writer.append(null)
                 return
             }
             val name = nameLoader.load(n)
             if (name == null) {
-                writer.append(n.toString())
+                writer.append(n)
             } else {
                 writer.append(name)
             }
@@ -523,12 +530,12 @@ class StrictGenerator(
 
             val invokeId = (args.removeAt(0) as Expr.Cst).cst as Int
             if (invokeId == -1) {
-                writer.append("null")
+                writer.append(null)
             } else {
                 val scriptName = scriptNameLoader.load(invokeId)
                 writer.append('"')
                 if (scriptName == null) {
-                    writer.append("script").append(invokeId.toString())
+                    writer.append("script").append(invokeId)
                 } else {
                     writer.append(scriptName.strip("[clientscript,", ']'))
                 }
@@ -559,7 +566,7 @@ class StrictGenerator(
             val invokeId = (invoke.arguments.first() as Expr.Cst).cst as Int
             val scriptName = scriptNameLoader.load(invokeId)
             if (scriptName == null) {
-                writer.append("script").append(invokeId.toString())
+                writer.append("script").append(invokeId)
             } else {
                 writer.append(scriptName.strip("[proc,", ']'))
             }
