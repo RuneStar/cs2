@@ -2,7 +2,7 @@ package org.runestar.cs2.cg
 
 import org.runestar.cs2.Opcodes.*
 import org.runestar.cs2.Type
-import org.runestar.cs2.bin.Loader
+import org.runestar.cs2.Loader
 import org.runestar.cs2.cfa.Construct
 import org.runestar.cs2.ir.Expr
 import org.runestar.cs2.ir.Func

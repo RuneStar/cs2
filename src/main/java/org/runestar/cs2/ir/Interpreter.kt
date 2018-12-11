@@ -1,11 +1,13 @@
 package org.runestar.cs2.ir
 
+import org.runestar.cs2.Loader
+import org.runestar.cs2.Script
 import org.runestar.cs2.Type
-import org.runestar.cs2.bin.*
 import org.runestar.cs2.dfa.Phase
 import org.runestar.cs2.util.Chain
 import org.runestar.cs2.util.HashChain
 import org.runestar.cs2.util.ListStack
+import org.runestar.cs2.util.toUnsignedInt
 
 internal class Interpreter(
         val scriptLoader: Loader<Script>,

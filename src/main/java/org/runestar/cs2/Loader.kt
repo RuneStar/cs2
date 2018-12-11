@@ -1,6 +1,5 @@
-package org.runestar.cs2.bin
+package org.runestar.cs2
 
-import org.runestar.cs2.Type
 import java.nio.ByteBuffer
 import java.nio.file.Files
 import java.nio.file.Path
@@ -23,7 +22,7 @@ interface Loader<T : Any> {
                 val type = split[1].toInt()
                 map[split[0].toInt()] = if (type == 0) Type.INT else Type.of(type)
             }
-            return Loader.Mapping(map)
+            return Mapping(map)
         }
 
         val PARAM_TYPES = readParamTypes("param-types.tsv")
@@ -34,7 +33,7 @@ interface Loader<T : Any> {
                 val split = line.split('\t')
                 map[split[0].toInt()] = split[1]
             }
-            return Loader.Mapping(map)
+            return Mapping(map)
         }
 
         val GRAPHIC_NAMES = readNames("graphic-names.tsv")

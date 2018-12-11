@@ -1,7 +1,5 @@
 package org.runestar.cs2
 
-import org.runestar.cs2.bin.Loader
-import org.runestar.cs2.bin.Script
 import org.runestar.cs2.cfa.reconstruct
 import org.runestar.cs2.cg.Generator
 import org.runestar.cs2.cg.StrictGenerator

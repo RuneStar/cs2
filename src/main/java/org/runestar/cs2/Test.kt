@@ -1,6 +1,5 @@
 package org.runestar.cs2
 
-import org.runestar.cs2.bin.Loader
 import java.nio.file.Files
 import java.nio.file.Paths
 

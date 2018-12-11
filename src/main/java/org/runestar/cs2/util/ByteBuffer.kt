@@ -1,4 +1,4 @@
-package org.runestar.cs2.bin
+package org.runestar.cs2.util
 
 import java.nio.ByteBuffer
 

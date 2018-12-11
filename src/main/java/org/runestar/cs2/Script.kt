@@ -1,5 +1,7 @@
-package org.runestar.cs2.bin
+package org.runestar.cs2
 
+import org.runestar.cs2.util.readString
+import org.runestar.cs2.util.toUnsignedInt
 import java.nio.ByteBuffer
 
 data class Script(
