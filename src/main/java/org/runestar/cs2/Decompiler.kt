@@ -1,15 +1,15 @@
 package org.runestar.cs2
 
-import org.runestar.cs2.bin.ParamTypeLoader
-import org.runestar.cs2.bin.ScriptLoader
+import org.runestar.cs2.bin.Loader
+import org.runestar.cs2.bin.Script
 import org.runestar.cs2.cfa.reconstruct
 import org.runestar.cs2.cg.Generator
 import org.runestar.cs2.cg.StrictGenerator
 import org.runestar.cs2.ir.Interpreter
 
 class Decompiler(
-        scriptLoader: ScriptLoader,
-        paramTypeLoader: ParamTypeLoader = ParamTypeLoader.DEFAULT,
+        scriptLoader: Loader<Script>,
+        paramTypeLoader: Loader<Type> = Loader.PARAM_TYPES,
         private val generator: Generator = StrictGenerator()
 ) {
 

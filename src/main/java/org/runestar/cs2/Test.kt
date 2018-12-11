@@ -1,7 +1,6 @@
 package org.runestar.cs2
 
-import org.runestar.cs2.bin.NameLoader
-import org.runestar.cs2.bin.ScriptLoader
+import org.runestar.cs2.bin.Loader
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -11,11 +10,11 @@ fun main(args: Array<String>) {
     val saveDir = Paths.get("scripts")
     Files.createDirectories(saveDir)
 
-    val decompiler = Decompiler(ScriptLoader.Binary(loadDir, ""))
+    val decompiler = Decompiler(Loader.Scripts(loadDir))
 
     loadDir.toFile().list().forEach { fileName ->
         val scriptId = fileName.toInt()
-        val scriptName = NameLoader.SCRIPTS.load(scriptId) ?: fileName
+        val scriptName = Loader.SCRIPT_NAMES.load(scriptId) ?: fileName
         println("$scriptId $scriptName")
         val s = decompiler.decompile(scriptId)
         val saveFile = saveDir.resolve("$scriptName.cs2")

@@ -2,7 +2,7 @@ package org.runestar.cs2.cg
 
 import org.runestar.cs2.Opcodes.*
 import org.runestar.cs2.Type
-import org.runestar.cs2.bin.NameLoader
+import org.runestar.cs2.bin.Loader
 import org.runestar.cs2.cfa.Construct
 import org.runestar.cs2.ir.Expr
 import org.runestar.cs2.ir.Func
@@ -12,10 +12,10 @@ import org.runestar.cs2.util.append
 import org.runestar.cs2.util.strip
 
 class StrictGenerator(
-        private val graphicNameLoader: NameLoader = NameLoader.GRAPHICS,
-        private val scriptNameLoader: NameLoader = NameLoader.SCRIPTS,
-        private val statNameLoader: NameLoader = NameLoader.STATS,
-        private val objNameLoader: NameLoader = NameLoader.OBJS
+        private val graphicNameLoader: Loader<String> = Loader.GRAPHIC_NAMES,
+        private val scriptNameLoader: Loader<String> = Loader.SCRIPT_NAMES,
+        private val statNameLoader: Loader<String> = Loader.STAT_NAMES,
+        private val objNameLoader: Loader<String> = Loader.OBJ_NAMES
 ) : Generator {
 
     override fun write(appendable: Appendable, func: Func, root: Construct) {
@@ -333,7 +333,7 @@ class StrictGenerator(
             }
         }
 
-        private fun writeQuoteNamedInt(nameLoader: NameLoader, n: Int) {
+        private fun writeQuoteNamedInt(nameLoader: Loader<String>, n: Int) {
             if (n == -1) {
                 writer.append(null)
                 return
@@ -346,7 +346,7 @@ class StrictGenerator(
             }
         }
 
-        private fun writeNamedInt(nameLoader: NameLoader, n: Int) {
+        private fun writeNamedInt(nameLoader: Loader<String>, n: Int) {
             if (n == -1) {
                 writer.append(null)
                 return

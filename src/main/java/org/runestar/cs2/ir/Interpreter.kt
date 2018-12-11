@@ -1,18 +1,15 @@
 package org.runestar.cs2.ir
 
 import org.runestar.cs2.Type
-import org.runestar.cs2.bin.ParamTypeLoader
-import org.runestar.cs2.bin.Script
-import org.runestar.cs2.bin.ScriptLoader
-import org.runestar.cs2.bin.toUnsignedInt
+import org.runestar.cs2.bin.*
 import org.runestar.cs2.dfa.Phase
 import org.runestar.cs2.util.Chain
 import org.runestar.cs2.util.HashChain
 import org.runestar.cs2.util.ListStack
 
 internal class Interpreter(
-        val scriptLoader: ScriptLoader,
-        val paramTypeLoader: ParamTypeLoader
+        val scriptLoader: Loader<Script>,
+        val paramTypeLoader: Loader<Type>
 ) {
 
     private val cache = HashMap<Int, Func>()
@@ -20,7 +17,7 @@ internal class Interpreter(
     fun interpret(id: Int): Func {
         val cached = cache[id]
         if (cached != null) return cached
-        return interpret0(id, scriptLoader.load(id))
+        return interpret0(id, checkNotNull(scriptLoader.load(id)))
     }
 
     private fun interpret0(id: Int, script: Script): Func {

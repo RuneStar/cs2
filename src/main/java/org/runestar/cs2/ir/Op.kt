@@ -869,7 +869,7 @@ internal interface Op {
             val paramKeyId = checkNotNull(state.intStack.peek().cst)
             val param = state.pop(Type.INT)
             val rec = state.pop(type)
-            val paramType = state.interpreter.paramTypeLoader.load(paramKeyId)
+            val paramType = checkNotNull(state.interpreter.paramTypeLoader.load(paramKeyId))
             return Insn.Assignment(listOf(state.push(paramType)), Expr.Operation(listOf(paramType), id, mutableListOf(rec, param)))
         }
     }
