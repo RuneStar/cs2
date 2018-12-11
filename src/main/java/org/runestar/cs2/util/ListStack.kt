@@ -1,6 +1,6 @@
 package org.runestar.cs2.util
 
-internal class ListStack<T : Any>(
+internal data class ListStack<T : Any>(
         val delegate: MutableList<T>
 ) {
 
@@ -13,10 +13,4 @@ internal class ListStack<T : Any>(
     fun peek(): T = delegate[delegate.lastIndex]
 
     fun pop(): T = delegate.removeAt(delegate.lastIndex)
-
-    override fun hashCode(): Int = delegate.hashCode()
-
-    override fun equals(other: Any?): Boolean = other is ListStack<*> && delegate == other.delegate
-
-    override fun toString(): String = delegate.toString()
 }
