@@ -264,65 +264,65 @@ class StrictGenerator(
                 Type.OBJ, Type.NAMEDOBJ -> writeNamedInt(objNameLoader, n)
                 Type.IFTYPE -> {
                     val s = when (n) {
-                        3 -> "^iftype_rectangle"
-                        4 -> "^iftype_text"
-                        5 -> "^iftype_graphic"
-                        6 -> "^iftype_model"
-                        9 -> "^iftype_line"
+                        3 -> "rectangle"
+                        4 -> "text"
+                        5 -> "graphic"
+                        6 -> "model"
+                        9 -> "line"
                         else -> error(n)
                     }
-                    writer.append(s)
+                    writer.append("^iftype_").append(s)
                 }
                 Type.SETSIZE -> {
                     val s = when (n) {
-                        0 -> "^setsize_abs"
-                        1 -> "^setsize_minus"
-                        2 -> "^setsize_2"
+                        0 -> "abs"
+                        1 -> "minus"
+                        2 -> "2"
                         else -> error(n)
                     }
-                    writer.append(s)
+                    writer.append("^setsize_").append(s)
                 }
                 Type.SETPOSH -> {
                     val s = when (n) {
-                        0 -> "^setpos_abs_left"
-                        1 -> "^setpos_abs_centre"
-                        2 -> "^setpos_abs_right"
-                        3 -> "^setpos_3"
-                        4 -> "^setpos_4"
-                        5 -> "^setpos_5"
+                        0 -> "abs_left"
+                        1 -> "abs_centre"
+                        2 -> "abs_right"
+                        3 -> "3"
+                        4 -> "4"
+                        5 -> "5"
                         else -> error(n)
                     }
-                    writer.append(s)
+                    writer.append("^setpos_").append(s)
                 }
                 Type.SETPOSV -> {
                     val s = when (n) {
-                        0 -> "^setpos_abs_top"
-                        1 -> "^setpos_abs_centre"
-                        2 -> "^setpos_abs_bottom"
-                        3 -> "^setpos_3"
-                        4 -> "^setpos_4"
-                        5 -> "^setpos_5"
+                        0 -> "abs_top"
+                        1 -> "abs_centre"
+                        2 -> "abs_bottom"
+                        3 -> "3"
+                        4 -> "4"
+                        5 -> "5"
                         else -> error(n)
                     }
-                    writer.append(s)
+                    writer.append("^setpos_").append(s)
                 }
                 Type.SETTEXTALIGNH -> {
                     val s = when (n) {
-                        0 -> "^settextalign_left"
-                        1 -> "^settextalign_centre"
-                        2 -> "^settextalign_right"
+                        0 -> "left"
+                        1 -> "centre"
+                        2 -> "right"
                         else -> error(n)
                     }
-                    writer.append(s)
+                    writer.append("^settextalign_").append(s)
                 }
                 Type.SETTEXTALIGNV -> {
                     val s = when (n) {
-                        0 -> "^settextalign_top"
-                        1 -> "^settextalign_centre"
-                        2 -> "^settextalign_bottom"
+                        0 -> "top"
+                        1 -> "centre"
+                        2 -> "bottom"
                         else -> error(n)
                     }
-                    writer.append(s)
+                    writer.append("^settextalign_").append(s)
                 }
                 else -> {
                     when (n) {
