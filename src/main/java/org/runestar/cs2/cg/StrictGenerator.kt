@@ -216,7 +216,7 @@ class StrictGenerator(
                     -1 -> writer.append(null)
                     else -> {
                         val plane = n ushr 28
-                        val x = n ushr 14
+                        val x = (n ushr 14) and 0x3FFF
                         val y = n and 0x3FFF
                         writer.append(plane).append('_')
                         writer.append((x / 64)).append('_')
