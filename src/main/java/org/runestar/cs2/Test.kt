@@ -18,7 +18,7 @@ fun main(args: Array<String>) {
 
     loadDir.toFile().list().forEach { fileName ->
         val scriptId = fileName.toInt()
-        val scriptName = Loader.SCRIPT_NAMES.load(scriptId) ?: fileName
+        val scriptName = Loader.SCRIPT_NAMES.load(scriptId) ?: "script$fileName"
         println("$scriptId $scriptName")
         val decompiled = decompiler.decompile(scriptId)
         val saveFile = saveDir.resolve("$scriptName.cs2")
