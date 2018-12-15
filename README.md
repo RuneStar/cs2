@@ -2,7 +2,7 @@
 
 [![Discord](https://img.shields.io/discord/384870460640329728.svg?logo=discord)](https://discord.gg/G2kxrnU)
 
-[**Download scripts**](https://github.com/RuneStar/cs2/releases)
+[**View scripts**](https://github.com/RuneStar/cs2-scripts)
 
 ClientScript2 (cs2) is a client-side scripting language used in Old School RuneScape to dynamically update interfaces.
 Players load scripts from the game cache in a custom bytecode format to be interpreted by the client.
