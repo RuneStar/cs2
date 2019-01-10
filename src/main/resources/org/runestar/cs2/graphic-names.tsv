@@ -736,6 +736,8 @@
 790	scrollbar_dragger_v2,1
 791	scrollbar_dragger_v2,2
 792	scrollbar_dragger_v2,3
+799	close_buttons_v2,0
+800	close_buttons_v2,1
 801	scrollbar_sep,0
 802	scrollbar_sep,1
 803	peng_emotes,0
@@ -892,6 +894,8 @@
 1042	bankbuttons,1
 1043	bankbuttons,2
 1045	options_icons,19
+1046	pvpw_icons,0
+1047	pvpw_icons,1
 1050	sortarrows,0
 1051	sortarrows,1
 1054	achievement_diary_icons,2
@@ -1001,6 +1005,7 @@
 1228	logo_deadman_mode
 1235	bankbuttons,6
 1236	info
+1239	pvpw_icons,2
 1240	zeah_book,0
 1241	zeah_book,1
 1242	arceuus_sigil
