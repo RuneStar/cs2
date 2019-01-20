@@ -503,7 +503,7 @@ public final class Opcodes {
             WORLDLIST_SPECIFIC = 6506,
             WORLDLIST_SORT = 6507,
             _6511 = 6511,
-            _6512 = 6512,
+            SETFOLLOWEROPSLOWPRIORITY = 6512,
             NC_PARAM = 6513,
             LC_PARAM = 6514,
             OC_PARAM = 6515,

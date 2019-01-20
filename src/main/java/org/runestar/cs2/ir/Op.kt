@@ -659,7 +659,7 @@ internal interface Op {
         WORLDLIST_SPECIFIC(arrayOf(INT u S), arrayOf(INT u S, INT u S, STRING u S, INT u S, INT u S, STRING u S)),
         WORLDLIST_SORT(arrayOf(INT u S, BOOLEAN u S, INT u S, BOOLEAN u S)),
         _6511(arrayOf(INT u S), arrayOf(INT u S, INT u S, STRING u S, INT u S, INT u S, STRING u S)),
-        _6512(arrayOf(BOOLEAN u S)),
+        SETFOLLOWEROPSLOWPRIORITY(arrayOf(BOOLEAN u S)),
 
         ON_MOBILE(defs = arrayOf(BOOLEAN u S)),
         CLIENTTYPE(defs = arrayOf(INT u S)),
