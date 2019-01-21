@@ -275,7 +275,7 @@ public final class Opcodes {
             RESUME_OBJDIALOG = 3115,
             BUG_REPORT = 3116,
             _3117 = 3117,
-            _3118 = 3118,
+            SETSHOWMOUSEOVERTEXT = 3118,
             RENDERSELF = 3119,
             _3120 = 3120,
             _3121 = 3121,
