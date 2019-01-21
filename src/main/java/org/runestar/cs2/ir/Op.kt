@@ -425,7 +425,7 @@ internal interface Op {
         _3122(arrayOf(BOOLEAN u S)),
         _3123(arrayOf(BOOLEAN u S)),
         _3124(),
-        _3125(arrayOf(BOOLEAN u S)),
+        SETSHOWMOUSECROSS(arrayOf(BOOLEAN u S)),
         _3126(arrayOf(BOOLEAN u S)),
         SETTAPTODROP(arrayOf(BOOLEAN u S)),
         GETTAPTODROP(defs = arrayOf(BOOLEAN u S)),

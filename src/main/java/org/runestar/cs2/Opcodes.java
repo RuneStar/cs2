@@ -282,7 +282,7 @@ public final class Opcodes {
             _3122 = 3122,
             _3123 = 3123,
             _3124 = 3124,
-            _3125 = 3125,
+            SETSHOWMOUSECROSS = 3125,
             _3126 = 3126,
             SETTAPTODROP = 3127,
             GETTAPTODROP = 3128,
