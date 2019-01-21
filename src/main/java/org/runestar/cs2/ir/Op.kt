@@ -432,7 +432,7 @@ internal interface Op {
         _3129(arrayOf(INT u S, INT u S)),
         _3130(arrayOf(INT u S, INT u S)),
         _3131(arrayOf(INT u S)),
-        _3132(defs = arrayOf(INT u S, INT u S)),
+        GETCANVASSIZE(defs = arrayOf(INT u S, INT u S)),
         _3133(arrayOf(INT u S)),
         _3134(),
         _3135(arrayOf(INT u S, INT u S)),
