@@ -417,7 +417,7 @@ internal interface Op {
         OPENURL(arrayOf(STRING u S, BOOLEAN u S)),
         RESUME_OBJDIALOG(arrayOf(INT u S)),
         BUG_REPORT(arrayOf(INT u S, STRING u S, STRING u S)),
-        _3117(arrayOf(BOOLEAN u S)),
+        SETSHIFTCLICKDROP(arrayOf(BOOLEAN u S)),
         SETSHOWMOUSEOVERTEXT(arrayOf(BOOLEAN u S)),
         RENDERSELF(arrayOf(BOOLEAN u S)),
         _3120(arrayOf(BOOLEAN u S)),

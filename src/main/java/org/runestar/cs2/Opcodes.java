@@ -274,7 +274,7 @@ public final class Opcodes {
             OPENURL = 3113,
             RESUME_OBJDIALOG = 3115,
             BUG_REPORT = 3116,
-            _3117 = 3117,
+            SETSHIFTCLICKDROP = 3117,
             SETSHOWMOUSEOVERTEXT = 3118,
             RENDERSELF = 3119,
             _3120 = 3120,
