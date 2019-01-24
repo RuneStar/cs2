@@ -10488,6 +10488,7 @@
 22737	dragon_hasta_p_22737
 22740	dragon_hasta_p_22740
 22743	dragon_hasta_kp_22743
+22744	fake_dragon_hasta_kp_22744
 22746	ikkle_hydra_22746
 22748	ikkle_hydra_22748
 22750	ikkle_hydra_22750
@@ -10584,7 +10585,7 @@
 22986	bonecrusher_necklace_22986
 22988	hydra_tail_22988
 22991	stone_tablet_22991
-22993	seed_box_22993
+22993	seed_pack_22993
 22994	bottomless_compost_bucket_22994
 22997	bottomless_compost_bucket_22997
 22999	bottled_dragonbreath_unpowered_22999
@@ -10611,3 +10612,9 @@
 23043	sulphur_lizard_23043
 23045	clue_scroll_hard_23045
 23046	clue_scroll_medium_23046
+23047	mystic_hat_dusk_23047
+23050	mystic_robe_top_dusk_23050
+23053	mystic_robe_bottom_dusk_23053
+23056	mystic_gloves_dusk_23056
+23059	mystic_boots_dusk_23059
+23062	nest_box_seeds_23062
