@@ -23,6 +23,7 @@ enum class Type(
     FONTMETRICS('f'),
     CHAR('z'),
     STRUCT('J'),
+    SYNTH('P'),
 
     TYPE(),
     COLOUR(),
