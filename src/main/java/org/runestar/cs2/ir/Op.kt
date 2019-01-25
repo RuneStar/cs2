@@ -833,7 +833,7 @@ internal interface Op {
                 val triggerType = when (id) {
                     Opcodes.IF_SETONSTATTRANSMIT, Opcodes.CC_SETONSTATTRANSMIT -> Type.STAT
                     Opcodes.IF_SETONINVTRANSMIT, Opcodes.CC_SETONINVTRANSMIT -> Type.INV
-                    Opcodes.IF_SETONVARTRANSMIT, Opcodes.CC_SETONVARTRANSMIT -> Type.INT
+                    Opcodes.IF_SETONVARTRANSMIT, Opcodes.CC_SETONVARTRANSMIT -> Type.VAR
                     else -> error(this)
                 }
                 val n = checkNotNull(state.intStack.pop().cst)

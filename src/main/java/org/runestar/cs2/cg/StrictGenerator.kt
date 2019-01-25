@@ -324,6 +324,9 @@ class StrictGenerator(
                     }
                     writer.append("^settextalign_").append(s)
                 }
+                Type.VAR -> {
+                    writer.append("var").append(n)
+                }
                 else -> {
                     when (n) {
                         -1 -> writer.append(null)

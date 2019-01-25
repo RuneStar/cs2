@@ -193,4 +193,4 @@ If a mouse event is being used `event_mousex` will be replaced by the mouse's x 
 ClientScripts can not only be assigned to interface actions but also to changes in varps, skills, or inventories.
 In this case the values which should be watched are added in braces after the arguments.
 
-`if_setonvartransmit("deadman_tournament_hudupdate(){1542, 1293}", 90:11);`
+`if_setonvartransmit("deadman_tournament_hudupdate(){var1542, var1293}", 90:11);`
