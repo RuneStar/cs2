@@ -36,7 +36,7 @@ internal interface Op {
             list.associateBy { it.id }
         }
 
-        fun of(id: Int): Op = map.getValue(id)
+        fun translate(state: Interpreter.State): Insn = map.getValue(state.opcode).translate(state)
     }
 
     private object Switch : Op {
@@ -162,7 +162,7 @@ internal interface Op {
             val arrayId = intOperand shr 16
             val arrayIdVar = Expr.Cst(Type.INT, arrayId)
             val typeDesc = intOperand and 0xFFFF
-            val type = Expr.Cst(Type.TYPE, intOperand and typeDesc)
+            val type = Expr.Cst(Type.TYPE, typeDesc)
             state.arrayTypes[arrayId] = Type.of(typeDesc)
             return Insn.Assignment(emptyList(), Expr.Operation(emptyList(), id, mutableListOf(arrayIdVar, type, length)))
         }
@@ -754,10 +754,8 @@ internal interface Op {
         override val id = Opcodes.JOIN_STRING
 
         override fun translate(state: Interpreter.State): Insn {
-            val intOperand = state.intOperand
-            val args = ArrayList<Expr>(intOperand)
-            repeat(intOperand) {
-                args.add(state.pop(Type.STRING))
+            val args = MutableList<Expr>(state.intOperand) {
+                state.pop(Type.STRING)
             }
             args.reverse()
             return Insn.Assignment(listOf(state.push(Type.STRING)), Expr.Operation(listOf(Type.STRING), id, args))

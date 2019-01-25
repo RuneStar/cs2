@@ -88,6 +88,7 @@ the plane, the x and y ids of the region, then the x and y coordinates inside of
     * `p11_full`
 * `char`
 * `struct`
+* `synth`
 
 #### Arrays
 

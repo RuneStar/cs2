@@ -7,7 +7,7 @@ import java.time.Instant
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-fun main(args: Array<String>) {
+fun main() {
     val start = Instant.now()
 
     val loadDir = Paths.get("input")

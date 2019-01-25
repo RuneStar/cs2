@@ -29,8 +29,7 @@ internal class Interpreter(
     private fun interpretInsns(id: Int, script: Script): Array<Insn> {
         val state = State(this, id, script)
         return Array(script.opcodes.size) {
-            val op = Op.of(state.opcode)
-            val insn = op.translate(state)
+            val insn = Op.translate(state)
             state.pc++
             if (insn !is Insn.Assignment) {
                 check(state.intStack.isEmpty())
