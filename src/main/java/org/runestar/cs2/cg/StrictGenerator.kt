@@ -15,7 +15,8 @@ class StrictGenerator(
         private val graphicNameLoader: Loader<String> = Loader.GRAPHIC_NAMES,
         private val scriptNameLoader: Loader<String> = Loader.SCRIPT_NAMES,
         private val statNameLoader: Loader<String> = Loader.STAT_NAMES,
-        private val objNameLoader: Loader<String> = Loader.OBJ_NAMES
+        private val objNameLoader: Loader<String> = Loader.OBJ_NAMES,
+        private val invNameLoader: Loader<String> = Loader.INV_NAMES
 ) : Generator {
 
     override fun write(appendable: Appendable, func: Func, root: Construct) {
@@ -324,9 +325,8 @@ class StrictGenerator(
                     }
                     writer.append("^settextalign_").append(s)
                 }
-                Type.VAR -> {
-                    writer.append("var").append(n)
-                }
+                Type.VAR -> writer.append("var").append(n)
+                Type.INV -> writeNamedInt(invNameLoader, n)
                 else -> {
                     when (n) {
                         -1 -> writer.append(null)

@@ -43,6 +43,8 @@ interface Loader<T : Any> {
         val STAT_NAMES = readNames("stat-names.tsv")
 
         val OBJ_NAMES = readNames("obj-names.tsv")
+
+        val INV_NAMES = readNames("inv-names.tsv")
     }
 
     class Scripts(val dir: Path) : Loader<Script> {
