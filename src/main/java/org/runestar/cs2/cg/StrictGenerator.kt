@@ -16,7 +16,8 @@ class StrictGenerator(
         private val scriptNameLoader: Loader<String> = Loader.SCRIPT_NAMES,
         private val statNameLoader: Loader<String> = Loader.STAT_NAMES,
         private val objNameLoader: Loader<String> = Loader.OBJ_NAMES,
-        private val invNameLoader: Loader<String> = Loader.INV_NAMES
+        private val invNameLoader: Loader<String> = Loader.INV_NAMES,
+        private val mapAreaNameLoader: Loader<String> = Loader.MAPAREA_NAMES
 ) : Generator {
 
     override fun write(appendable: Appendable, func: Func, root: Construct) {
@@ -327,6 +328,7 @@ class StrictGenerator(
                 }
                 Type.VAR -> writer.append("var").append(n)
                 Type.INV -> writeNamedInt(invNameLoader, n)
+                Type.MAPAREA -> writeNamedInt(mapAreaNameLoader, n)
                 else -> {
                     when (n) {
                         -1 -> writer.append(null)
