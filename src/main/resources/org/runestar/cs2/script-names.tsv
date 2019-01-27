@@ -1024,6 +1024,10 @@
 1703	3338
 1704	3594
 1707	[clientscript,worldmap_init]
+1708	[clientscript,worldmap_maplist_open]
+1709	[clientscript,worldmap_maplist_close]
+1710	[proc,worldmap_maplist_close]
+1711	[clientscript,worldmap_maplist_select]
 1712	[proc,worldmap_loadmap]
 1715	[proc,worldmap_findcoordinmap]
 1716	[proc,worldmap_toggles_createbutton]
@@ -1054,6 +1058,7 @@
 1750	[clientscript,worldmap_overlay]
 1751	[proc,worldmap_overlay_clear]
 1752	[proc,worldmap_elements_chooseposition]
+1757	[proc,worldmap_elements_marker]
 1760	17
 1761	273
 1762	529
@@ -1625,3 +1630,4 @@
 2782	[clientscript,pest_rewards_select]
 2783	[clientscript,pest_rewards_refuse]
 2784	[proc,pest_rewards_costpoints]
+2785	[proc,pest_rewards_costpts]
