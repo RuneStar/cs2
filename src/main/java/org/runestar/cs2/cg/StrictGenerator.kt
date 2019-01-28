@@ -1,14 +1,13 @@
 package org.runestar.cs2.cg
 
+import org.runestar.cs2.Loader
 import org.runestar.cs2.Opcodes.*
 import org.runestar.cs2.Type
-import org.runestar.cs2.Loader
 import org.runestar.cs2.cfa.Construct
 import org.runestar.cs2.ir.Expr
 import org.runestar.cs2.ir.Func
 import org.runestar.cs2.ir.Insn
 import org.runestar.cs2.names
-import org.runestar.cs2.util.append
 import org.runestar.cs2.util.strip
 
 class StrictGenerator(
@@ -20,11 +19,11 @@ class StrictGenerator(
         private val mapAreaNameLoader: Loader<String> = Loader.MAPAREA_NAMES
 ) : Generator {
 
-    override fun write(appendable: Appendable, func: Func, root: Construct) {
+    override fun write(appendable: StringBuilder, func: Func, root: Construct) {
         State(appendable, func, root).write()
     }
 
-    private inner class State(appendable: Appendable, private val func: Func, private val root: Construct) {
+    private inner class State(appendable: StringBuilder, private val func: Func, private val root: Construct) {
 
         private var inCalc = false
 

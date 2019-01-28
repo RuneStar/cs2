@@ -13,7 +13,7 @@ class Decompiler(
 
     private val interpreter = Interpreter(scriptLoader, paramTypeLoader)
 
-    fun <A : Appendable> decompile(id: Int, appendable: A): A {
+    fun decompile(id: Int, appendable: StringBuilder): StringBuilder {
         val func = interpreter.interpret(id)
         generator.write(appendable, func, reconstruct(func))
         return appendable
