@@ -14,7 +14,7 @@ fun main() {
     val saveDir = Paths.get("scripts")
     Files.createDirectories(saveDir)
     val decompiler = Decompiler(Loader.Scripts(loadDir))
-    val io = Executors.newCachedThreadPool()
+    val io = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
     loadDir.toFile().list().forEach { fileName ->
         val scriptId = fileName.toInt()
@@ -23,7 +23,7 @@ fun main() {
         val decompiled = decompiler.decompile(scriptId)
         val saveFile = saveDir.resolve("$scriptName.cs2")
         io.submit {
-            Files.write(saveFile, decompiled.toByteArray())
+            Files.writeString(saveFile, decompiled)
         }
     }
 
