@@ -25,11 +25,12 @@ data class Script(
             val instructionCount = buffer.int
             val localIntCount = buffer.short.toUnsignedInt()
             val localStringCount = buffer.short.toUnsignedInt()
-            val stackIntCount = buffer.short.toUnsignedInt()
-            val stackStringCount = buffer.short.toUnsignedInt()
+            val intArgumentCount = buffer.short.toUnsignedInt()
+            val stringArgumentCount = buffer.short.toUnsignedInt()
             val switches = Array<Map<Int, Int>>(buffer.get().toUnsignedInt()) {
-                val switch = HashMap<Int, Int>()
-                repeat(buffer.short.toUnsignedInt()) {
+                val caseCount = buffer.short.toUnsignedInt()
+                val switch = LinkedHashMap<Int, Int>(caseCount)
+                repeat(caseCount) {
                     switch[buffer.int] = buffer.int
                 }
                 switch
@@ -60,8 +61,8 @@ data class Script(
             return Script(
                     localIntCount,
                     localStringCount,
-                    stackIntCount,
-                    stackStringCount,
+                    intArgumentCount,
+                    stringArgumentCount,
                     intOperands,
                     stringOperands,
                     opcodes,

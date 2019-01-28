@@ -4,8 +4,6 @@ import org.runestar.cs2.ir.Expr
 import org.runestar.cs2.ir.Func
 import org.runestar.cs2.ir.Insn
 import org.runestar.cs2.util.isSuccessorAcyclic
-import java.util.*
-import kotlin.collections.LinkedHashMap
 
 internal fun reconstruct(func: Func): Construct {
     val fg = FlowGraph(func)
@@ -43,11 +41,11 @@ private fun reconstructBlock(
             return reconstructBlock(flow, seq, dominator, suc)
         }
         is Insn.Switch -> {
-            val map = LinkedHashMap<SortedSet<Int>, Construct>()
+            val map = LinkedHashMap<Set<Int>, Construct>()
             val switch = Construct.Switch(tail.expr, map)
             seq.next = switch
             for (v in tail.map.values.toSet()) {
-                val keys = TreeSet<Int>()
+                val keys = LinkedHashSet<Int>()
                 for (e in tail.map) {
                     if (e.value == v) keys.add(e.key)
                 }

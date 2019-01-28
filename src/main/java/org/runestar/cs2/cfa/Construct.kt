@@ -2,7 +2,7 @@ package org.runestar.cs2.cfa
 
 import org.runestar.cs2.ir.Expr
 import org.runestar.cs2.ir.Insn
-import java.util.*
+import java.util.ArrayList
 
 interface Construct {
 
@@ -37,7 +37,7 @@ interface Construct {
 
     class Switch(
             val expr: Expr,
-            val map: Map<SortedSet<Int>, Construct>
+            val map: Map<Set<Int>, Construct>
     ) : Construct {
 
         var elze: Construct? = null
