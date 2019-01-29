@@ -65,7 +65,7 @@ embedding it in a `string` literal.
     * `"Show"`, `"Magic level: <tostring($lvl)>"`
 * `boolean` :
     * `true`, `false`
-* `coordgrid` : a tile. Written as 5 numbers separated by underscores:
+* `coord` : a tile. Written as 5 numbers separated by underscores:
 the plane, the x and y ids of the region, then the x and y coordinates inside of the region
     * `0_1_2_3_4` 
 * `component` an interface component. Written as the interface, a colon, then the component

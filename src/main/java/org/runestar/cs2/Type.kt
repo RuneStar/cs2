@@ -14,7 +14,7 @@ enum class Type(
     GRAPHIC('d'),
     INV('v'),
     MODEL('m'),
-    COORDGRID('c'),
+    COORD('c'),
     CATEGORY('y'),
     LOC('l'),
     AREA('R'),

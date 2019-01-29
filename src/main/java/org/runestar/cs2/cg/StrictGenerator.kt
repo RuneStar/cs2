@@ -213,7 +213,7 @@ class StrictGenerator(
                     -1 -> writer.append(null)
                     else -> error(n)
                 }
-                Type.COORDGRID -> when (n) {
+                Type.COORD -> when (n) {
                     -1 -> writer.append(null)
                     else -> {
                         val plane = n ushr 28
