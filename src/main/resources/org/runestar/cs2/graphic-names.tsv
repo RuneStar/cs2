@@ -807,6 +807,8 @@
 828	v2_stone_borders,8
 829	v2_stone_borders,9
 830	v2_stone_borders,10
+831	v2_stone_close_button,0
+832	v2_stone_close_button,1
 835	achievement_diary_icons,0
 836	achievement_diary_icons,1
 838	dream_monster_icon
@@ -894,6 +896,14 @@
 926	v2_stone_button_in,5
 927	v2_stone_button_in,6
 928	v2_stone_button_in,7
+929	v2_stone_button_out,0
+930	v2_stone_button_out,1
+931	v2_stone_button_out,2
+932	v2_stone_button_out,3
+933	v2_stone_button_out,4
+934	v2_stone_button_out,5
+935	v2_stone_button_out,6
+936	v2_stone_button_out,7
 940	warning_icons,0
 941	warning_icons,1
 942	warning_icons,2
@@ -932,6 +942,7 @@
 1020	small_button_highlight
 1021	small_button_blue
 1022	small_button_pressed
+1023	small_button_pressed_highlight
 1024	large_button
 1025	large_button_highlight
 1031	side_background
@@ -1004,7 +1015,9 @@
 1100	2x_standard_spells_on,18
 1101	friends_icons
 1102	orb_filler,8
+1103	gameblast_donate
 1104	gameblast_logo
+1105	gameblast_specialeffect
 1106	ge_icons,0
 1107	ge_icons,1
 1108	ge_icons,2
@@ -1022,6 +1035,8 @@
 1122	ge_backbutton
 1126	ge_cancel,0
 1127	ge_cancel,1
+1128	membership_icon_large
+1129	membership_icon_medium
 1130	worldswitcher_stars,0
 1131	worldswitcher_stars,1
 1132	worldswitcher_flags,0
@@ -1224,6 +1239,9 @@
 1398	wint_icons,1
 1399	wint_icons,2
 1400	wint_icons,3
+1408	premier_bronze
+1409	premier_silver
+1410	premier_gold
 1412	refresh
 1413	side_icons,17
 1414	sideicons_interface,17
@@ -1358,6 +1376,14 @@
 1551	v2_stone_button_in,13
 1552	v2_stone_button_in,14
 1553	v2_stone_button_in,15
+1554	v2_stone_button_out,8
+1555	v2_stone_button_out,9
+1556	v2_stone_button_out,10
+1557	v2_stone_button_out,11
+1558	v2_stone_button_out,12
+1559	v2_stone_button_out,13
+1560	v2_stone_button_out,14
+1561	v2_stone_button_out,15
 1562	options_icons,40
 1563	options_icons,41
 1564	options_icons,42
@@ -1407,6 +1433,8 @@
 1611	mini_bottom
 1617	options_slider,8
 1622	options_slider,9
+1625	clickcircle_filled
+1626	clickcircle_outline
 1627	raids_challenge_icon
 1628	hitmark,7
 1629	hitmark,8
@@ -1479,6 +1507,8 @@
 1726	mobile_stones,0
 1727	mobile_stones,1
 1728	pvp_warning_icon
+1729	stoneborder_close_button,0
+1730	stoneborder_close_button,1
 1731	steelborder_close_button,0
 1732	steelborder_close_button,1
 1733	oge_title,0
@@ -1496,6 +1526,8 @@
 1745	oge_images,3
 1746	oge_images,4
 1747	arrowkeys
+1748	combat_autoretaliate,0
+1749	combat_autoretaliate,1
 1750	barbassault_icons,8
 1751	2x_standard_spells_on,19
 1752	2x_standard_spells_on,20
@@ -1883,3 +1915,5 @@
 2135	titlebutton_wide
 2138	storeorb
 2140	orb_frame,2
+2152	free_trial
+2153	free_trial_button
