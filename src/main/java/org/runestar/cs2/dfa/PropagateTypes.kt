@@ -55,10 +55,13 @@ internal object PropagateTypes : Phase {
                 changed = propagateComparisons(branch.arguments[0] as Expr.Operation) || changed
                 changed = propagateComparisons(branch.arguments[1] as Expr.Operation) || changed
             }
-            Opcodes.BRANCH_EQUALS, Opcodes.BRANCH_NOT -> {
+            Opcodes.BRANCH_EQUALS, Opcodes.BRANCH_NOT,
+            Opcodes.BRANCH_LESS_THAN_OR_EQUALS, Opcodes.BRANCH_GREATER_THAN_OR_EQUALS,
+            Opcodes.BRANCH_LESS_THAN, Opcodes.BRANCH_GREATER_THAN -> {
                 val arg0 = branch.arguments[0]
                 val arg1 = branch.arguments[1]
                 val type = Type.bottom(arg0.type, arg1.type)
+                if (type == Type.COLOUR && branch.id != Opcodes.BRANCH_EQUALS && branch.id != Opcodes.BRANCH_NOT) return changed
                 if (arg0.type != type) changed = true
                 if (arg1.type != type) changed = true
                 arg0.type = type
