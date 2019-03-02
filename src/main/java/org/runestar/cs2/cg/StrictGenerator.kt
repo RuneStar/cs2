@@ -40,9 +40,11 @@ class StrictGenerator(
             } else {
                 writer.append(scriptName)
             }
-            writer.append('(')
-            func.args.joinTo(writer) { "${it.type.typeLiteral} \$${it.name}" }
-            writer.append(')')
+            if (func.args.isNotEmpty() || func.returns.isNotEmpty()) {
+                writer.append('(')
+                func.args.joinTo(writer) { "${it.type.typeLiteral} \$${it.name}" }
+                writer.append(')')
+            }
             if (func.returns.isNotEmpty()) {
                 writer.append('(')
                 func.returns.joinTo(writer) { it.typeLiteral }
