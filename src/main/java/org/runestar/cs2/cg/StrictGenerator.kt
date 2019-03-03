@@ -27,6 +27,8 @@ class StrictGenerator(
 
         private var inCalc = false
 
+        private var endingLine = true
+
         private val definedVars = HashSet<Expr.Var>(func.args)
 
         private val writer = LineWriter(appendable)
@@ -51,7 +53,7 @@ class StrictGenerator(
                 writer.append(')')
             }
             writeConstruct(root)
-            writer.nextLine()
+            if (endingLine) writer.nextLine()
         }
 
         private fun writeConstruct(construct: Construct) {
@@ -156,7 +158,14 @@ class StrictGenerator(
         private fun writeInsn(insn: Insn) {
             when (insn) {
                 is Insn.Assignment -> writeAssignment(insn)
-                is Insn.Return -> writeOperation(insn.expr as Expr.Operation)
+                is Insn.Return -> {
+                    if (writer.indents == 0 && func.returns.isEmpty()) {
+                        endingLine = false
+                        return
+                    } else {
+                        writeOperation(insn.expr as Expr.Operation)
+                    }
+                }
             }
             writer.append(';')
         }
