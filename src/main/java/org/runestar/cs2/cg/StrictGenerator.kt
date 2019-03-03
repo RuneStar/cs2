@@ -254,8 +254,8 @@ class StrictGenerator(
                 }
                 Type.INT -> {
                     when (n) {
-                        Int.MAX_VALUE -> writer.append("^int_max")
-                        Int.MIN_VALUE -> writer.append("^int_min")
+                        Int.MAX_VALUE -> writer.append("^max_32bit_int")
+                        Int.MIN_VALUE -> writer.append("^min_32bit_int")
                         -2147483647 -> writer.append("event_mousex")
                         -2147483646 -> writer.append("event_mousey")
                         -2147483644 -> writer.append("event_opindex")
