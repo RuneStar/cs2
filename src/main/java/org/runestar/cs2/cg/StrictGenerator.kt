@@ -16,7 +16,8 @@ class StrictGenerator(
         private val statNameLoader: Loader<String> = Loader.STAT_NAMES,
         private val objNameLoader: Loader<String> = Loader.OBJ_NAMES,
         private val invNameLoader: Loader<String> = Loader.INV_NAMES,
-        private val mapAreaNameLoader: Loader<String> = Loader.MAPAREA_NAMES
+        private val mapAreaNameLoader: Loader<String> = Loader.MAPAREA_NAMES,
+        private val paramNameLoader: Loader<String> = Loader.PARAM_NAMES
 ) : Generator {
 
     override fun write(appendable: StringBuilder, func: Func, root: Construct) {
@@ -372,6 +373,7 @@ class StrictGenerator(
                     }
                     writer.append("^chattype_").append(s)
                 }
+                Type.PARAM -> writeNamedInt(paramNameLoader, n)
                 else -> {
                     when (n) {
                         -1 -> writer.append(null)

@@ -865,7 +865,7 @@ internal interface Op {
 
         override fun translate(state: Interpreter.State): Insn {
             val paramKeyId = checkNotNull(state.intStack.peek().cst)
-            val param = state.pop(Type.INT)
+            val param = state.pop(Type.PARAM)
             val rec = state.pop(type)
             val paramType = checkNotNull(state.interpreter.paramTypeLoader.load(paramKeyId))
             return Insn.Assignment(listOf(state.push(paramType)), Expr.Operation(listOf(paramType), id, mutableListOf(rec, param)))

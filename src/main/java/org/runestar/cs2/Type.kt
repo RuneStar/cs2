@@ -35,6 +35,7 @@ enum class Type(
     SETTEXTALIGNV(),
     VAR(),
     CHATTYPE(),
+    PARAM(),
     ;
 
     val nameLiteral: String = name.toLowerCase()

@@ -47,6 +47,8 @@ interface Loader<T : Any> {
         val INV_NAMES = readNames("inv-names.tsv")
 
         val MAPAREA_NAMES = readNames("maparea-names.tsv")
+
+        val PARAM_NAMES = readNames("param-names.tsv")
     }
 
     class Scripts(val dir: Path) : Loader<Script> {
