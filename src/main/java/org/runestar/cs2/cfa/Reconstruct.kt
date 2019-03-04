@@ -41,6 +41,7 @@ private fun reconstructBlock(
             return reconstructBlock(flow, seq, dominator, suc)
         }
         is Insn.Switch -> {
+            var after: BasicBlock? = null
             val map = LinkedHashMap<Set<Int>, Construct>()
             val switch = Construct.Switch(tail.expr, map)
             seq.next = switch
@@ -52,17 +53,17 @@ private fun reconstructBlock(
                 val nxt = Construct.Seq()
                 map[keys] = nxt
                 val dst = flow.blocks.block(v)
-                reconstructBlock(flow, nxt, dst, dst)
+                after = reconstructBlock(flow, nxt, dst, dst) ?: after
             }
             val next = flow.blocks.next(block)
             val elze = Construct.Seq()
             switch.elze = elze
-            val afterElze = reconstructBlock(flow, elze, next, next)
+            after = reconstructBlock(flow, elze, next, next) ?: after
             if (elze.insns.isEmpty() && elze.next == null) {
                 switch.elze = null
             }
-            if (afterElze != null) {
-                reconstructBlock(flow, switch, block, afterElze)
+            if (after != null) {
+                return reconstructBlock(flow, switch, block, after)
             }
         }
         is Insn.Branch -> {
