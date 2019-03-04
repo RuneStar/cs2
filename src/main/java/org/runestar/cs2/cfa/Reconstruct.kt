@@ -93,10 +93,14 @@ private fun reconstructBlock(
                     iff.elze = if2.elze
                 }
 
-                if (afterIf != null) {
+                if (afterIf == null) {
+                    iff.next = iff.elze
+                    iff.elze = null
+                    if (afterElze != null) {
+                        return reconstructBlock(flow, iff.next ?: iff, block, afterElze)
+                    }
+                } else {
                     return reconstructBlock(flow, iff, block, afterIf)
-                } else if (afterElze != null) {
-                    return reconstructBlock(flow, iff, block, afterElze)
                 }
             }
         }
