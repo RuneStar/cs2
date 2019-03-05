@@ -17,9 +17,7 @@ internal class Interpreter(
     private val cache = HashMap<Int, Func>()
 
     fun interpret(id: Int): Func {
-        val cached = cache[id]
-        if (cached != null) return cached
-        return interpret0(id, checkNotNull(scriptLoader.load(id)))
+        return cache[id] ?: interpret0(id, checkNotNull(scriptLoader.load(id)))
     }
 
     private fun interpret0(id: Int, script: Script): Func {

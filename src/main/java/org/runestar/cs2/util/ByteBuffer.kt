@@ -16,10 +16,6 @@ fun ByteBuffer.readString(): String {
     val byteArray = ByteArray(length)
     position(origPos)
     get(byteArray)
-    skip(1)
+    position(position() + 1)
     return String(byteArray, CHARSET)
-}
-
-fun ByteBuffer.skip(count: Int) {
-    position(position() + count)
 }

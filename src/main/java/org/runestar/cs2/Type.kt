@@ -25,17 +25,17 @@ enum class Type(
     STRUCT('J'),
     SYNTH('P'),
 
-    TYPE(),
-    COLOUR(),
-    IFTYPE(),
-    SETSIZE(),
-    SETPOSH(),
-    SETPOSV(),
-    SETTEXTALIGNH(),
-    SETTEXTALIGNV(),
-    VAR(),
-    CHATTYPE(),
-    PARAM(),
+    TYPE,
+    COLOUR,
+    IFTYPE,
+    SETSIZE,
+    SETPOSH,
+    SETPOSV,
+    SETTEXTALIGNH,
+    SETTEXTALIGNV,
+    VAR,
+    CHATTYPE,
+    PARAM,
     ;
 
     val nameLiteral: String = name.toLowerCase()
