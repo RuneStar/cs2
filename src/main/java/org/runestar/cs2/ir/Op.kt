@@ -220,6 +220,8 @@ internal interface Op {
         POP_STRING_DISCARD(arrayOf(STRING.s)),
         GET_VARC_INT(arrayOf(INT.o), arrayOf(INT.s)),
         SET_VARC_INT(arrayOf(INT.o, INT.s)),
+        GET_VARC_STRING_OLD(arrayOf(INT.o), arrayOf(STRING.s)),
+        SET_VARC_STRING_OLD(arrayOf(INT.o, STRING.s)),
         GET_VARC_STRING(arrayOf(INT.o), arrayOf(STRING.s)),
         SET_VARC_STRING(arrayOf(INT.o, STRING.s)),
         CC_CREATE(arrayOf(COMPONENT.s, IFTYPE.s, INT.s, BOOLEAN.o)),
