@@ -1772,3 +1772,6 @@
 2789	[clientscript,barrows_puzzle_buttonhover]
 2790	[proc,skill_guide_subsection_magic]
 2791	[proc,skill_guide_data_magic]
+2792	[proc,orbs_spec_draw_button]
+2793	[clientscript,orbs_toggle_spec_op]
+2794	[clientscript,orbs_blocked_spec_op]
