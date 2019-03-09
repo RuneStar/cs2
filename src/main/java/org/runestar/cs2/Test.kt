@@ -1,17 +1,39 @@
 package org.runestar.cs2
 
+import java.io.File
 import java.nio.file.Files
-import java.nio.file.Paths
-import java.time.Duration
-import java.time.Instant
+import java.nio.file.Path
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 fun main() {
-    val start = Instant.now()
+    writeReadme()
+    decompile()
+}
 
-    val loadDir = Paths.get("input")
-    val saveDir = Paths.get("scripts")
+private fun writeReadme() {
+    val sb = StringBuilder()
+    val prefix = "scripts/"
+    sb.append("[![Discord](https://img.shields.io/discord/384870460640329728.svg?logo=discord)](https://discord.gg/G2kxrnU)\n\n")
+    val ids = File("input").list().map { it.toInt() }.sorted()
+    ids.forEach { scriptId ->
+        val scriptName = Loader.SCRIPT_NAMES.load(scriptId)
+        if (scriptName == null) {
+            val link = "${prefix}script$scriptId.cs2"
+            sb.append("[**$scriptId**]($link)  \n")
+        } else {
+            val link = "$prefix$scriptName.cs2"
+            sb.append("[**$scriptId**]($link) `$scriptName`  \n")
+        }
+    }
+    val saveFile = Path.of("scripts", "README.md")
+    Files.createDirectories(saveFile.parent)
+    Files.write(saveFile, sb.toString().toByteArray())
+}
+
+private fun decompile() {
+    val loadDir = Path.of("input")
+    val saveDir = Path.of("scripts", "scripts")
     Files.createDirectories(saveDir)
     val decompiler = Decompiler(Loader.Scripts(loadDir))
     val io = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
@@ -29,6 +51,4 @@ fun main() {
 
     io.shutdown()
     io.awaitTermination(Long.MAX_VALUE, TimeUnit.HOURS)
-
-    println(Duration.between(start, Instant.now()))
 }
