@@ -1,8 +1,10 @@
 package org.runestar.cs2.util
 
 internal data class ListStack<T : Any>(
-        val delegate: MutableList<T>
+        val delegate: MutableList<T> = ArrayList()
 ) {
+
+    constructor(initialCapacity: Int) : this(ArrayList(initialCapacity))
 
     val size: Int get() = delegate.size
 

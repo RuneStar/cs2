@@ -731,7 +731,7 @@ internal interface Op {
         override val id: Int = namesReverse.getValue(name)
 
         override fun translate(state: Interpreter.State): Insn {
-            val stackArgs = ListStack<Expr.Var>(ArrayList())
+            val stackArgs = ListStack<Expr.Var>(args.size)
             for (i in args.lastIndex downTo 0) {
                 val arg = args[i]
                 if (arg.src == S) stackArgs.push(state.pop(arg.type))
@@ -761,9 +761,7 @@ internal interface Op {
         override val id = Opcodes.JOIN_STRING
 
         override fun translate(state: Interpreter.State): Insn {
-            val args = MutableList<Expr>(state.intOperand) {
-                state.pop(Type.STRING)
-            }
+            val args = MutableList<Expr>(state.intOperand) { state.pop(Type.STRING) }
             args.reverse()
             return Insn.Assignment(listOf(state.push(Type.STRING)), Expr.Operation(listOf(Type.STRING), id, args))
         }
@@ -833,7 +831,7 @@ internal interface Op {
             if (id >= 2000) {
                 args.add(state.pop(Type.COMPONENT))
             } else {
-                args.add(Expr.Cst(Type.BOOLEAN, state.intOperand))
+                args.add(state.operand(Type.BOOLEAN))
             }
             var s = checkNotNull(state.strStack.pop().cst)
             if (s.isNotEmpty() && s.last() == 'Y') {

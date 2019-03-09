@@ -76,9 +76,9 @@ internal class Interpreter(
 
         var pc: Int = 0
 
-        val intStack: ListStack<Val<Int?>> = ListStack(ArrayList())
+        val intStack: ListStack<Val<Int?>> = ListStack()
 
-        val strStack: ListStack<Val<String?>> = ListStack(ArrayList())
+        val strStack: ListStack<Val<String?>> = ListStack()
 
         private var stackVarCounter: Int = 0
 
