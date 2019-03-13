@@ -35,16 +35,32 @@ internal object AddShortCircuitOperators : Phase {
             val if2 = func.insns.next(if1.pass) as? Insn.Branch ?: continue
 
             val else1 = func.insns.next(if1) as? Insn.Goto ?: continue
-            val else2 = func.insns.next(if2) as? Insn.Goto ?: continue
+            val else2 = func.insns.next(if2)
 
-            if (else1.label == else2.label && isUnused(func.insns, if1.pass)) {
-                func.insns.remove(if1.pass)
-                func.insns.remove(else2)
-                func.insns.remove(if2)
+            when (else2) {
+                is Insn.Goto -> {
+                    if (else1.label == else2.label && isUnused(func.insns, if1.pass)) {
+                        func.insns.remove(if1.pass)
+                        func.insns.remove(else2)
+                        func.insns.remove(if2)
 
-                if1.pass = if2.pass
-                if1.expr = Expr.Operation(listOf(Type.BOOLEAN), Opcodes.SS_AND, mutableListOf(if1.expr, if2.expr))
-                return true
+                        if1.pass = if2.pass
+                        if1.expr = Expr.Operation(listOf(Type.BOOLEAN), Opcodes.SS_AND, mutableListOf(if1.expr, if2.expr))
+                        return true
+                    }
+                }
+                is Insn.Label -> {
+                    if (else1.label == else2 && isUnused(func.insns, if1.pass)) {
+                        func.insns.remove(if1.pass)
+                        func.insns.remove(else1)
+                        func.insns.remove(else2)
+                        func.insns.remove(if2)
+
+                        if1.pass = if2.pass
+                        if1.expr = Expr.Operation(listOf(Type.BOOLEAN), Opcodes.SS_AND, mutableListOf(if1.expr, if2.expr))
+                        return true
+                    }
+                }
             }
         }
         return false
