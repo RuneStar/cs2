@@ -122,7 +122,7 @@ class StrictGenerator(
 
         private fun writeSwitch(construct: Construct.Switch) {
             writer.nextLine()
-            writer.append("switch (")
+            writer.append("switch_").append(construct.expr.type.typeLiteral).append(" (")
             writeExpr(construct.expr)
             writer.append(") {")
             for ((ns, con) in construct.map) {
