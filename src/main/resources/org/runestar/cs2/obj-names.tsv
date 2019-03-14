@@ -6489,7 +6489,7 @@
 10372	zamorak_chaps_10372
 10374	zamorak_coif_10374
 10376	guthix_bracers_10376
-10378	guthix_dragonhide_10378
+10378	guthix_dhide_10378
 10380	guthix_chaps_10380
 10382	guthix_coif_10382
 10384	saradomin_bracers_10384
@@ -10638,9 +10638,8 @@
 23097	ornate_top_23097
 23099	ornate_cape_23099
 23101	ornate_helm_23101
-23103	cooks_shopping_list_23103
-23104	cooks_letter_23104
-23105	brewers_folly_23105
-23106	vyvins_wine_23106
-23107	beer_glass_of_water_23107
 23108	birthday_cake_23108
+23110	mystic_set_light_23110
+23113	mystic_set_blue_23113
+23116	mystic_set_dark_23116
+23119	mystic_set_dusk_23119
