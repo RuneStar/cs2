@@ -153,7 +153,7 @@ Any expression that is not of type `string` can be the target of a `switch` stat
 The cases must be constants.
 Multiple cases may lead to the same block.
 There is no fall-through between blocks.
-An optional `else` case can be used if none of the other cases are matched.
+An optional `default` case can be used if none of the other cases are matched.
 
 #### Comments
 

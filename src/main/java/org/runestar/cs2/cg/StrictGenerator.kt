@@ -145,7 +145,7 @@ class StrictGenerator(
             if (elze != null) {
                 writer.indents++
                 writer.nextLine()
-                writer.append("else :")
+                writer.append("case default :")
                 writer.indents++
                 writeConstruct(elze)
                 writer.indents--
