@@ -369,6 +369,7 @@ class StrictGenerator(
                         105 -> "spam"
                         106 -> "playerrelated"
                         107 -> "10sectimeout"
+                        108 -> "108"
                         else -> error(n)
                     }
                     writer.append("^chattype_").append(s)
