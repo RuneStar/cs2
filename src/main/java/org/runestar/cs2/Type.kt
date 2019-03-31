@@ -36,6 +36,7 @@ enum class Type(
     VAR,
     CHATTYPE,
     PARAM,
+    BIT,
     ;
 
     val nameLiteral: String = name.toLowerCase()

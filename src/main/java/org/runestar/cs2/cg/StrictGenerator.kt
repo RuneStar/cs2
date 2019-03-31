@@ -375,6 +375,14 @@ class StrictGenerator(
                     writer.append("^chattype_").append(s)
                 }
                 Type.PARAM -> writeNamedInt(paramNameLoader, n)
+                Type.BIT -> {
+                    val s = when (n) {
+                        0 -> "^false"
+                        1 -> "^true"
+                        else -> error(n)
+                    }
+                    writer.append(s)
+                }
                 else -> {
                     when (n) {
                         -1 -> writer.append(null)
