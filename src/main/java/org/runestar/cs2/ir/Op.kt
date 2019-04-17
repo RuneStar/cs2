@@ -49,7 +49,7 @@ internal interface Op {
         override val id = Opcodes.SWITCH
 
         override fun translate(state: Interpreter.State): Insn {
-            return Insn.Switch(state.pop(Type.INT), state.switch.mapValues { Insn.Label(it.value + 1 + state.pc) })
+            return Insn.Switch(state.pop(INT), state.switch.mapValues { Insn.Label(it.value + 1 + state.pc) })
         }
     }
 
@@ -146,8 +146,8 @@ internal interface Op {
     }
 
     private enum class PushCst(val type: Type) : Op {
-        PUSH_CONSTANT_INT(Type.INT),
-        PUSH_CONSTANT_STRING(Type.STRING);
+        PUSH_CONSTANT_INT(INT),
+        PUSH_CONSTANT_STRING(STRING);
 
         override val id: Int = namesReverse.getValue(name)
 
@@ -162,12 +162,12 @@ internal interface Op {
         override val id = Opcodes.DEFINE_ARRAY
 
         override fun translate(state: Interpreter.State): Insn {
-            val length = state.pop(Type.INT)
+            val length = state.pop(INT)
             val intOperand = state.intOperand
             val arrayId = intOperand shr 16
-            val arrayIdVar = Expr.Cst(Type.INT, arrayId)
+            val arrayIdVar = Expr.Cst(INT, arrayId)
             val typeDesc = intOperand and 0xFFFF
-            val type = Expr.Cst(Type.TYPE, typeDesc)
+            val type = Expr.Cst(TYPE, typeDesc)
             state.arrayTypes[arrayId] = Type.of(typeDesc)
             return Insn.Assignment(emptyList(), Expr.Operation(emptyList(), id, mutableListOf(arrayIdVar, type, length)))
         }
@@ -179,9 +179,9 @@ internal interface Op {
 
         override fun translate(state: Interpreter.State): Insn {
             val arrayId = state.intOperand
-            val arrayIdVar = Expr.Cst(Type.INT, arrayId)
-            val arrayIndex = state.pop(Type.INT)
-            val arrayType = state.arrayTypes[arrayId] ?: Type.INT
+            val arrayIdVar = Expr.Cst(INT, arrayId)
+            val arrayIndex = state.pop(INT)
+            val arrayType = state.arrayTypes[arrayId] ?: INT
             val def = state.push(arrayType)
             return Insn.Assignment(listOf(def), Expr.Operation(listOf(arrayType), id, mutableListOf(arrayIdVar, arrayIndex)))
         }
@@ -193,10 +193,10 @@ internal interface Op {
 
         override fun translate(state: Interpreter.State): Insn {
             val arrayId = state.intOperand
-            val arrayType = state.arrayTypes[arrayId] ?: Type.INT
-            val arrayIdVar = Expr.Cst(Type.INT, arrayId)
+            val arrayType = state.arrayTypes[arrayId] ?: INT
+            val arrayIdVar = Expr.Cst(INT, arrayId)
             val value = state.pop(arrayType)
-            val arrayIndex = state.pop(Type.INT)
+            val arrayIndex = state.pop(INT)
             return Insn.Assignment(emptyList(), Expr.Operation(emptyList(), id, mutableListOf(arrayIdVar, arrayIndex, value)))
         }
     }
@@ -761,9 +761,9 @@ internal interface Op {
         override val id = Opcodes.JOIN_STRING
 
         override fun translate(state: Interpreter.State): Insn {
-            val args = MutableList<Expr>(state.intOperand) { state.pop(Type.STRING) }
+            val args = MutableList<Expr>(state.intOperand) { state.pop(STRING) }
             args.reverse()
-            return Insn.Assignment(listOf(state.push(Type.STRING)), Expr.Operation(listOf(Type.STRING), id, args))
+            return Insn.Assignment(listOf(state.push(STRING)), Expr.Operation(listOf(STRING), id, args))
         }
     }
 
@@ -829,48 +829,48 @@ internal interface Op {
         override fun translate(state: Interpreter.State): Insn {
             val args = ArrayList<Expr>()
             if (id >= 2000) {
-                args.add(state.pop(Type.COMPONENT))
+                args.add(state.pop(COMPONENT))
             } else {
-                args.add(state.operand(Type.BOOLEAN))
+                args.add(state.operand(BOOLEAN))
             }
             var s = checkNotNull(state.strStack.pop().cst)
             if (s.isNotEmpty() && s.last() == 'Y') {
                 val triggerType = when (id) {
-                    Opcodes.IF_SETONSTATTRANSMIT, Opcodes.CC_SETONSTATTRANSMIT -> Type.STAT
-                    Opcodes.IF_SETONINVTRANSMIT, Opcodes.CC_SETONINVTRANSMIT -> Type.INV
-                    Opcodes.IF_SETONVARTRANSMIT, Opcodes.CC_SETONVARTRANSMIT -> Type.VAR
+                    Opcodes.IF_SETONSTATTRANSMIT, Opcodes.CC_SETONSTATTRANSMIT -> STAT
+                    Opcodes.IF_SETONINVTRANSMIT, Opcodes.CC_SETONINVTRANSMIT -> INV
+                    Opcodes.IF_SETONVARTRANSMIT, Opcodes.CC_SETONVARTRANSMIT -> VAR
                     else -> error(this)
                 }
                 val n = checkNotNull(state.intStack.pop().cst)
-                args.add(Expr.Cst(Type.INT, n))
+                args.add(Expr.Cst(INT, n))
                 repeat(n) {
                     args.add(state.pop(triggerType))
                 }
                 s = s.dropLast(1)
             } else {
-                args.add(Expr.Cst(Type.INT, 0))
+                args.add(Expr.Cst(INT, 0))
             }
             for (i in s.lastIndex downTo 0) {
                 args.add(state.pop(Type.of(s[i])))
             }
-            args.add(state.pop(Type.INT))
+            args.add(state.pop(INT))
             args.reverse()
             return Insn.Assignment(emptyList(), Expr.Operation(emptyList(), id, args))
         }
     }
 
     enum class ParamKey(val type: Type) : Op {
-        NC_PARAM(Type.INT),
-        LC_PARAM(Type.LOC),
-        OC_PARAM(Type.OBJ),
-        STRUCT_PARAM(Type.STRUCT),
+        NC_PARAM(INT),
+        LC_PARAM(LOC),
+        OC_PARAM(OBJ),
+        STRUCT_PARAM(STRUCT),
         ;
 
         override val id = namesReverse.getValue(name)
 
         override fun translate(state: Interpreter.State): Insn {
             val paramKeyId = checkNotNull(state.intStack.peek().cst)
-            val param = state.pop(Type.PARAM)
+            val param = state.pop(PARAM)
             val rec = state.pop(type)
             val paramType = checkNotNull(state.interpreter.paramTypeLoader.load(paramKeyId))
             return Insn.Assignment(listOf(state.push(paramType)), Expr.Operation(listOf(paramType), id, mutableListOf(rec, param)))
