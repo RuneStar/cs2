@@ -30,8 +30,7 @@ internal class Interpreter(
             val insn = Op.translate(state)
             state.pc++
             if (insn !is Insn.Assignment) {
-                check(state.intStack.isEmpty())
-                check(state.strStack.isEmpty())
+                check(state.stack.isEmpty())
             }
             insn
         }
@@ -76,9 +75,7 @@ internal class Interpreter(
 
         var pc: Int = 0
 
-        val intStack: ListStack<Val<Int?>> = ListStack()
-
-        val strStack: ListStack<Val<String?>> = ListStack()
+        val stack: ListStack<Val> = ListStack()
 
         private var stackVarCounter: Int = 0
 
@@ -100,24 +97,28 @@ internal class Interpreter(
 
         val switch: Map<Int, Int> get() = script.switches[intOperand]
 
-        fun pop(type: Type): Expr.Var = when (type.topType == Type.STRING) {
-            false -> intStack.pop().toExpr(type)
-            true -> strStack.pop().toExpr(type)
+        fun pop(type: Type): Expr.Var = stack.pop().toExpr(type)
+
+        fun popAll(): List<Expr.Var> = stack.popAll().map { it.toExpr() }
+
+        fun pop(ints: List<Type>, strings: List<Type>): List<Expr.Var> {
+            val i = ListStack(ArrayList(ints))
+            val s = ListStack(ArrayList(strings))
+            val v = ArrayList<Expr.Var>()
+            while (!i.isEmpty() || !s.isEmpty()) {
+                if (stack.peek().type == Type.STRING) {
+                    v.add(pop(s.pop()))
+                } else {
+                    v.add(pop(i.pop()))
+                }
+            }
+            return v
         }
 
         fun push(type: Type, cst: Any? = null): Expr.Var {
-            return when (type.topType == Type.STRING) {
-                false -> {
-                    val v = Val(cst as Int?, type, ++stackVarCounter)
-                    intStack.push(v)
-                    v.toExpr()
-                }
-                true -> {
-                    val v = Val(cst as String?, type, ++stackVarCounter)
-                    strStack.push(v)
-                    v.toExpr()
-                }
-            }
+            val v = Val(cst, type, ++stackVarCounter)
+            stack.push(v)
+            return v.toExpr()
         }
     }
 }

@@ -68,25 +68,21 @@ internal interface Op {
 
         override fun translate(state: Interpreter.State): Insn {
             val invokeId = state.intOperand
-
             val args = ArrayList<Expr>()
             args.add(Expr.Cst(INT, invokeId))
             val returns = ArrayList<Expr.Var>()
-            val stackArgs = ArrayList<Expr>()
             if (invokeId == state.id) {
-                // todo
-                repeat(state.script.stringArgumentCount) { stackArgs.add(state.pop(Type.STRING)) }
-                repeat(state.script.intArgumentCount) { stackArgs.add(state.pop(Type.INT)) }
+                args.addAll(state.popAll().asReversed())
             } else {
                 val invoked = state.interpreter.interpret(invokeId)
-                invoked.args.asReversed().forEach {
-                    stackArgs.add(state.pop(it.type))
-                }
+                val types = invoked.args.map { it.type }
+                val ints = types.filter { it != STRING }
+                val strings = types.filter { it == STRING }
+                args.addAll(state.pop(ints, strings).asReversed())
                 invoked.returns.forEach {
                     returns.add(state.push(it))
                 }
             }
-            args.addAll(stackArgs.asReversed())
             return Insn.Assignment(returns, Expr.Operation(returns.map { it.type }, id, args))
         }
     }
@@ -96,15 +92,7 @@ internal interface Op {
         override val id = Opcodes.RETURN
 
         override fun translate(state: Interpreter.State): Insn {
-            val args = ArrayList<Expr>()
-            repeat(state.intStack.size) {
-                args.add(state.pop(INT))
-            }
-            repeat(state.strStack.size) {
-                args.add(state.pop(STRING))
-            }
-            args.reverse()
-            return Insn.Return(Expr.Operation(emptyList(), id, args))
+            return Insn.Return(Expr.Operation(emptyList(), id, state.popAll().asReversed().toMutableList()))
         }
     }
 
@@ -115,9 +103,9 @@ internal interface Op {
         override fun translate(state: Interpreter.State): Insn {
             val key = state.pop(INT)
             val enumId = state.pop(ENUM)
-            val valueType = Type.of(checkNotNull(state.intStack.peek().cst))
+            val valueType = Type.of(checkNotNull(state.stack.peek().cst as Int))
             val valueTypeVar = state.pop(TYPE)
-            val keyType = Type.of(checkNotNull(state.intStack.peek().cst))
+            val keyType = Type.of(checkNotNull(state.stack.peek().cst as Int))
             val keyTypeVar = state.pop(TYPE)
             val args = mutableListOf<Expr>(keyTypeVar, valueTypeVar, enumId, key)
             key.type = keyType
@@ -594,8 +582,8 @@ internal interface Op {
         TEXT_GENDER(arrayOf(STRING.s, STRING.s), arrayOf(STRING.s)),
         TOSTRING(arrayOf(INT.s), arrayOf(STRING.s)),
         COMPARE(arrayOf(STRING.s, STRING.s), arrayOf(INT.s)),
-        PARAHEIGHT(arrayOf(INT.s, FONTMETRICS.s, STRING.s), arrayOf(INT.s)),
-        PARAWIDTH(arrayOf(INT.s, FONTMETRICS.s, STRING.s), arrayOf(INT.s)),
+        PARAHEIGHT(arrayOf(STRING.s, INT.s, FONTMETRICS.s), arrayOf(INT.s)),
+        PARAWIDTH(arrayOf(STRING.s, INT.s, FONTMETRICS.s), arrayOf(INT.s)),
         TEXT_SWITCH(arrayOf(INT.s, STRING.s, STRING.s), arrayOf(STRING.s)),
         ESCAPE(arrayOf(STRING.s), arrayOf(STRING.s)),
         APPEND_CHAR(arrayOf(STRING.s, CHAR.s), arrayOf(STRING.s)),
@@ -619,15 +607,15 @@ internal interface Op {
         OC_MEMBERS(arrayOf(OBJ.s), arrayOf(BIT.s)),
         OC_PLACEHOLDER(arrayOf(OBJ.s), arrayOf(OBJ.s)),
         OC_UNPLACEHOLDER(arrayOf(OBJ.s), arrayOf(OBJ.s)),
-        OC_FIND(arrayOf(BOOLEAN.s, STRING.s), arrayOf(INT.s)),
+        OC_FIND(arrayOf(STRING.s, BOOLEAN.s), arrayOf(INT.s)),
         OC_FINDNEXT(defs = arrayOf(OBJ.s)),
         OC_FINDRESET,
 
         CHAT_GETFILTER_PUBLIC(defs = arrayOf(INT.s)),
         CHAT_SETFILTER(arrayOf(INT.s, INT.s, INT.s)),
         CHAT_SENDABUSEREPORT(arrayOf(STRING.s, INT.s, INT.s)),
-        CHAT_GETHISTORY_BYTYPEANDLINE(arrayOf(CHATTYPE.s, INT.s), arrayOf(INT.s, INT.s, INT.s, STRING.s, STRING.s, STRING.s)),
-        CHAT_GETHISTORY_BYUID(arrayOf(INT.s), arrayOf(CHATTYPE.s, INT.s, INT.s, STRING.s, STRING.s, STRING.s)),
+        CHAT_GETHISTORY_BYTYPEANDLINE(arrayOf(CHATTYPE.s, INT.s), arrayOf(INT.s, INT.s, STRING.s, STRING.s, STRING.s, INT.s)),
+        CHAT_GETHISTORY_BYUID(arrayOf(INT.s), arrayOf(CHATTYPE.s, INT.s, STRING.s, STRING.s, STRING.s, INT.s)),
         CHAT_GETFILTER_PRIVATE(defs = arrayOf(INT.s)),
         CHAT_SENDPUBLIC(arrayOf(STRING.s, INT.s)),
         CHAT_SENDPRIVATE(arrayOf(STRING.s, STRING.s)),
@@ -672,8 +660,8 @@ internal interface Op {
         CLIENTTYPE(defs = arrayOf(INT.s)),
         _6520,
         _6521,
-        _6522(arrayOf(INT.s, STRING.s)),
-        _6523(arrayOf(INT.s, STRING.s)),
+        _6522(arrayOf(STRING.s, INT.s)),
+        _6523(arrayOf(STRING.s, INT.s)),
         BATTERYLEVEL(defs = arrayOf(INT.s)),
         BATTERYCHARGING(defs = arrayOf(BOOLEAN.s)),
         WIFIAVAILABLE(defs = arrayOf(BOOLEAN.s)),
@@ -833,7 +821,7 @@ internal interface Op {
             } else {
                 args.add(state.operand(BOOLEAN))
             }
-            var s = checkNotNull(state.strStack.pop().cst)
+            var s = checkNotNull(state.stack.pop().cst as String)
             if (s.isNotEmpty() && s.last() == 'Y') {
                 val triggerType = when (id) {
                     Opcodes.IF_SETONSTATTRANSMIT, Opcodes.CC_SETONSTATTRANSMIT -> STAT
@@ -841,7 +829,7 @@ internal interface Op {
                     Opcodes.IF_SETONVARTRANSMIT, Opcodes.CC_SETONVARTRANSMIT -> VAR
                     else -> error(this)
                 }
-                val n = checkNotNull(state.intStack.pop().cst)
+                val n = checkNotNull(state.stack.pop().cst as Int)
                 args.add(Expr.Cst(INT, n))
                 repeat(n) {
                     args.add(state.pop(triggerType))
@@ -869,7 +857,7 @@ internal interface Op {
         override val id = namesReverse.getValue(name)
 
         override fun translate(state: Interpreter.State): Insn {
-            val paramKeyId = checkNotNull(state.intStack.peek().cst)
+            val paramKeyId = checkNotNull(state.stack.peek().cst as Int)
             val param = state.pop(PARAM)
             val rec = state.pop(type)
             val paramType = checkNotNull(state.interpreter.paramTypeLoader.load(paramKeyId))

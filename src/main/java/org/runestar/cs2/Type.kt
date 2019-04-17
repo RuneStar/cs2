@@ -55,7 +55,7 @@ enum class Type(
 
         fun bottom(a: Type, b: Type): Type {
             if (a == b) return a
-            require(a.topType == b.topType)
+            require(a.topType == b.topType) { "$a $b" }
             if (a == a.topType) return b
             if (b == b.topType) return a
             if ((a == OBJ || a == NAMEDOBJ) && (b == OBJ || b == NAMEDOBJ)) return OBJ

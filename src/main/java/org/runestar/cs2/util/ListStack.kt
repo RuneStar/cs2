@@ -15,4 +15,6 @@ internal data class ListStack<T : Any>(
     fun peek(): T = delegate[delegate.lastIndex]
 
     fun pop(): T = delegate.removeAt(delegate.lastIndex)
+
+    fun popAll(): List<T> = delegate.reversed().also { delegate.clear() }
 }
