@@ -10,7 +10,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <version.kotlin>1.3.21</version.kotlin>
+        <version.kotlin>1.3.30</version.kotlin>
     </properties>
 
     <dependencies>
