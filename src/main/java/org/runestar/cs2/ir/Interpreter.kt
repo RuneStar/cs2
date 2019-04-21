@@ -38,9 +38,9 @@ internal class Interpreter(
 
     private fun makeFunc(id: Int, script: Script, insns: Array<Insn>): Func {
         val returnInsn = (insns.last { it is Insn.Return } as Insn.Return).expr as Expr.Operation
-        val args = ArrayList<Expr.Var>()
-        repeat(script.intArgumentCount) { args.add(Expr.Var(it, Type.INT)) }
-        repeat(script.stringArgumentCount) { args.add(Expr.Var(it, Type.STRING)) }
+        val args = ArrayList<Expr.Variable.Local>()
+        repeat(script.intArgumentCount) { args.add(Expr.Variable.Local(it, Type.INT)) }
+        repeat(script.stringArgumentCount) { args.add(Expr.Variable.Local(it, Type.STRING)) }
         val returns = returnInsn.arguments.flatMapTo(ArrayList()) { it.types }
         val func = Func(id, args, addLabels(insns), returns)
         Phase.DEFAULT.transform(func)
@@ -97,14 +97,14 @@ internal class Interpreter(
 
         val switch: Map<Int, Int> get() = script.switches[intOperand]
 
-        fun pop(type: Type): Expr.Var = stack.pop().toExpr(type)
+        fun pop(type: Type): Expr.Variable.Stack = stack.pop().toExpr(type)
 
-        fun popAll(): List<Expr.Var> = stack.popAll().map { it.toExpr() }
+        fun popAll(): List<Expr.Variable.Stack> = stack.popAll().map { it.toExpr() }
 
-        fun pop(ints: List<Type>, strings: List<Type>): List<Expr.Var> {
+        fun pop(ints: List<Type>, strings: List<Type>): List<Expr.Variable.Stack> {
             val i = ListStack(ArrayList(ints))
             val s = ListStack(ArrayList(strings))
-            val v = ArrayList<Expr.Var>()
+            val v = ArrayList<Expr.Variable.Stack>()
             while (!i.isEmpty() || !s.isEmpty()) {
                 if (stack.peek().type == Type.STRING) {
                     v.add(pop(s.pop()))
@@ -115,7 +115,7 @@ internal class Interpreter(
             return v
         }
 
-        fun push(type: Type, cst: Any? = null): Expr.Var {
+        fun push(type: Type, cst: Any? = null): Expr.Variable.Stack {
             val v = Val(cst, type, ++stackVarCounter)
             stack.push(v)
             return v.toExpr()

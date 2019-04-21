@@ -12,7 +12,7 @@ internal object MergeSingleStackDefs : Phase {
         for (insn in func.insns) {
             val assignment = insn as? Insn.Assignment ?: continue
             val def = assignment.definitions.singleOrNull() ?: continue
-            if (def.id >= 0) continue
+            if (def !is Expr.Variable.Stack) continue
             var c: Insn? = func.insns.next(assignment)!!
             while (c != null && c is Insn.Exprd) {
                 if (replace(c, def, assignment.expr)) {
@@ -24,12 +24,12 @@ internal object MergeSingleStackDefs : Phase {
             if (assignment.expr is Expr.Cst) {
                 func.insns.remove(assignment)
             } else if (assignment.expr is Expr.Operation) {
-                assignment.definitions = emptyList()
+                assignment.definitions = ArrayList()
             }
         }
     }
 
-    private fun replace(insn: Insn.Exprd, v: Expr.Var, by: Expr): Boolean {
+    private fun replace(insn: Insn.Exprd, v: Expr.Variable.Stack, by: Expr): Boolean {
         if (insn.expr == v) {
             by.type = Type.bottom(insn.expr.type, by.type)
             insn.expr = by
@@ -45,7 +45,7 @@ internal object MergeSingleStackDefs : Phase {
         return false
     }
 
-    private fun replace(operation: Expr.Operation, v: Expr.Var, by: Expr): Boolean {
+    private fun replace(operation: Expr.Operation, v: Expr.Variable.Stack, by: Expr): Boolean {
         val li = operation.arguments.listIterator()
         while (li.hasNext()) {
             val next = li.next()

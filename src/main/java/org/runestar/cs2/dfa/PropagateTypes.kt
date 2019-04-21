@@ -24,7 +24,7 @@ internal object PropagateTypes : Phase {
             val defs = insn.definitions
             if (defs.size != 1) continue
             val expr = insn.expr
-            if (expr !is Expr.Var) continue
+            if (expr !is Expr.Variable) continue
             val def = defs.single()
             val type = Type.bottom(expr.type, def.type)
             if (type != expr.type || type != def.type) changed = true
@@ -71,8 +71,8 @@ internal object PropagateTypes : Phase {
         return changed
     }
 
-    private fun scanVars(func: Func): Map<Expr.Var, Type> {
-        val map = HashMap<Expr.Var, Type>()
+    private fun scanVars(func: Func): Map<Expr.Variable, Type> {
+        val map = HashMap<Expr.Variable, Type>()
         for (arg in func.args) {
             addType(arg, map)
         }
@@ -89,21 +89,21 @@ internal object PropagateTypes : Phase {
         return map
     }
 
-    private fun addType(v: Expr.Var, map: MutableMap<Expr.Var, Type>) {
+    private fun addType(v: Expr.Variable, map: MutableMap<Expr.Variable, Type>) {
         map.compute(v) { k, t -> if (t == null) k.type else Type.bottom(t, k.type) }
     }
 
-    private fun scanVars(e: Expr, map: MutableMap<Expr.Var, Type>) {
+    private fun scanVars(e: Expr, map: MutableMap<Expr.Variable, Type>) {
         if (e is Expr.Operation) {
             for (arg in e.arguments) {
                 scanVars(arg, map)
             }
-        } else if (e is Expr.Var) {
+        } else if (e is Expr.Variable) {
             addType(e, map)
         }
     }
 
-    private fun changeVarTypes(func: Func, map: Map<Expr.Var, Type>): Boolean {
+    private fun changeVarTypes(func: Func, map: Map<Expr.Variable, Type>): Boolean {
         var changed = false
         for (arg in func.args) {
             val s = arg.type
@@ -132,13 +132,13 @@ internal object PropagateTypes : Phase {
         return changed
     }
 
-    private fun changeVarTypes(e: Expr, map: Map<Expr.Var, Type>): Boolean {
+    private fun changeVarTypes(e: Expr, map: Map<Expr.Variable, Type>): Boolean {
         var changed = false
         if (e is Expr.Operation) {
             for (arg in e.arguments) {
                 changed = changeVarTypes(arg, map) || changed
             }
-        } else if (e is Expr.Var) {
+        } else if (e is Expr.Variable) {
             val before = e.type
             e.type = map.getOrDefault(e, e.type)
             if (e.type != before) {

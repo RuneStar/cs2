@@ -1,9 +1,10 @@
 package org.runestar.cs2.dfa
 
+import org.runestar.cs2.Type
 import org.runestar.cs2.ir.Expr
 import org.runestar.cs2.ir.Func
 import org.runestar.cs2.ir.Insn
-import java.util.*
+import java.util.Collections
 
 internal object MergeMultiStackDefs : Phase {
 
@@ -13,24 +14,27 @@ internal object MergeMultiStackDefs : Phase {
             val defs = assignment.definitions
             if (defs.size <= 1) continue
             ds@
-            for (d in defs) {
+            for (i in defs.indices) {
+                val d = defs[i]
                 var c = func.insns.next(assignment)!!
                 while (c is Insn.Assignment) {
                     if (c.expr == d) {
-                        d.id = c.definitions.single().id
+                        val cd = c.definitions.single()
+                        cd.type = Type.bottom(cd.type, d.type)
+                        defs[i] = cd
                         func.insns.remove(c)
                         continue@ds
                     }
                     c = func.insns.next(c)!!
                 }
             }
-            if (defs.all { it.id < 0 }) {
+            if (defs.all { it is Expr.Variable.Stack }) {
                 val next = func.insns.next(assignment) as? Insn.Exprd
                 val nextExpr = next?.expr as? Expr.Operation
                 if (nextExpr != null && replaceExprList(assignment, nextExpr)) {
                     func.insns.remove(assignment)
                 } else {
-                    assignment.definitions = emptyList()
+                    assignment.definitions = ArrayList()
                 }
             }
         }

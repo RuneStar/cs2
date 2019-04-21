@@ -14,7 +14,6 @@ internal interface Phase {
     companion object {
         val DEFAULT = Composite(
                 RemoveDeadCode,
-                RemoveIdentityOperations,
                 DeleteNops,
                 MergeSingleStackDefs,
                 MergeMultiStackDefs,

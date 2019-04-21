@@ -3,9 +3,7 @@ package org.runestar.cs2.ir
 import org.runestar.cs2.Opcodes
 import org.runestar.cs2.Type
 import org.runestar.cs2.Type.*
-import org.runestar.cs2.ir.Op.Src.*
 import org.runestar.cs2.namesReverse
-import org.runestar.cs2.util.ListStack
 
 internal interface Op {
 
@@ -14,12 +12,6 @@ internal interface Op {
     fun translate(state: Interpreter.State): Insn
 
     companion object {
-        
-        private val Type.s get() = Arg(this, S)
-
-        private val Type.l get() = Arg(this, L)
-
-        private val Type.o get() = Arg(this, O)
 
         private val map: Map<Int, Op> by lazy {
             ArrayList<Op>().run {
@@ -32,8 +24,8 @@ internal interface Op {
                 add(DefineArray)
                 add(GetArrayInt)
                 add(SetArrayInt)
-                addAll(PushCst.values().asList())
                 addAll(BranchCompare.values().asList())
+                addAll(Assign.values().asList())
                 addAll(Basic.values().asList())
                 addAll(SetOn.values().asList())
                 addAll(ParamKey.values().asList())
@@ -70,7 +62,7 @@ internal interface Op {
             val invokeId = state.intOperand
             val args = ArrayList<Expr>()
             args.add(Expr.Cst(INT, invokeId))
-            val returns = ArrayList<Expr.Var>()
+            val returns = ArrayList<Expr.Variable>()
             if (invokeId == state.id) {
                 args.addAll(state.popAll().asReversed())
             } else {
@@ -110,7 +102,7 @@ internal interface Op {
             val args = mutableListOf<Expr>(keyTypeVar, valueTypeVar, enumId, key)
             key.type = keyType
             val value = state.push(valueType)
-            return Insn.Assignment(listOf(value), Expr.Operation(listOf(valueType), id, args))
+            return Insn.Assignment(mutableListOf(value), Expr.Operation(listOf(valueType), id, args))
         }
     }
 
@@ -133,18 +125,6 @@ internal interface Op {
         }
     }
 
-    private enum class PushCst(val type: Type) : Op {
-        PUSH_CONSTANT_INT(INT),
-        PUSH_CONSTANT_STRING(STRING);
-
-        override val id: Int = namesReverse.getValue(name)
-
-        override fun translate(state: Interpreter.State): Insn {
-            val cst = state.operand(type)
-            return Insn.Assignment(listOf(state.push(type, cst.cst)), cst)
-        }
-    }
-
     private object DefineArray : Op {
 
         override val id = Opcodes.DEFINE_ARRAY
@@ -157,7 +137,7 @@ internal interface Op {
             val typeDesc = intOperand and 0xFFFF
             val type = Expr.Cst(TYPE, typeDesc)
             state.arrayTypes[arrayId] = Type.of(typeDesc)
-            return Insn.Assignment(emptyList(), Expr.Operation(emptyList(), id, mutableListOf(arrayIdVar, type, length)))
+            return Insn.Assignment(ArrayList(), Expr.Operation(emptyList(), id, mutableListOf(arrayIdVar, type, length)))
         }
     }
 
@@ -171,7 +151,7 @@ internal interface Op {
             val arrayIndex = state.pop(INT)
             val arrayType = state.arrayTypes[arrayId] ?: INT
             val def = state.push(arrayType)
-            return Insn.Assignment(listOf(def), Expr.Operation(listOf(arrayType), id, mutableListOf(arrayIdVar, arrayIndex)))
+            return Insn.Assignment(mutableListOf(def), Expr.Operation(listOf(arrayType), id, mutableListOf(arrayIdVar, arrayIndex)))
         }
     }
 
@@ -185,562 +165,576 @@ internal interface Op {
             val arrayIdVar = Expr.Cst(INT, arrayId)
             val value = state.pop(arrayType)
             val arrayIndex = state.pop(INT)
-            return Insn.Assignment(emptyList(), Expr.Operation(emptyList(), id, mutableListOf(arrayIdVar, arrayIndex, value)))
+            return Insn.Assignment(ArrayList(), Expr.Operation(emptyList(), id, mutableListOf(arrayIdVar, arrayIndex, value)))
         }
     }
 
-    private data class Arg(val type: Type, val src: Src)
+    private enum class Assign : Op {
 
-    private enum class Src {
-        L, S, O
-    }
-
-    private enum class Basic(val args: Array<Arg> = emptyArray(), val defs: Array<Arg> = emptyArray()) : Op {
-        GET_VAR(arrayOf(INT.o), arrayOf(INT.s)),
-        SET_VAR(arrayOf(INT.o, INT.s)),
-        GET_VARBIT(arrayOf(INT.o), arrayOf(INT.s)),
-        SET_VARBIT(arrayOf(INT.o, INT.s)),
-        PUSH_INT_LOCAL(arrayOf(INT.l), arrayOf(INT.s)),
-        POP_INT_LOCAL(arrayOf(INT.s), arrayOf(INT.l)),
-        PUSH_STRING_LOCAL(arrayOf(STRING.l), arrayOf(STRING.s)),
-        POP_STRING_LOCAL(arrayOf(STRING.s), arrayOf(STRING.l)),
-        POP_INT_DISCARD(arrayOf(INT.s)),
-        POP_STRING_DISCARD(arrayOf(STRING.s)),
-        GET_VARC_INT(arrayOf(INT.o), arrayOf(INT.s)),
-        SET_VARC_INT(arrayOf(INT.o, INT.s)),
-        GET_VARC_STRING_OLD(arrayOf(INT.o), arrayOf(STRING.s)),
-        SET_VARC_STRING_OLD(arrayOf(INT.o, STRING.s)),
-        GET_VARC_STRING(arrayOf(INT.o), arrayOf(STRING.s)),
-        SET_VARC_STRING(arrayOf(INT.o, STRING.s)),
-        CC_CREATE(arrayOf(COMPONENT.s, IFTYPE.s, INT.s, BOOLEAN.o)),
-        CC_DELETE(arrayOf(BOOLEAN.o)),
-        CC_DELETEALL(arrayOf(COMPONENT.s)),
-        CC_FIND(arrayOf(COMPONENT.s, INT.s, BOOLEAN.o), arrayOf(BIT.s)),
-        IF_FIND(arrayOf(COMPONENT.s, BOOLEAN.o), arrayOf(BOOLEAN.s)),
-
-        CC_SETPOSITION(arrayOf(INT.s, INT.s, SETPOSH.s, SETPOSV.s, BOOLEAN.o)),
-        CC_SETSIZE(arrayOf(INT.s, INT.s, SETSIZE.s, SETSIZE.s, BOOLEAN.o)),
-        CC_SETHIDE(arrayOf(BOOLEAN.s, BOOLEAN.o)),
-        CC_SETNOCLICKTHROUGH(arrayOf(BOOLEAN.s, BOOLEAN.o)),
-        _1006(arrayOf(BOOLEAN.s, BOOLEAN.o)),
-
-        CC_SETSCROLLPOS(arrayOf(INT.s, INT.s, BOOLEAN.o)),
-        CC_SETCOLOUR(arrayOf(COLOUR.s, BOOLEAN.o)),
-        CC_SETFILL(arrayOf(BOOLEAN.s, BOOLEAN.o)),
-        CC_SETTRANS(arrayOf(INT.s, BOOLEAN.o)),
-        CC_SETLINEWID(arrayOf(INT.s, BOOLEAN.o)),
-        CC_SETGRAPHIC(arrayOf(GRAPHIC.s, BOOLEAN.o)),
-        CC_SET2DANGLE(arrayOf(INT.s, BOOLEAN.o)),
-        CC_SETTILING(arrayOf(BOOLEAN.s, BOOLEAN.o)),
-        CC_SETMODEL(arrayOf(MODEL.s, BOOLEAN.o)),
-        CC_SETMODELANGLE(arrayOf(INT.s, INT.s, INT.s, INT.s, INT.s, INT.s, BOOLEAN.o)),
-        CC_SETMODELANIM(arrayOf(INT.s, BOOLEAN.o)),
-        CC_SETMODELORTHOG(arrayOf(BOOLEAN.s, BOOLEAN.o)),
-        CC_SETTEXT(arrayOf(STRING.s, BOOLEAN.o)),
-        CC_SETTEXTFONT(arrayOf(FONTMETRICS.s, BOOLEAN.o)),
-        CC_SETTEXTALIGN(arrayOf(SETTEXTALIGNH.s, SETTEXTALIGNV.s, INT.s, BOOLEAN.o)),
-        CC_SETTEXTSHADOW(arrayOf(BOOLEAN.s, BOOLEAN.o)),
-        CC_SETOUTLINE(arrayOf(INT.s, BOOLEAN.o)),
-        CC_SETGRAPHICSHADOW(arrayOf(COLOUR.s, BOOLEAN.o)),
-        CC_SETVFLIP(arrayOf(BOOLEAN.s, BOOLEAN.o)),
-        CC_SETHFLIP(arrayOf(BOOLEAN.s, BOOLEAN.o)),
-        CC_SETSCROLLSIZE(arrayOf(INT.s, INT.s, BOOLEAN.o)),
-        CC_RESUME_PAUSEBUTTON(arrayOf(BOOLEAN.o)),
-        _1122(arrayOf(GRAPHIC.s, BOOLEAN.o)),
-        CC_SETFILLCOLOUR(arrayOf(COLOUR.s, BOOLEAN.o)),
-        _1124(arrayOf(INT.s, BOOLEAN.o)),
-        _1125(arrayOf(INT.s, BOOLEAN.o)),
-        CC_SETLINEDIRECTION(arrayOf(BOOLEAN.s, BOOLEAN.o)),
-        _1127(arrayOf(BOOLEAN.s, BOOLEAN.o)),
-
-        CC_SETOBJECT(arrayOf(OBJ.s, INT.s, BOOLEAN.o)),
-        CC_SETNPCHEAD(arrayOf(INT.s, BOOLEAN.o)),
-        CC_SETPLAYERHEAD_SELF(arrayOf(BOOLEAN.o)),
-        CC_SETOBJECT_NONUM(arrayOf(OBJ.s, INT.s, BOOLEAN.o)),
-        CC_SETOBJECT_ALWAYS_NUM(arrayOf(OBJ.s, INT.s, BOOLEAN.o)),
-
-        CC_SETOP(arrayOf(INT.s, STRING.s, BOOLEAN.o)),
-        CC_SETDRAGGABLE(arrayOf(INT.s, INT.s, BOOLEAN.o)),
-        CC_SETDRAGGABLEBEHAVIOR(arrayOf(INT.s, BOOLEAN.o)),
-        CC_SETDRAGDEADZONE(arrayOf(INT.s, BOOLEAN.o)),
-        CC_SETDRAGDEADTIME(arrayOf(INT.s, BOOLEAN.o)),
-        CC_SETOPBASE(arrayOf(STRING.s, BOOLEAN.o)),
-        CC_SETTARGETVERB(arrayOf(STRING.s, BOOLEAN.o)),
-        CC_CLEAROPS(arrayOf(BOOLEAN.o)),
-        CC_SETOPKEY(arrayOf(INT.s, INT.s, INT.s, INT.s, INT.s, INT.s, INT.s, INT.s, INT.s, INT.s, INT.s, BOOLEAN.o)),
-        CC_SETOPTKEY(arrayOf(INT.s, INT.s, BOOLEAN.o)),
-        CC_SETOPKEYRATE(arrayOf(INT.s, INT.s, INT.s, BOOLEAN.o)),
-        CC_SETOPTKEYRATE(arrayOf(INT.s, INT.s, BOOLEAN.o)),
-        CC_SETOPKEYIGNOREHELD(arrayOf(INT.s, BOOLEAN.o)),
-        CC_SETOPTKEYIGNOREHELD(arrayOf(BOOLEAN.o)),
-
-        CC_GETX(arrayOf(BOOLEAN.o), arrayOf(INT.s)),
-        CC_GETY(arrayOf(BOOLEAN.o), arrayOf(INT.s)),
-        CC_GETWIDTH(arrayOf(BOOLEAN.o), arrayOf(INT.s)),
-        CC_GETHEIGHT(arrayOf(BOOLEAN.o), arrayOf(INT.s)),
-        CC_GETHIDE(arrayOf(BOOLEAN.o), arrayOf(BOOLEAN.s)),
-        CC_GETLAYER(arrayOf(BOOLEAN.o), arrayOf(COMPONENT.s)),
-
-        CC_GETSCROLLX(arrayOf(BOOLEAN.o), arrayOf(INT.s)),
-        CC_GETSCROLLY(arrayOf(BOOLEAN.o), arrayOf(INT.s)),
-        CC_GETTEXT(arrayOf(BOOLEAN.o), arrayOf(STRING.s)),
-        CC_GETSCROLLWIDTH(arrayOf(BOOLEAN.o), arrayOf(INT.s)),
-        CC_GETSCROLLHEIGHT(arrayOf(BOOLEAN.o), arrayOf(INT.s)),
-        CC_GETMODELZOOM(arrayOf(BOOLEAN.o), arrayOf(INT.s)),
-        CC_GETMODELANGLE_X(arrayOf(BOOLEAN.o), arrayOf(INT.s)),
-        CC_GETMODELANGLE_Z(arrayOf(BOOLEAN.o), arrayOf(INT.s)),
-        CC_GETMODELANGLE_Y(arrayOf(BOOLEAN.o), arrayOf(INT.s)),
-        CC_GETTRANS(arrayOf(BOOLEAN.o), arrayOf(INT.s)),
-        _1610(arrayOf(BOOLEAN.o), arrayOf(INT.s)),
-        CC_GETCOLOUR(arrayOf(BOOLEAN.o), arrayOf(COLOUR.s)),
-        CC_GETFILLCOLOUR(arrayOf(BOOLEAN.o), arrayOf(COLOUR.s)),
-        _1613(arrayOf(BOOLEAN.o), arrayOf(INT.s)),
-        _1614(arrayOf(BOOLEAN.o), arrayOf(BOOLEAN.s)),
-
-        CC_GETINVOBJECT(arrayOf(BOOLEAN.o), arrayOf(OBJ.s)),
-        CC_GETINVCOUNT(arrayOf(BOOLEAN.o), arrayOf(INT.s)),
-        CC_GETID(arrayOf(BOOLEAN.o), arrayOf(INT.s)),
-
-        CC_GETTARGETMASK(arrayOf(BOOLEAN.o), arrayOf(INT.s)),
-        CC_GETOP(arrayOf(INT.s, BOOLEAN.o), arrayOf(STRING.s)),
-        CC_GETOPBASE(arrayOf(BOOLEAN.o), arrayOf(STRING.s)),
-
-        CC_CALLONRESIZE(arrayOf(BOOLEAN.s)),
-
-        IF_SETPOSITION(arrayOf(INT.s, INT.s, SETPOSH.s, SETPOSV.s, COMPONENT.s)),
-        IF_SETSIZE(arrayOf(INT.s, INT.s, SETSIZE.s, SETSIZE.s, COMPONENT.s)),
-        IF_SETHIDE(arrayOf(BOOLEAN.s, COMPONENT.s)),
-        IF_SETNOCLICKTHROUGH(arrayOf(BOOLEAN.s, COMPONENT.s)),
-        _2006(arrayOf(BOOLEAN.s, COMPONENT.s)),
-
-        IF_SETSCROLLPOS(arrayOf(INT.s, INT.s, COMPONENT.s)),
-        IF_SETCOLOUR(arrayOf(COLOUR.s, COMPONENT.s)),
-        IF_SETFILL(arrayOf(BOOLEAN.s, COMPONENT.s)),
-        IF_SETTRANS(arrayOf(INT.s, COMPONENT.s)),
-        IF_SETLINEWID(arrayOf(INT.s, COMPONENT.s)),
-        IF_SETGRAPHIC(arrayOf(GRAPHIC.s, COMPONENT.s)),
-        IF_SET2DANGLE(arrayOf(INT.s, COMPONENT.s)),
-        IF_SETTILING(arrayOf(BOOLEAN.s, COMPONENT.s)),
-        IF_SETMODEL(arrayOf(MODEL.s, COMPONENT.s)),
-        IF_SETMODELANGLE(arrayOf(INT.s, INT.s, INT.s, INT.s, INT.s, INT.s, COMPONENT.s)),
-        IF_SETMODELANIM(arrayOf(INT.s, COMPONENT.s)),
-        IF_SETMODELORTHOG(arrayOf(BOOLEAN.s, COMPONENT.s)),
-        IF_SETTEXT(arrayOf(STRING.s, COMPONENT.s)),
-        IF_SETTEXTFONT(arrayOf(FONTMETRICS.s, COMPONENT.s)),
-        IF_SETTEXTALIGN(arrayOf(SETTEXTALIGNH.s, SETTEXTALIGNV.s, INT.s, COMPONENT.s)),
-        IF_SETTEXTSHADOW(arrayOf(BOOLEAN.s, COMPONENT.s)),
-        IF_SETOUTLINE(arrayOf(INT.s, COMPONENT.s)),
-        IF_SETGRAPHICSHADOW(arrayOf(COLOUR.s, COMPONENT.s)),
-        IF_SETVFLIP(arrayOf(BOOLEAN.s, COMPONENT.s)),
-        IF_SETHFLIP(arrayOf(BOOLEAN.s, COMPONENT.s)),
-        IF_SETSCROLLSIZE(arrayOf(INT.s, INT.s, COMPONENT.s)),
-        IF_RESUME_PAUSEBUTTON(arrayOf(COMPONENT.s)),
-        _2122(arrayOf(GRAPHIC.s, COMPONENT.s)),
-        IF_SETFILLCOLOUR(arrayOf(COLOUR.s, COMPONENT.s)),
-        _2124(arrayOf(INT.s, COMPONENT.s)),
-        _2125(arrayOf(INT.s, COMPONENT.s)),
-        IF_SETLINEDIRECTION(arrayOf(BOOLEAN.s, COMPONENT.s)),
-        _2127(arrayOf(BOOLEAN.s, COMPONENT.s)),
-
-        IF_SETOBJECT(arrayOf(OBJ.s, INT.s, COMPONENT.s)),
-        IF_SETNPCHEAD(arrayOf(INT.s, COMPONENT.s)),
-        IF_SETPLAYERHEAD_SELF(arrayOf(COMPONENT.s)),
-        IF_SETOBJECT_NONUM(arrayOf(OBJ.s, INT.s, COMPONENT.s)),
-        IF_SETOBJECT_ALWAYS_NUM(arrayOf(OBJ.s, INT.s, COMPONENT.s)),
-
-        IF_SETOP(arrayOf(INT.s, STRING.s, COMPONENT.s)),
-        IF_SETDRAGGABLE(arrayOf(INT.s, INT.s, COMPONENT.s)),
-        IF_SETDRAGGABLEBEHAVIOR(arrayOf(INT.s, COMPONENT.s)),
-        IF_SETDRAGDEADZONE(arrayOf(INT.s, COMPONENT.s)),
-        IF_SETDRAGDEADTIME(arrayOf(INT.s, COMPONENT.s)),
-        IF_SETOPBASE(arrayOf(STRING.s, COMPONENT.s)),
-        IF_SETTARGETVERB(arrayOf(STRING.s, COMPONENT.s)),
-        IF_CLEAROPS(arrayOf(COMPONENT.s)),
-        IF_SETOPKEY(arrayOf(INT.s, INT.s, INT.s, COMPONENT.s)),
-        IF_SETOPTKEY(arrayOf(INT.s, INT.s, COMPONENT.s)),
-        IF_SETOPKEYRATE(arrayOf(INT.s, INT.s, INT.s, COMPONENT.s)),
-        IF_SETOPTKEYRATE(arrayOf(INT.s, INT.s, COMPONENT.s)),
-        IF_SETOPKEYIGNOREHELD(arrayOf(INT.s, COMPONENT.s)),
-        IF_SETOPTKEYIGNOREHELD(arrayOf(COMPONENT.s)),
-
-        IF_GETX(arrayOf(COMPONENT.s), arrayOf(INT.s)),
-        IF_GETY(arrayOf(COMPONENT.s), arrayOf(INT.s)),
-        IF_GETWIDTH(arrayOf(COMPONENT.s), arrayOf(INT.s)),
-        IF_GETHEIGHT(arrayOf(COMPONENT.s), arrayOf(INT.s)),
-        IF_GETHIDE(arrayOf(COMPONENT.s), arrayOf(BOOLEAN.s)),
-        IF_GETLAYER(arrayOf(COMPONENT.s), arrayOf(COMPONENT.s)),
-
-        IF_GETSCROLLX(arrayOf(COMPONENT.s), arrayOf(INT.s)),
-        IF_GETSCROLLY(arrayOf(COMPONENT.s), arrayOf(INT.s)),
-        IF_GETTEXT(arrayOf(COMPONENT.s), arrayOf(STRING.s)),
-        IF_GETSCROLLWIDTH(arrayOf(COMPONENT.s), arrayOf(INT.s)),
-        IF_GETSCROLLHEIGHT(arrayOf(COMPONENT.s), arrayOf(INT.s)),
-        IF_GETMODELZOOM(arrayOf(COMPONENT.s), arrayOf(INT.s)),
-        IF_GETMODELANGLE_X(arrayOf(COMPONENT.s), arrayOf(INT.s)),
-        IF_GETMODELANGLE_Z(arrayOf(COMPONENT.s), arrayOf(INT.s)),
-        IF_GETMODELANGLE_Y(arrayOf(COMPONENT.s), arrayOf(INT.s)),
-        IF_GETTRANS(arrayOf(COMPONENT.s), arrayOf(INT.s)),
-        _2610(arrayOf(COMPONENT.s), arrayOf(INT.s)),
-        IF_GETCOLOUR(arrayOf(COMPONENT.s), arrayOf(COLOUR.s)),
-        IF_GETFILLCOLOUR(arrayOf(COMPONENT.s), arrayOf(COLOUR.s)),
-        _2613(arrayOf(COMPONENT.s), arrayOf(INT.s)),
-        _2614(arrayOf(COMPONENT.s), arrayOf(BOOLEAN.s)),
-
-        IF_GETINVOBJECT(arrayOf(COMPONENT.s), arrayOf(OBJ.s)),
-        IF_GETINVCOUNT(arrayOf(COMPONENT.s), arrayOf(INT.s)),
-        IF_HASSUB(arrayOf(COMPONENT.s), arrayOf(BOOLEAN.s)),
-        IF_GETTOP(defs = arrayOf(INT.s)),
-
-        IF_GETTARGETMASK(arrayOf(COMPONENT.s), arrayOf(INT.s)),
-        IF_GETOP(arrayOf(INT.s, COMPONENT.s), arrayOf(STRING.s)),
-        IF_GETOPBASE(arrayOf(COMPONENT.s), arrayOf(STRING.s)),
-
-        IF_CALLONRESIZE(arrayOf(COMPONENT.s, BOOLEAN.o)),
-
-        MES(arrayOf(STRING.s)),
-        ANIM(arrayOf(INT.s, INT.s)),
-        IF_CLOSE,
-        RESUME_COUNTDIALOG(arrayOf(STRING.s)),
-        RESUME_NAMEDIALOG(arrayOf(STRING.s)),
-        RESUME_STRINGDIALOG(arrayOf(STRING.s)),
-        OPPLAYER(arrayOf(INT.s, STRING.s)),
-        IF_DRAGPICKUP(arrayOf(COMPONENT.s, INT.s, INT.s)),
-        CC_DRAGPICKUP(arrayOf(INT.s, INT.s, BOOLEAN.o)),
-        MOUSECAM(arrayOf(BOOLEAN.s)),
-        GETREMOVEROOFS(defs = arrayOf(BOOLEAN.s)),
-        SETREMOVEROOFS(arrayOf(BOOLEAN.s)),
-        OPENURL(arrayOf(STRING.s, BOOLEAN.s)),
-        RESUME_OBJDIALOG(arrayOf(INT.s)),
-        BUG_REPORT(arrayOf(INT.s, STRING.s, STRING.s)),
-        SETSHIFTCLICKDROP(arrayOf(BOOLEAN.s)),
-        SETSHOWMOUSEOVERTEXT(arrayOf(BOOLEAN.s)),
-        RENDERSELF(arrayOf(BOOLEAN.s)),
-        _3120(arrayOf(BOOLEAN.s)),
-        _3121(arrayOf(BOOLEAN.s)),
-        _3122(arrayOf(BOOLEAN.s)),
-        _3123(arrayOf(BOOLEAN.s)),
-        _3124,
-        SETSHOWMOUSECROSS(arrayOf(BOOLEAN.s)),
-        SETSHOWLOADINGMESSAGES(arrayOf(BOOLEAN.s)),
-        SETTAPTODROP(arrayOf(BOOLEAN.s)),
-        GETTAPTODROP(defs = arrayOf(BOOLEAN.s)),
-        _3129(arrayOf(INT.s, INT.s)),
-        _3130(arrayOf(INT.s, INT.s)),
-        _3131(arrayOf(INT.s)),
-        GETCANVASSIZE(defs = arrayOf(INT.s, INT.s)),
-        _3133(arrayOf(INT.s)),
-        _3134,
-        _3135(arrayOf(INT.s, INT.s)),
-        _3136(arrayOf(BOOLEAN.s)),
-        _3137(arrayOf(BOOLEAN.s)),
-        _3138,
-        _3139,
-        _3140(arrayOf(BOOLEAN.o)),
-        SETHIDEUSERNAME(arrayOf(BOOLEAN.s)),
-        GETHIDEUSERNAME(defs = arrayOf(BOOLEAN.s)),
-        SETREMEMBERUSERNAME(arrayOf(BOOLEAN.s)),
-        GETREMEMBERUSERNAME(defs = arrayOf(BOOLEAN.s)),
-        _3145,
-
-        SOUND_SYNTH(arrayOf(SYNTH.s, INT.s, INT.s)),
-        SOUND_SONG(arrayOf(INT.s)),
-        SOUND_JINGLE(arrayOf(INT.s, INT.s)),
-
-        CLIENTCLOCK(defs = arrayOf(INT.s)),
-        INV_GETOBJ(arrayOf(INV.s, INT.s), arrayOf(OBJ.s)),
-        INV_GETNUM(arrayOf(INV.s, INT.s), arrayOf(INT.s)),
-        INV_TOTAL(arrayOf(INV.s, OBJ.s), arrayOf(INT.s)),
-        INV_SIZE(arrayOf(INV.s), arrayOf(INT.s)),
-        STAT(arrayOf(Type.STAT.s), arrayOf(INT.s)),
-        STAT_BASE(arrayOf(Type.STAT.s), arrayOf(INT.s)),
-        STAT_XP(arrayOf(Type.STAT.s), arrayOf(INT.s)),
-        COORD(defs = arrayOf(Type.COORD.s)),
-        COORDX(arrayOf(Type.COORD.s), arrayOf(INT.s)),
-        COORDZ(arrayOf(Type.COORD.s), arrayOf(INT.s)),
-        COORDY(arrayOf(Type.COORD.s), arrayOf(INT.s)),
-        MAP_MEMBERS(defs = arrayOf(BIT.s)),
-        INVOTHER_GETOBJ(arrayOf(INV.s, INT.s), arrayOf(OBJ.s)),
-        INVOTHER_GETNUM(arrayOf(INV.s, INT.s), arrayOf(INT.s)),
-        INVOTHER_TOTAL(arrayOf(INV.s, OBJ.s), arrayOf(INT.s)),
-        STAFFMODLEVEL(defs = arrayOf(INT.s)),
-        REBOOTTIMER(defs = arrayOf(INT.s)),
-        MAP_WORLD(defs = arrayOf(INT.s)),
-        RUNENERGY_VISIBLE(defs = arrayOf(INT.s)),
-        RUNWEIGHT_VISIBLE(defs = arrayOf(INT.s)),
-        PLAYERMOD(defs = arrayOf(BOOLEAN.s)),
-        WORLDFLAGS(defs = arrayOf(INT.s)),
-        MOVECOORD(arrayOf(Type.COORD.s, INT.s, INT.s, INT.s), arrayOf(Type.COORD.s)),
-
-        ENUM_STRING(arrayOf(ENUM.s, INT.s), arrayOf(STRING.s)),
-        ENUM_GETOUTPUTCOUNT(arrayOf(ENUM.s), arrayOf(INT.s)),
-
-        FRIEND_COUNT(defs = arrayOf(INT.s)),
-        FRIEND_GETNAME(arrayOf(INT.s), arrayOf(STRING.s, STRING.s)),
-        FRIEND_GETWORLD(arrayOf(INT.s), arrayOf(INT.s)),
-        FRIEND_GETRANK(arrayOf(INT.s), arrayOf(INT.s)),
-        FRIEND_SETRANK(arrayOf(STRING.s, INT.s)),
-        FRIEND_ADD(arrayOf(STRING.s)),
-        FRIEND_DEL(arrayOf(STRING.s)),
-        IGNORE_ADD(arrayOf(STRING.s)),
-        IGNORE_DEL(arrayOf(STRING.s)),
-        FRIEND_TEST(arrayOf(STRING.s), arrayOf(BOOLEAN.s)),
-        CLAN_GETCHATDISPLAYNAME(defs = arrayOf(STRING.s)),
-        CLAN_GETCHATCOUNT(defs = arrayOf(INT.s)),
-        CLAN_GETCHATUSERNAME(arrayOf(INT.s), arrayOf(STRING.s)),
-        CLAN_GETCHATUSERWORLD(arrayOf(INT.s), arrayOf(INT.s)),
-        CLAN_GETCHATUSERRANK(arrayOf(INT.s), arrayOf(INT.s)),
-        CLAN_GETCHATMINKICK(defs = arrayOf(INT.s)),
-        CLAN_KICKUSER(arrayOf(STRING.s)),
-        CLAN_GETCHATRANK(defs = arrayOf(INT.s)),
-        CLAN_JOINCHAT(arrayOf(STRING.s)),
-        CLAN_LEAVECHAT,
-        IGNORE_COUNT(defs = arrayOf(INT.s)),
-        IGNORE_GETNAME(arrayOf(INT.s), arrayOf(STRING.s, STRING.s)),
-        IGNORE_TEST(arrayOf(STRING.s), arrayOf(BOOLEAN.s)),
-        CLAN_ISSELF(arrayOf(INT.s), arrayOf(BOOLEAN.s)),
-        CLAN_GETCHATOWNERNAME(defs = arrayOf(STRING.s)),
-        CLAN_ISFRIEND(arrayOf(INT.s), arrayOf(BOOLEAN.s)),
-        CLAN_ISIGNORE(arrayOf(INT.s), arrayOf(BOOLEAN.s)),
-        _3628,
-        _3629(arrayOf(BOOLEAN.s)),
-        _3630(arrayOf(BOOLEAN.s)),
-        _3631(arrayOf(BOOLEAN.s)),
-        _3632(arrayOf(BOOLEAN.s)),
-        _3633(arrayOf(BOOLEAN.s)),
-        _3634(arrayOf(BOOLEAN.s)),
-        _3635(arrayOf(BOOLEAN.s)),
-        _3636(arrayOf(BOOLEAN.s)),
-        _3637(arrayOf(BOOLEAN.s)),
-        _3638(arrayOf(BOOLEAN.s)),
-        _3639,
-        _3640,
-        _3641(arrayOf(BOOLEAN.s)),
-        _3642(arrayOf(BOOLEAN.s)),
-        _3643,
-        _3644,
-        _3645(arrayOf(BOOLEAN.s)),
-        _3646(arrayOf(BOOLEAN.s)),
-        _3647(arrayOf(BOOLEAN.s)),
-        _3648(arrayOf(BOOLEAN.s)),
-        _3649(arrayOf(BOOLEAN.s)),
-        _3650(arrayOf(BOOLEAN.s)),
-        _3651(arrayOf(BOOLEAN.s)),
-        _3652(arrayOf(BOOLEAN.s)),
-        _3653(arrayOf(BOOLEAN.s)),
-        _3654(arrayOf(BOOLEAN.s)),
-        _3655,
-        _3656(arrayOf(BOOLEAN.s)),
-        _3657(arrayOf(BOOLEAN.s)),
-
-        STOCKMARKET_GETOFFERTYPE(arrayOf(INT.s), arrayOf(INT.s)),
-        STOCKMARKET_GETOFFERITEM(arrayOf(INT.s), arrayOf(OBJ.s)),
-        STOCKMARKET_GETOFFERPRICE(arrayOf(INT.s), arrayOf(INT.s)),
-        STOCKMARKET_GETOFFERCOUNT(arrayOf(INT.s), arrayOf(INT.s)),
-        STOCKMARKET_GETOFFERCOMPLETEDCOUNT(arrayOf(INT.s), arrayOf(INT.s)),
-        STOCKMARKET_GETOFFERCOMPLETEDGOLD(arrayOf(INT.s), arrayOf(INT.s)),
-        STOCKMARKET_ISOFFEREMPTY(arrayOf(INT.s), arrayOf(BOOLEAN.s)),
-        STOCKMARKET_ISOFFERSTABLE(arrayOf(INT.s), arrayOf(BOOLEAN.s)),
-        STOCKMARKET_ISOFFERFINISHED(arrayOf(INT.s), arrayOf(BOOLEAN.s)),
-        STOCKMARKET_ISOFFERADDING(arrayOf(INT.s), arrayOf(BOOLEAN.s)),
-
-        TRADINGPOST_SORTBY_NAME(arrayOf(BOOLEAN.s)),
-        TRADINGPOST_SORTBY_PRICE(arrayOf(BOOLEAN.s)),
-        TRADINGPOST_SORTFILTERBY_WORLD(arrayOf(BOOLEAN.s, BOOLEAN.s)),
-        TRADINGPOST_SORTBY_AGE(arrayOf(BOOLEAN.s)),
-        TRADINGPOST_SORTBY_COUNT(arrayOf(BOOLEAN.s)),
-        TRADINGPOST_GETTOTALOFFERS(defs = arrayOf(INT.s)),
-        TRADINGPOST_GETOFFERWORLD(arrayOf(INT.s), arrayOf(INT.s)),
-        TRADINGPOST_GETOFFERNAME(arrayOf(INT.s), arrayOf(STRING.s)),
-        TRADINGPOST_GETOFFERPREVIOUSNAME(arrayOf(INT.s), arrayOf(STRING.s)),
-        TRADINGPOST_GETOFFERAGE(arrayOf(INT.s), arrayOf(STRING.s)),
-        TRADINGPOST_GETOFFERCOUNT(arrayOf(INT.s), arrayOf(INT.s)),
-        TRADINGPOST_GETOFFERPRICE(arrayOf(INT.s), arrayOf(INT.s)),
-        TRADINGPOST_GETOFFERITEM(arrayOf(INT.s), arrayOf(INT.s)),
-
-        ADD(arrayOf(INT.s, INT.s), arrayOf(INT.s)),
-        SUB(arrayOf(INT.s, INT.s), arrayOf(INT.s)),
-        MULTIPLY(arrayOf(INT.s, INT.s), arrayOf(INT.s)),
-        DIV(arrayOf(INT.s, INT.s), arrayOf(INT.s)),
-        RANDOM(arrayOf(INT.s), arrayOf(INT.s)),
-        RANDOMINC(arrayOf(INT.s), arrayOf(INT.s)),
-        INTERPOLATE(arrayOf(INT.s, INT.s, INT.s, INT.s, INT.s), arrayOf(INT.s)),
-        ADDPERCENT(arrayOf(INT.s, INT.s), arrayOf(INT.s)),
-        SETBIT(arrayOf(INT.s, INT.s), arrayOf(INT.s)),
-        CLEARBIT(arrayOf(INT.s, INT.s), arrayOf(INT.s)),
-        TESTBIT(arrayOf(INT.s, INT.s), arrayOf(BIT.s)),
-        MOD(arrayOf(INT.s, INT.s), arrayOf(INT.s)),
-        POW(arrayOf(INT.s, INT.s), arrayOf(INT.s)),
-        INVPOW(arrayOf(INT.s, INT.s), arrayOf(INT.s)),
-        AND(arrayOf(INT.s, INT.s), arrayOf(INT.s)),
-        OR(arrayOf(INT.s, INT.s), arrayOf(INT.s)),
-        SCALE(arrayOf(INT.s, INT.s, INT.s), arrayOf(INT.s)),
-        APPEND_NUM(arrayOf(STRING.s, INT.s), arrayOf(STRING.s)),
-        APPEND(arrayOf(STRING.s, STRING.s), arrayOf(STRING.s)),
-        APPEND_SIGNNUM(arrayOf(STRING.s, INT.s), arrayOf(STRING.s)),
-        LOWERCASE(arrayOf(STRING.s), arrayOf(STRING.s)),
-        FROMDATE(arrayOf(INT.s), arrayOf(STRING.s)),
-        TEXT_GENDER(arrayOf(STRING.s, STRING.s), arrayOf(STRING.s)),
-        TOSTRING(arrayOf(INT.s), arrayOf(STRING.s)),
-        COMPARE(arrayOf(STRING.s, STRING.s), arrayOf(INT.s)),
-        PARAHEIGHT(arrayOf(STRING.s, INT.s, FONTMETRICS.s), arrayOf(INT.s)),
-        PARAWIDTH(arrayOf(STRING.s, INT.s, FONTMETRICS.s), arrayOf(INT.s)),
-        TEXT_SWITCH(arrayOf(INT.s, STRING.s, STRING.s), arrayOf(STRING.s)),
-        ESCAPE(arrayOf(STRING.s), arrayOf(STRING.s)),
-        APPEND_CHAR(arrayOf(STRING.s, CHAR.s), arrayOf(STRING.s)),
-        CHAR_ISPRINTABLE(arrayOf(CHAR.s), arrayOf(BOOLEAN.s)),
-        CHAR_ISALPHANUMERIC(arrayOf(CHAR.s), arrayOf(BOOLEAN.s)),
-        CHAR_ISALPHA(arrayOf(CHAR.s), arrayOf(BOOLEAN.s)),
-        CHAR_ISNUMERIC(arrayOf(CHAR.s), arrayOf(BOOLEAN.s)),
-        STRING_LENGTH(arrayOf(STRING.s), arrayOf(INT.s)),
-        SUBSTRING(arrayOf(STRING.s, INT.s, INT.s), arrayOf(STRING.s)),
-        REMOVETAGS(arrayOf(STRING.s), arrayOf(STRING.s)),
-        STRING_INDEXOF_CHAR(arrayOf(STRING.s, CHAR.s), arrayOf(INT.s)),
-        STRING_INDEXOF_STRING(arrayOf(STRING.s, STRING.s, INT.s), arrayOf(INT.s)),
-
-        OC_NAME(arrayOf(OBJ.s), arrayOf(STRING.s)),
-        OC_OP(arrayOf(OBJ.s, INT.s), arrayOf(STRING.s)),
-        OC_IOP(arrayOf(OBJ.s, INT.s), arrayOf(STRING.s)),
-        OC_COST(arrayOf(OBJ.s), arrayOf(INT.s)),
-        OC_STACKABLE(arrayOf(OBJ.s), arrayOf(BOOLEAN.s)),
-        OC_CERT(arrayOf(OBJ.s), arrayOf(OBJ.s)),
-        OC_UNCERT(arrayOf(OBJ.s), arrayOf(OBJ.s)),
-        OC_MEMBERS(arrayOf(OBJ.s), arrayOf(BIT.s)),
-        OC_PLACEHOLDER(arrayOf(OBJ.s), arrayOf(OBJ.s)),
-        OC_UNPLACEHOLDER(arrayOf(OBJ.s), arrayOf(OBJ.s)),
-        OC_FIND(arrayOf(STRING.s, BOOLEAN.s), arrayOf(INT.s)),
-        OC_FINDNEXT(defs = arrayOf(OBJ.s)),
-        OC_FINDRESET,
-
-        CHAT_GETFILTER_PUBLIC(defs = arrayOf(INT.s)),
-        CHAT_SETFILTER(arrayOf(INT.s, INT.s, INT.s)),
-        CHAT_SENDABUSEREPORT(arrayOf(STRING.s, INT.s, INT.s)),
-        CHAT_GETHISTORY_BYTYPEANDLINE(arrayOf(CHATTYPE.s, INT.s), arrayOf(INT.s, INT.s, STRING.s, STRING.s, STRING.s, INT.s)),
-        CHAT_GETHISTORY_BYUID(arrayOf(INT.s), arrayOf(CHATTYPE.s, INT.s, STRING.s, STRING.s, STRING.s, INT.s)),
-        CHAT_GETFILTER_PRIVATE(defs = arrayOf(INT.s)),
-        CHAT_SENDPUBLIC(arrayOf(STRING.s, INT.s)),
-        CHAT_SENDPRIVATE(arrayOf(STRING.s, STRING.s)),
-        CHAT_PLAYERNAME(defs = arrayOf(STRING.s)),
-        CHAT_GETFILTER_TRADE(defs = arrayOf(INT.s)),
-        CHAT_GETHISTORYLENGTH(arrayOf(CHATTYPE.s), arrayOf(INT.s)),
-        CHAT_GETNEXTUID(arrayOf(INT.s), arrayOf(INT.s)),
-        CHAT_GETPREVUID(arrayOf(INT.s), arrayOf(INT.s)),
-        DOCHEAT(arrayOf(STRING.s)),
-        CHAT_SETMESSAGEFILTER(arrayOf(STRING.s)),
-        CHAT_GETMESSAGEFILTER(defs = arrayOf(STRING.s)),
-
-        GETWINDOWMODE(defs = arrayOf(INT.s)),
-        SETWINDOWMODE(arrayOf(INT.s)),
-        GETDEFAULTWINDOWMODE(defs = arrayOf(INT.s)),
-        SETDEFAULTWINDOWMODE(arrayOf(INT.s)),
-
-        CAM_FORCEANGLE(arrayOf(INT.s, INT.s)),
-        CAM_GETANGLE_XA(defs = arrayOf(INT.s)),
-        CAM_GETANGLE_YA(defs = arrayOf(INT.s)),
-        CAM_SETFOLLOWHEIGHT(arrayOf(INT.s)),
-        CAM_GETFOLLOWHEIGHT(defs = arrayOf(INT.s)),
-
-        LOGOUT,
-
-        VIEWPORT_SETFOV(arrayOf(INT.s, INT.s)),
-        VIEWPORT_SETZOOM(arrayOf(INT.s, INT.s)),
-        VIEWPORT_CLAMPFOV(arrayOf(INT.s, INT.s, INT.s, INT.s)),
-        VIEWPORT_GETEFFECTIVESIZE(defs = arrayOf(INT.s, INT.s)),
-        VIEWPORT_GETZOOM(defs = arrayOf(INT.s, INT.s)),
-        VIEWPORT_GETFOV(defs = arrayOf(INT.s, INT.s)),
-
-        WORLDLIST_FETCH(defs = arrayOf(BOOLEAN.s)),
-        WORLDLIST_START(defs = arrayOf(INT.s, INT.s, STRING.s, INT.s, INT.s, STRING.s)),
-        WORLDLIST_NEXT(defs = arrayOf(INT.s, INT.s, STRING.s, INT.s, INT.s, STRING.s)),
-        WORLDLIST_SPECIFIC(arrayOf(INT.s), arrayOf(INT.s, INT.s, STRING.s, INT.s, INT.s, STRING.s)),
-        WORLDLIST_SORT(arrayOf(INT.s, BOOLEAN.s, INT.s, BOOLEAN.s)),
-        _6511(arrayOf(INT.s), arrayOf(INT.s, INT.s, STRING.s, INT.s, INT.s, STRING.s)),
-        SETFOLLOWEROPSLOWPRIORITY(arrayOf(BOOLEAN.s)),
-
-        ON_MOBILE(defs = arrayOf(BOOLEAN.s)),
-        CLIENTTYPE(defs = arrayOf(INT.s)),
-        _6520,
-        _6521,
-        _6522(arrayOf(STRING.s, INT.s)),
-        _6523(arrayOf(STRING.s, INT.s)),
-        BATTERYLEVEL(defs = arrayOf(INT.s)),
-        BATTERYCHARGING(defs = arrayOf(BOOLEAN.s)),
-        WIFIAVAILABLE(defs = arrayOf(BOOLEAN.s)),
-
-        _6600,
-        WORLDMAP_GETMAPNAME(arrayOf(MAPAREA.s), arrayOf(STRING.s)),
-        WORLDMAP_SETMAP(arrayOf(MAPAREA.s)),
-        WORLDMAP_GETZOOM(defs = arrayOf(INT.s)),
-        WORLDMAP_SETZOOM(arrayOf(INT.s)),
-        WORLDMAP_ISLOADED(defs = arrayOf(BOOLEAN.s)),
-        WORLDMAP_JUMPTODISPLAYCOORD(arrayOf(Type.COORD.s)),
-        WORLDMAP_JUMPTODISPLAYCOORD_INSTANT(arrayOf(Type.COORD.s)),
-        WORLDMAP_JUMPTOSOURCECOORD(arrayOf(Type.COORD.s)),
-        WORLDMAP_JUMPTOSOURCECOORD_INSTANT(arrayOf(Type.COORD.s)),
-        WORLDMAP_GETDISPLAYPOSITION(defs = arrayOf(INT.s, INT.s)),
-        WORLDMAP_GETCONFIGORIGIN(arrayOf(MAPAREA.s), arrayOf(INT.s)),
-        WORLDMAP_GETCONFIGSIZE(arrayOf(MAPAREA.s), arrayOf(INT.s, INT.s)),
-        WORLDMAP_GETCONFIGBOUNDS(arrayOf(MAPAREA.s), arrayOf(INT.s, INT.s, INT.s, INT.s)),
-        WORLDMAP_GETCONFIGZOOM(arrayOf(MAPAREA.s), arrayOf(INT.s)),
-        _6615(defs = arrayOf(INT.s, INT.s)),
-        WORLDMAP_GETCURRENTMAP(defs = arrayOf(MAPAREA.s)),
-        WORLDMAP_GETDISPLAYCOORD(arrayOf(Type.COORD.s), arrayOf(INT.s, INT.s)),
-        _6618(arrayOf(Type.COORD.s), arrayOf(INT.s, INT.s)),
-        _6619(arrayOf(INT.s, Type.COORD.s)),
-        _6620(arrayOf(INT.s, Type.COORD.s)),
-        WORLDMAP_COORDINMAP(arrayOf(MAPAREA.s, Type.COORD.s), arrayOf(BOOLEAN.s)),
-        WORLDMAP_GETSIZE(defs = arrayOf(INT.s, INT.s)),
-        _6623(arrayOf(Type.COORD.s), arrayOf(INT.s)),
-        _6624(arrayOf(INT.s)),
-        _6625,
-        _6626(arrayOf(INT.s)),
-        _6627,
-        WORLDMAP_PERPETUALFLASH(arrayOf(INT.s)),
-        WORLDMAP_FLASHELEMENT(arrayOf(INT.s)),
-        WORLDMAP_FLASHELEMENTCATEGORY(arrayOf(CATEGORY.s)),
-        WORLDMAP_STOPCURRENTFLASHES,
-        WORLDMAP_DISABLEELEMENTS(arrayOf(BOOLEAN.s)),
-        WORLDMAP_DISABLEELEMENT(arrayOf(INT.s, BOOLEAN.s)),
-        WORLDMAP_DISABLEELEMENTCATEGORY(arrayOf(INT.s, BOOLEAN.s)),
-        WORLDMAP_GETDISABLEELEMENTS(defs = arrayOf(BOOLEAN.s)),
-        WORLDMAP_GETDISABLEELEMENT(arrayOf(INT.s), arrayOf(BOOLEAN.s)),
-        WORLDMAP_GETDISABLEELEMENTCATEGORY(arrayOf(INT.s), arrayOf(BOOLEAN.s)),
-        _6638(arrayOf(INT.s, Type.COORD.s), arrayOf(INT.s)),
-        WORLDMAP_LISTELEMENT_START(defs = arrayOf(INT.s, INT.s)),
-        WORLDMAP_LISTELEMENT_NEXT(defs = arrayOf(INT.s, INT.s)),
-        MEC_TEXT(arrayOf(INT.s), arrayOf(STRING.s)),
-        MEC_TEXTSIZE(arrayOf(INT.s), arrayOf(INT.s)),
-        MEC_CATEGORY(arrayOf(INT.s), arrayOf(CATEGORY.s)),
-        MEC_SPRITE(arrayOf(INT.s), arrayOf(INT.s)),
-        _6697(defs = arrayOf(INT.s)),
-        _6698(defs = arrayOf(Type.COORD.s)),
-        _6699(defs = arrayOf(Type.COORD.s)),
+        PUSH_CONSTANT_INT,
+        PUSH_CONSTANT_STRING,
+        GET_VAR,
+        SET_VAR,
+        GET_VARBIT,
+        SET_VARBIT,
+        PUSH_INT_LOCAL,
+        POP_INT_LOCAL,
+        PUSH_STRING_LOCAL,
+        POP_STRING_LOCAL,
+        POP_INT_DISCARD,
+        POP_STRING_DISCARD,
+        GET_VARC_INT,
+        SET_VARC_INT,
+        GET_VARC_STRING,
+        SET_VARC_STRING,
         ;
 
         override val id: Int = namesReverse.getValue(name)
 
         override fun translate(state: Interpreter.State): Insn {
-            val stackArgs = ListStack<Expr.Var>(args.size)
-            for (i in args.lastIndex downTo 0) {
-                val arg = args[i]
-                if (arg.src == S) stackArgs.push(state.pop(arg.type))
+            return when (this) {
+                PUSH_CONSTANT_INT -> Insn.Assignment(mutableListOf(state.push(INT, state.intOperand)), state.operand(INT))
+                PUSH_CONSTANT_STRING -> Insn.Assignment(mutableListOf(state.push(STRING, state.strOperand)), state.operand(STRING))
+                GET_VAR -> Insn.Assignment(mutableListOf(state.push(INT)), Expr.Variable.Varp(state.intOperand, INT))
+                SET_VAR -> Insn.Assignment(mutableListOf(Expr.Variable.Varp(state.intOperand, INT)), state.pop(INT))
+                GET_VARBIT -> Insn.Assignment(mutableListOf(state.push(INT)), Expr.Variable.Varbit(state.intOperand, INT))
+                SET_VARBIT -> Insn.Assignment(mutableListOf(Expr.Variable.Varbit(state.intOperand, INT)), state.pop(INT))
+                PUSH_INT_LOCAL -> Insn.Assignment(mutableListOf(state.push(INT)), Expr.Variable.Local(state.intOperand, INT))
+                POP_INT_LOCAL -> Insn.Assignment(mutableListOf(Expr.Variable.Local(state.intOperand, INT)), state.pop(INT))
+                PUSH_STRING_LOCAL -> Insn.Assignment(mutableListOf(state.push(STRING)), Expr.Variable.Local(state.intOperand, STRING))
+                POP_STRING_LOCAL -> Insn.Assignment(mutableListOf(Expr.Variable.Local(state.intOperand, STRING)), state.pop(STRING))
+                POP_INT_DISCARD -> Insn.Assignment(mutableListOf(), state.pop(INT))
+                POP_STRING_DISCARD -> Insn.Assignment(mutableListOf(), state.pop(STRING))
+                GET_VARC_INT -> Insn.Assignment(mutableListOf(state.push(INT)), Expr.Variable.Varc(state.intOperand, INT))
+                SET_VARC_INT -> Insn.Assignment(mutableListOf(Expr.Variable.Varc(state.intOperand, INT)), state.pop(INT))
+                GET_VARC_STRING -> Insn.Assignment(mutableListOf(state.push(STRING)), Expr.Variable.Varc(state.intOperand, STRING))
+                SET_VARC_STRING -> Insn.Assignment(mutableListOf(Expr.Variable.Varc(state.intOperand, STRING)), state.pop(STRING))
             }
-            val exprArgs = ArrayList<Expr>(args.size)
-            for (arg in args) {
-                when (arg.src) {
-                    S -> exprArgs.add(stackArgs.pop())
-                    L -> exprArgs.add(Expr.Var(state.intOperand, arg.type))
-                    O -> exprArgs.add(state.operand(arg.type))
-                }
+        }
+    }
+
+    private enum class Basic(
+            val args: Array<Type>,
+            val defs: Array<Type>,
+            val o: Type? = null
+    ) : Op {
+        GET_VARC_STRING_OLD(arrayOf(), arrayOf(STRING), INT),
+        SET_VARC_STRING_OLD(arrayOf(STRING), arrayOf(), INT),
+        CC_CREATE(arrayOf(COMPONENT, IFTYPE, INT), arrayOf(), BOOLEAN),
+        CC_DELETE(arrayOf(), arrayOf(), BOOLEAN),
+        CC_DELETEALL(arrayOf(COMPONENT), arrayOf()),
+        CC_FIND(arrayOf(COMPONENT, INT), arrayOf(BIT), BOOLEAN),
+        IF_FIND(arrayOf(COMPONENT), arrayOf(BOOLEAN), BOOLEAN),
+
+        CC_SETPOSITION(arrayOf(INT, INT, SETPOSH, SETPOSV), arrayOf(), BOOLEAN),
+        CC_SETSIZE(arrayOf(INT, INT, SETSIZE, SETSIZE), arrayOf(), BOOLEAN),
+        CC_SETHIDE(arrayOf(BOOLEAN), arrayOf(), BOOLEAN),
+        CC_SETNOCLICKTHROUGH(arrayOf(BOOLEAN), arrayOf(), BOOLEAN),
+        _1006(arrayOf(BOOLEAN), arrayOf(), BOOLEAN),
+
+        CC_SETSCROLLPOS(arrayOf(INT, INT), arrayOf(), BOOLEAN),
+        CC_SETCOLOUR(arrayOf(COLOUR), arrayOf(), BOOLEAN),
+        CC_SETFILL(arrayOf(BOOLEAN), arrayOf(), BOOLEAN),
+        CC_SETTRANS(arrayOf(INT), arrayOf(), BOOLEAN),
+        CC_SETLINEWID(arrayOf(INT), arrayOf(), BOOLEAN),
+        CC_SETGRAPHIC(arrayOf(GRAPHIC), arrayOf(), BOOLEAN),
+        CC_SET2DANGLE(arrayOf(INT), arrayOf(), BOOLEAN),
+        CC_SETTILING(arrayOf(BOOLEAN), arrayOf(), BOOLEAN),
+        CC_SETMODEL(arrayOf(MODEL), arrayOf(), BOOLEAN),
+        CC_SETMODELANGLE(arrayOf(INT, INT, INT, INT, INT, INT), arrayOf(), BOOLEAN),
+        CC_SETMODELANIM(arrayOf(INT), arrayOf(), BOOLEAN),
+        CC_SETMODELORTHOG(arrayOf(BOOLEAN), arrayOf(), BOOLEAN),
+        CC_SETTEXT(arrayOf(STRING), arrayOf(), BOOLEAN),
+        CC_SETTEXTFONT(arrayOf(FONTMETRICS), arrayOf(), BOOLEAN),
+        CC_SETTEXTALIGN(arrayOf(SETTEXTALIGNH, SETTEXTALIGNV, INT), arrayOf(), BOOLEAN),
+        CC_SETTEXTSHADOW(arrayOf(BOOLEAN), arrayOf(), BOOLEAN),
+        CC_SETOUTLINE(arrayOf(INT), arrayOf(), BOOLEAN),
+        CC_SETGRAPHICSHADOW(arrayOf(COLOUR), arrayOf(), BOOLEAN),
+        CC_SETVFLIP(arrayOf(BOOLEAN), arrayOf(), BOOLEAN),
+        CC_SETHFLIP(arrayOf(BOOLEAN), arrayOf(), BOOLEAN),
+        CC_SETSCROLLSIZE(arrayOf(INT, INT), arrayOf(), BOOLEAN),
+        CC_RESUME_PAUSEBUTTON(arrayOf(), arrayOf(), BOOLEAN),
+        _1122(arrayOf(GRAPHIC), arrayOf(), BOOLEAN),
+        CC_SETFILLCOLOUR(arrayOf(COLOUR), arrayOf(), BOOLEAN),
+        _1124(arrayOf(INT), arrayOf(), BOOLEAN),
+        _1125(arrayOf(INT), arrayOf(), BOOLEAN),
+        CC_SETLINEDIRECTION(arrayOf(BOOLEAN), arrayOf(), BOOLEAN),
+        _1127(arrayOf(BOOLEAN), arrayOf(), BOOLEAN),
+
+        CC_SETOBJECT(arrayOf(OBJ, INT), arrayOf(), BOOLEAN),
+        CC_SETNPCHEAD(arrayOf(INT), arrayOf(), BOOLEAN),
+        CC_SETPLAYERHEAD_SELF(arrayOf(), arrayOf(), BOOLEAN),
+        CC_SETOBJECT_NONUM(arrayOf(OBJ, INT), arrayOf(), BOOLEAN),
+        CC_SETOBJECT_ALWAYS_NUM(arrayOf(OBJ, INT), arrayOf(), BOOLEAN),
+
+        CC_SETOP(arrayOf(INT, STRING), arrayOf(), BOOLEAN),
+        CC_SETDRAGGABLE(arrayOf(INT, INT), arrayOf(), BOOLEAN),
+        CC_SETDRAGGABLEBEHAVIOR(arrayOf(INT), arrayOf(), BOOLEAN),
+        CC_SETDRAGDEADZONE(arrayOf(INT), arrayOf(), BOOLEAN),
+        CC_SETDRAGDEADTIME(arrayOf(INT), arrayOf(), BOOLEAN),
+        CC_SETOPBASE(arrayOf(STRING), arrayOf(), BOOLEAN),
+        CC_SETTARGETVERB(arrayOf(STRING), arrayOf(), BOOLEAN),
+        CC_CLEAROPS(arrayOf(), arrayOf(), BOOLEAN),
+        CC_SETOPKEY(arrayOf(INT, INT, INT, INT, INT, INT, INT, INT, INT, INT, INT), arrayOf(), BOOLEAN),
+        CC_SETOPTKEY(arrayOf(INT, INT), arrayOf(), BOOLEAN),
+        CC_SETOPKEYRATE(arrayOf(INT, INT, INT), arrayOf(), BOOLEAN),
+        CC_SETOPTKEYRATE(arrayOf(INT, INT), arrayOf(), BOOLEAN),
+        CC_SETOPKEYIGNOREHELD(arrayOf(INT), arrayOf(), BOOLEAN),
+        CC_SETOPTKEYIGNOREHELD(arrayOf(), arrayOf(), BOOLEAN),
+
+        CC_GETX(arrayOf(), arrayOf(INT), BOOLEAN),
+        CC_GETY(arrayOf(), arrayOf(INT), BOOLEAN),
+        CC_GETWIDTH(arrayOf(), arrayOf(INT), BOOLEAN),
+        CC_GETHEIGHT(arrayOf(), arrayOf(INT), BOOLEAN),
+        CC_GETHIDE(arrayOf(), arrayOf(BOOLEAN), BOOLEAN),
+        CC_GETLAYER(arrayOf(), arrayOf(COMPONENT), BOOLEAN),
+
+        CC_GETSCROLLX(arrayOf(), arrayOf(INT), BOOLEAN),
+        CC_GETSCROLLY(arrayOf(), arrayOf(INT), BOOLEAN),
+        CC_GETTEXT(arrayOf(), arrayOf(STRING), BOOLEAN),
+        CC_GETSCROLLWIDTH(arrayOf(), arrayOf(INT), BOOLEAN),
+        CC_GETSCROLLHEIGHT(arrayOf(), arrayOf(INT), BOOLEAN),
+        CC_GETMODELZOOM(arrayOf(), arrayOf(INT), BOOLEAN),
+        CC_GETMODELANGLE_X(arrayOf(), arrayOf(INT), BOOLEAN),
+        CC_GETMODELANGLE_Z(arrayOf(), arrayOf(INT), BOOLEAN),
+        CC_GETMODELANGLE_Y(arrayOf(), arrayOf(INT), BOOLEAN),
+        CC_GETTRANS(arrayOf(), arrayOf(INT), BOOLEAN),
+        _1610(arrayOf(), arrayOf(INT), BOOLEAN),
+        CC_GETCOLOUR(arrayOf(), arrayOf(COLOUR), BOOLEAN),
+        CC_GETFILLCOLOUR(arrayOf(), arrayOf(COLOUR), BOOLEAN),
+        _1613(arrayOf(), arrayOf(INT), BOOLEAN),
+        _1614(arrayOf(), arrayOf(BOOLEAN), BOOLEAN),
+
+        CC_GETINVOBJECT(arrayOf(), arrayOf(OBJ), BOOLEAN),
+        CC_GETINVCOUNT(arrayOf(), arrayOf(INT), BOOLEAN),
+        CC_GETID(arrayOf(), arrayOf(INT), BOOLEAN),
+
+        CC_GETTARGETMASK(arrayOf(), arrayOf(INT), BOOLEAN),
+        CC_GETOP(arrayOf(INT), arrayOf(STRING), BOOLEAN),
+        CC_GETOPBASE(arrayOf(), arrayOf(STRING), BOOLEAN),
+
+        CC_CALLONRESIZE(arrayOf(BOOLEAN), arrayOf()),
+
+        IF_SETPOSITION(arrayOf(INT, INT, SETPOSH, SETPOSV, COMPONENT), arrayOf()),
+        IF_SETSIZE(arrayOf(INT, INT, SETSIZE, SETSIZE, COMPONENT), arrayOf()),
+        IF_SETHIDE(arrayOf(BOOLEAN, COMPONENT), arrayOf()),
+        IF_SETNOCLICKTHROUGH(arrayOf(BOOLEAN, COMPONENT), arrayOf()),
+        _2006(arrayOf(BOOLEAN, COMPONENT), arrayOf()),
+
+        IF_SETSCROLLPOS(arrayOf(INT, INT, COMPONENT), arrayOf()),
+        IF_SETCOLOUR(arrayOf(COLOUR, COMPONENT), arrayOf()),
+        IF_SETFILL(arrayOf(BOOLEAN, COMPONENT), arrayOf()),
+        IF_SETTRANS(arrayOf(INT, COMPONENT), arrayOf()),
+        IF_SETLINEWID(arrayOf(INT, COMPONENT), arrayOf()),
+        IF_SETGRAPHIC(arrayOf(GRAPHIC, COMPONENT), arrayOf()),
+        IF_SET2DANGLE(arrayOf(INT, COMPONENT), arrayOf()),
+        IF_SETTILING(arrayOf(BOOLEAN, COMPONENT), arrayOf()),
+        IF_SETMODEL(arrayOf(MODEL, COMPONENT), arrayOf()),
+        IF_SETMODELANGLE(arrayOf(INT, INT, INT, INT, INT, INT, COMPONENT), arrayOf()),
+        IF_SETMODELANIM(arrayOf(INT, COMPONENT), arrayOf()),
+        IF_SETMODELORTHOG(arrayOf(BOOLEAN, COMPONENT), arrayOf()),
+        IF_SETTEXT(arrayOf(STRING, COMPONENT), arrayOf()),
+        IF_SETTEXTFONT(arrayOf(FONTMETRICS, COMPONENT), arrayOf()),
+        IF_SETTEXTALIGN(arrayOf(SETTEXTALIGNH, SETTEXTALIGNV, INT, COMPONENT), arrayOf()),
+        IF_SETTEXTSHADOW(arrayOf(BOOLEAN, COMPONENT), arrayOf()),
+        IF_SETOUTLINE(arrayOf(INT, COMPONENT), arrayOf()),
+        IF_SETGRAPHICSHADOW(arrayOf(COLOUR, COMPONENT), arrayOf()),
+        IF_SETVFLIP(arrayOf(BOOLEAN, COMPONENT), arrayOf()),
+        IF_SETHFLIP(arrayOf(BOOLEAN, COMPONENT), arrayOf()),
+        IF_SETSCROLLSIZE(arrayOf(INT, INT, COMPONENT), arrayOf()),
+        IF_RESUME_PAUSEBUTTON(arrayOf(COMPONENT), arrayOf()),
+        _2122(arrayOf(GRAPHIC, COMPONENT), arrayOf()),
+        IF_SETFILLCOLOUR(arrayOf(COLOUR, COMPONENT), arrayOf()),
+        _2124(arrayOf(INT, COMPONENT), arrayOf()),
+        _2125(arrayOf(INT, COMPONENT), arrayOf()),
+        IF_SETLINEDIRECTION(arrayOf(BOOLEAN, COMPONENT), arrayOf()),
+        _2127(arrayOf(BOOLEAN, COMPONENT), arrayOf()),
+
+        IF_SETOBJECT(arrayOf(OBJ, INT, COMPONENT), arrayOf()),
+        IF_SETNPCHEAD(arrayOf(INT, COMPONENT), arrayOf()),
+        IF_SETPLAYERHEAD_SELF(arrayOf(COMPONENT), arrayOf()),
+        IF_SETOBJECT_NONUM(arrayOf(OBJ, INT, COMPONENT), arrayOf()),
+        IF_SETOBJECT_ALWAYS_NUM(arrayOf(OBJ, INT, COMPONENT), arrayOf()),
+
+        IF_SETOP(arrayOf(INT, STRING, COMPONENT), arrayOf()),
+        IF_SETDRAGGABLE(arrayOf(INT, INT, COMPONENT), arrayOf()),
+        IF_SETDRAGGABLEBEHAVIOR(arrayOf(INT, COMPONENT), arrayOf()),
+        IF_SETDRAGDEADZONE(arrayOf(INT, COMPONENT), arrayOf()),
+        IF_SETDRAGDEADTIME(arrayOf(INT, COMPONENT), arrayOf()),
+        IF_SETOPBASE(arrayOf(STRING, COMPONENT), arrayOf()),
+        IF_SETTARGETVERB(arrayOf(STRING, COMPONENT), arrayOf()),
+        IF_CLEAROPS(arrayOf(COMPONENT), arrayOf()),
+        IF_SETOPKEY(arrayOf(INT, INT, INT, COMPONENT), arrayOf()),
+        IF_SETOPTKEY(arrayOf(INT, INT, COMPONENT), arrayOf()),
+        IF_SETOPKEYRATE(arrayOf(INT, INT, INT, COMPONENT), arrayOf()),
+        IF_SETOPTKEYRATE(arrayOf(INT, INT, COMPONENT), arrayOf()),
+        IF_SETOPKEYIGNOREHELD(arrayOf(INT, COMPONENT), arrayOf()),
+        IF_SETOPTKEYIGNOREHELD(arrayOf(COMPONENT), arrayOf()),
+
+        IF_GETX(arrayOf(COMPONENT), arrayOf(INT)),
+        IF_GETY(arrayOf(COMPONENT), arrayOf(INT)),
+        IF_GETWIDTH(arrayOf(COMPONENT), arrayOf(INT)),
+        IF_GETHEIGHT(arrayOf(COMPONENT), arrayOf(INT)),
+        IF_GETHIDE(arrayOf(COMPONENT), arrayOf(BOOLEAN)),
+        IF_GETLAYER(arrayOf(COMPONENT), arrayOf(COMPONENT)),
+
+        IF_GETSCROLLX(arrayOf(COMPONENT), arrayOf(INT)),
+        IF_GETSCROLLY(arrayOf(COMPONENT), arrayOf(INT)),
+        IF_GETTEXT(arrayOf(COMPONENT), arrayOf(STRING)),
+        IF_GETSCROLLWIDTH(arrayOf(COMPONENT), arrayOf(INT)),
+        IF_GETSCROLLHEIGHT(arrayOf(COMPONENT), arrayOf(INT)),
+        IF_GETMODELZOOM(arrayOf(COMPONENT), arrayOf(INT)),
+        IF_GETMODELANGLE_X(arrayOf(COMPONENT), arrayOf(INT)),
+        IF_GETMODELANGLE_Z(arrayOf(COMPONENT), arrayOf(INT)),
+        IF_GETMODELANGLE_Y(arrayOf(COMPONENT), arrayOf(INT)),
+        IF_GETTRANS(arrayOf(COMPONENT), arrayOf(INT)),
+        _2610(arrayOf(COMPONENT), arrayOf(INT)),
+        IF_GETCOLOUR(arrayOf(COMPONENT), arrayOf(COLOUR)),
+        IF_GETFILLCOLOUR(arrayOf(COMPONENT), arrayOf(COLOUR)),
+        _2613(arrayOf(COMPONENT), arrayOf(INT)),
+        _2614(arrayOf(COMPONENT), arrayOf(BOOLEAN)),
+
+        IF_GETINVOBJECT(arrayOf(COMPONENT), arrayOf(OBJ)),
+        IF_GETINVCOUNT(arrayOf(COMPONENT), arrayOf(INT)),
+        IF_HASSUB(arrayOf(COMPONENT), arrayOf(BOOLEAN)),
+        IF_GETTOP(arrayOf(), arrayOf(INT)),
+
+        IF_GETTARGETMASK(arrayOf(COMPONENT), arrayOf(INT)),
+        IF_GETOP(arrayOf(INT, COMPONENT), arrayOf(STRING)),
+        IF_GETOPBASE(arrayOf(COMPONENT), arrayOf(STRING)),
+
+        IF_CALLONRESIZE(arrayOf(COMPONENT), arrayOf(), BOOLEAN),
+
+        MES(arrayOf(STRING), arrayOf()),
+        ANIM(arrayOf(INT, INT), arrayOf()),
+        IF_CLOSE(arrayOf(), arrayOf()),
+        RESUME_COUNTDIALOG(arrayOf(STRING), arrayOf()),
+        RESUME_NAMEDIALOG(arrayOf(STRING), arrayOf()),
+        RESUME_STRINGDIALOG(arrayOf(STRING), arrayOf()),
+        OPPLAYER(arrayOf(INT, STRING), arrayOf()),
+        IF_DRAGPICKUP(arrayOf(COMPONENT, INT, INT), arrayOf()),
+        CC_DRAGPICKUP(arrayOf(INT, INT), arrayOf(), BOOLEAN),
+        MOUSECAM(arrayOf(BOOLEAN), arrayOf()),
+        GETREMOVEROOFS(arrayOf(), arrayOf(BOOLEAN)),
+        SETREMOVEROOFS(arrayOf(BOOLEAN), arrayOf()),
+        OPENURL(arrayOf(STRING, BOOLEAN), arrayOf()),
+        RESUME_OBJDIALOG(arrayOf(INT), arrayOf()),
+        BUG_REPORT(arrayOf(INT, STRING, STRING), arrayOf()),
+        SETSHIFTCLICKDROP(arrayOf(BOOLEAN), arrayOf()),
+        SETSHOWMOUSEOVERTEXT(arrayOf(BOOLEAN), arrayOf()),
+        RENDERSELF(arrayOf(BOOLEAN), arrayOf()),
+        _3120(arrayOf(BOOLEAN), arrayOf()),
+        _3121(arrayOf(BOOLEAN), arrayOf()),
+        _3122(arrayOf(BOOLEAN), arrayOf()),
+        _3123(arrayOf(BOOLEAN), arrayOf()),
+        _3124(arrayOf(), arrayOf()),
+        SETSHOWMOUSECROSS(arrayOf(BOOLEAN), arrayOf()),
+        SETSHOWLOADINGMESSAGES(arrayOf(BOOLEAN), arrayOf()),
+        SETTAPTODROP(arrayOf(BOOLEAN), arrayOf()),
+        GETTAPTODROP(arrayOf(), arrayOf(BOOLEAN)),
+        _3129(arrayOf(INT, INT), arrayOf()),
+        _3130(arrayOf(INT, INT), arrayOf()),
+        _3131(arrayOf(INT), arrayOf()),
+        GETCANVASSIZE(arrayOf(), arrayOf(INT, INT)),
+        _3133(arrayOf(INT), arrayOf()),
+        _3134(arrayOf(), arrayOf()),
+        _3135(arrayOf(INT, INT), arrayOf()),
+        _3136(arrayOf(BOOLEAN), arrayOf()),
+        _3137(arrayOf(BOOLEAN), arrayOf()),
+        _3138(arrayOf(), arrayOf()),
+        _3139(arrayOf(), arrayOf()),
+        _3140(arrayOf(), arrayOf(), BOOLEAN),
+        SETHIDEUSERNAME(arrayOf(BOOLEAN), arrayOf()),
+        GETHIDEUSERNAME(arrayOf(), arrayOf(BOOLEAN)),
+        SETREMEMBERUSERNAME(arrayOf(BOOLEAN), arrayOf()),
+        GETREMEMBERUSERNAME(arrayOf(), arrayOf(BOOLEAN)),
+        _3145(arrayOf(), arrayOf()),
+
+        SOUND_SYNTH(arrayOf(SYNTH, INT, INT), arrayOf()),
+        SOUND_SONG(arrayOf(INT), arrayOf()),
+        SOUND_JINGLE(arrayOf(INT, INT), arrayOf()),
+
+        CLIENTCLOCK(arrayOf(), arrayOf(INT)),
+        INV_GETOBJ(arrayOf(INV, INT), arrayOf(OBJ)),
+        INV_GETNUM(arrayOf(INV, INT), arrayOf(INT)),
+        INV_TOTAL(arrayOf(INV, OBJ), arrayOf(INT)),
+        INV_SIZE(arrayOf(INV), arrayOf(INT)),
+        STAT(arrayOf(Type.STAT), arrayOf(INT)),
+        STAT_BASE(arrayOf(Type.STAT), arrayOf(INT)),
+        STAT_XP(arrayOf(Type.STAT), arrayOf(INT)),
+        COORD(arrayOf(), arrayOf(Type.COORD)),
+        COORDX(arrayOf(Type.COORD), arrayOf(INT)),
+        COORDZ(arrayOf(Type.COORD), arrayOf(INT)),
+        COORDY(arrayOf(Type.COORD), arrayOf(INT)),
+        MAP_MEMBERS(arrayOf(), arrayOf(BIT)),
+        INVOTHER_GETOBJ(arrayOf(INV, INT), arrayOf(OBJ)),
+        INVOTHER_GETNUM(arrayOf(INV, INT), arrayOf(INT)),
+        INVOTHER_TOTAL(arrayOf(INV, OBJ), arrayOf(INT)),
+        STAFFMODLEVEL(arrayOf(), arrayOf(INT)),
+        REBOOTTIMER(arrayOf(), arrayOf(INT)),
+        MAP_WORLD(arrayOf(), arrayOf(INT)),
+        RUNENERGY_VISIBLE(arrayOf(), arrayOf(INT)),
+        RUNWEIGHT_VISIBLE(arrayOf(), arrayOf(INT)),
+        PLAYERMOD(arrayOf(), arrayOf(BOOLEAN)),
+        WORLDFLAGS(arrayOf(), arrayOf(INT)),
+        MOVECOORD(arrayOf(Type.COORD, INT, INT, INT), arrayOf(Type.COORD)),
+
+        ENUM_STRING(arrayOf(ENUM, INT), arrayOf(STRING)),
+        ENUM_GETOUTPUTCOUNT(arrayOf(ENUM), arrayOf(INT)),
+
+        FRIEND_COUNT(arrayOf(), arrayOf(INT)),
+        FRIEND_GETNAME(arrayOf(INT), arrayOf(STRING, STRING)),
+        FRIEND_GETWORLD(arrayOf(INT), arrayOf(INT)),
+        FRIEND_GETRANK(arrayOf(INT), arrayOf(INT)),
+        FRIEND_SETRANK(arrayOf(STRING, INT), arrayOf()),
+        FRIEND_ADD(arrayOf(STRING), arrayOf()),
+        FRIEND_DEL(arrayOf(STRING), arrayOf()),
+        IGNORE_ADD(arrayOf(STRING), arrayOf()),
+        IGNORE_DEL(arrayOf(STRING), arrayOf()),
+        FRIEND_TEST(arrayOf(STRING), arrayOf(BOOLEAN)),
+        CLAN_GETCHATDISPLAYNAME(arrayOf(), arrayOf(STRING)),
+        CLAN_GETCHATCOUNT(arrayOf(), arrayOf(INT)),
+        CLAN_GETCHATUSERNAME(arrayOf(INT), arrayOf(STRING)),
+        CLAN_GETCHATUSERWORLD(arrayOf(INT), arrayOf(INT)),
+        CLAN_GETCHATUSERRANK(arrayOf(INT), arrayOf(INT)),
+        CLAN_GETCHATMINKICK(arrayOf(), arrayOf(INT)),
+        CLAN_KICKUSER(arrayOf(STRING), arrayOf()),
+        CLAN_GETCHATRANK(arrayOf(), arrayOf(INT)),
+        CLAN_JOINCHAT(arrayOf(STRING), arrayOf()),
+        CLAN_LEAVECHAT(arrayOf(), arrayOf()),
+        IGNORE_COUNT(arrayOf(), arrayOf(INT)),
+        IGNORE_GETNAME(arrayOf(INT), arrayOf(STRING, STRING)),
+        IGNORE_TEST(arrayOf(STRING), arrayOf(BOOLEAN)),
+        CLAN_ISSELF(arrayOf(INT), arrayOf(BOOLEAN)),
+        CLAN_GETCHATOWNERNAME(arrayOf(), arrayOf(STRING)),
+        CLAN_ISFRIEND(arrayOf(INT), arrayOf(BOOLEAN)),
+        CLAN_ISIGNORE(arrayOf(INT), arrayOf(BOOLEAN)),
+        _3628(arrayOf(), arrayOf()),
+        _3629(arrayOf(BOOLEAN), arrayOf()),
+        _3630(arrayOf(BOOLEAN), arrayOf()),
+        _3631(arrayOf(BOOLEAN), arrayOf()),
+        _3632(arrayOf(BOOLEAN), arrayOf()),
+        _3633(arrayOf(BOOLEAN), arrayOf()),
+        _3634(arrayOf(BOOLEAN), arrayOf()),
+        _3635(arrayOf(BOOLEAN), arrayOf()),
+        _3636(arrayOf(BOOLEAN), arrayOf()),
+        _3637(arrayOf(BOOLEAN), arrayOf()),
+        _3638(arrayOf(BOOLEAN), arrayOf()),
+        _3639(arrayOf(), arrayOf()),
+        _3640(arrayOf(), arrayOf()),
+        _3641(arrayOf(BOOLEAN), arrayOf()),
+        _3642(arrayOf(BOOLEAN), arrayOf()),
+        _3643(arrayOf(), arrayOf()),
+        _3644(arrayOf(), arrayOf()),
+        _3645(arrayOf(BOOLEAN), arrayOf()),
+        _3646(arrayOf(BOOLEAN), arrayOf()),
+        _3647(arrayOf(BOOLEAN), arrayOf()),
+        _3648(arrayOf(BOOLEAN), arrayOf()),
+        _3649(arrayOf(BOOLEAN), arrayOf()),
+        _3650(arrayOf(BOOLEAN), arrayOf()),
+        _3651(arrayOf(BOOLEAN), arrayOf()),
+        _3652(arrayOf(BOOLEAN), arrayOf()),
+        _3653(arrayOf(BOOLEAN), arrayOf()),
+        _3654(arrayOf(BOOLEAN), arrayOf()),
+        _3655(arrayOf(), arrayOf()),
+        _3656(arrayOf(BOOLEAN), arrayOf()),
+        _3657(arrayOf(BOOLEAN), arrayOf()),
+
+        STOCKMARKET_GETOFFERTYPE(arrayOf(INT), arrayOf(INT)),
+        STOCKMARKET_GETOFFERITEM(arrayOf(INT), arrayOf(OBJ)),
+        STOCKMARKET_GETOFFERPRICE(arrayOf(INT), arrayOf(INT)),
+        STOCKMARKET_GETOFFERCOUNT(arrayOf(INT), arrayOf(INT)),
+        STOCKMARKET_GETOFFERCOMPLETEDCOUNT(arrayOf(INT), arrayOf(INT)),
+        STOCKMARKET_GETOFFERCOMPLETEDGOLD(arrayOf(INT), arrayOf(INT)),
+        STOCKMARKET_ISOFFEREMPTY(arrayOf(INT), arrayOf(BOOLEAN)),
+        STOCKMARKET_ISOFFERSTABLE(arrayOf(INT), arrayOf(BOOLEAN)),
+        STOCKMARKET_ISOFFERFINISHED(arrayOf(INT), arrayOf(BOOLEAN)),
+        STOCKMARKET_ISOFFERADDING(arrayOf(INT), arrayOf(BOOLEAN)),
+
+        TRADINGPOST_SORTBY_NAME(arrayOf(BOOLEAN), arrayOf()),
+        TRADINGPOST_SORTBY_PRICE(arrayOf(BOOLEAN), arrayOf()),
+        TRADINGPOST_SORTFILTERBY_WORLD(arrayOf(BOOLEAN, BOOLEAN), arrayOf()),
+        TRADINGPOST_SORTBY_AGE(arrayOf(BOOLEAN), arrayOf()),
+        TRADINGPOST_SORTBY_COUNT(arrayOf(BOOLEAN), arrayOf()),
+        TRADINGPOST_GETTOTALOFFERS(arrayOf(), arrayOf(INT)),
+        TRADINGPOST_GETOFFERWORLD(arrayOf(INT), arrayOf(INT)),
+        TRADINGPOST_GETOFFERNAME(arrayOf(INT), arrayOf(STRING)),
+        TRADINGPOST_GETOFFERPREVIOUSNAME(arrayOf(INT), arrayOf(STRING)),
+        TRADINGPOST_GETOFFERAGE(arrayOf(INT), arrayOf(STRING)),
+        TRADINGPOST_GETOFFERCOUNT(arrayOf(INT), arrayOf(INT)),
+        TRADINGPOST_GETOFFERPRICE(arrayOf(INT), arrayOf(INT)),
+        TRADINGPOST_GETOFFERITEM(arrayOf(INT), arrayOf(INT)),
+
+        ADD(arrayOf(INT, INT), arrayOf(INT)),
+        SUB(arrayOf(INT, INT), arrayOf(INT)),
+        MULTIPLY(arrayOf(INT, INT), arrayOf(INT)),
+        DIV(arrayOf(INT, INT), arrayOf(INT)),
+        RANDOM(arrayOf(INT), arrayOf(INT)),
+        RANDOMINC(arrayOf(INT), arrayOf(INT)),
+        INTERPOLATE(arrayOf(INT, INT, INT, INT, INT), arrayOf(INT)),
+        ADDPERCENT(arrayOf(INT, INT), arrayOf(INT)),
+        SETBIT(arrayOf(INT, INT), arrayOf(INT)),
+        CLEARBIT(arrayOf(INT, INT), arrayOf(INT)),
+        TESTBIT(arrayOf(INT, INT), arrayOf(BIT)),
+        MOD(arrayOf(INT, INT), arrayOf(INT)),
+        POW(arrayOf(INT, INT), arrayOf(INT)),
+        INVPOW(arrayOf(INT, INT), arrayOf(INT)),
+        AND(arrayOf(INT, INT), arrayOf(INT)),
+        OR(arrayOf(INT, INT), arrayOf(INT)),
+        SCALE(arrayOf(INT, INT, INT), arrayOf(INT)),
+        APPEND_NUM(arrayOf(STRING, INT), arrayOf(STRING)),
+        APPEND(arrayOf(STRING, STRING), arrayOf(STRING)),
+        APPEND_SIGNNUM(arrayOf(STRING, INT), arrayOf(STRING)),
+        LOWERCASE(arrayOf(STRING), arrayOf(STRING)),
+        FROMDATE(arrayOf(INT), arrayOf(STRING)),
+        TEXT_GENDER(arrayOf(STRING, STRING), arrayOf(STRING)),
+        TOSTRING(arrayOf(INT), arrayOf(STRING)),
+        COMPARE(arrayOf(STRING, STRING), arrayOf(INT)),
+        PARAHEIGHT(arrayOf(STRING, INT, FONTMETRICS), arrayOf(INT)),
+        PARAWIDTH(arrayOf(STRING, INT, FONTMETRICS), arrayOf(INT)),
+        TEXT_SWITCH(arrayOf(INT, STRING, STRING), arrayOf(STRING)),
+        ESCAPE(arrayOf(STRING), arrayOf(STRING)),
+        APPEND_CHAR(arrayOf(STRING, CHAR), arrayOf(STRING)),
+        CHAR_ISPRINTABLE(arrayOf(CHAR), arrayOf(BOOLEAN)),
+        CHAR_ISALPHANUMERIC(arrayOf(CHAR), arrayOf(BOOLEAN)),
+        CHAR_ISALPHA(arrayOf(CHAR), arrayOf(BOOLEAN)),
+        CHAR_ISNUMERIC(arrayOf(CHAR), arrayOf(BOOLEAN)),
+        STRING_LENGTH(arrayOf(STRING), arrayOf(INT)),
+        SUBSTRING(arrayOf(STRING, INT, INT), arrayOf(STRING)),
+        REMOVETAGS(arrayOf(STRING), arrayOf(STRING)),
+        STRING_INDEXOF_CHAR(arrayOf(STRING, CHAR), arrayOf(INT)),
+        STRING_INDEXOF_STRING(arrayOf(STRING, STRING, INT), arrayOf(INT)),
+
+        OC_NAME(arrayOf(OBJ), arrayOf(STRING)),
+        OC_OP(arrayOf(OBJ, INT), arrayOf(STRING)),
+        OC_IOP(arrayOf(OBJ, INT), arrayOf(STRING)),
+        OC_COST(arrayOf(OBJ), arrayOf(INT)),
+        OC_STACKABLE(arrayOf(OBJ), arrayOf(BOOLEAN)),
+        OC_CERT(arrayOf(OBJ), arrayOf(OBJ)),
+        OC_UNCERT(arrayOf(OBJ), arrayOf(OBJ)),
+        OC_MEMBERS(arrayOf(OBJ), arrayOf(BIT)),
+        OC_PLACEHOLDER(arrayOf(OBJ), arrayOf(OBJ)),
+        OC_UNPLACEHOLDER(arrayOf(OBJ), arrayOf(OBJ)),
+        OC_FIND(arrayOf(STRING, BOOLEAN), arrayOf(INT)),
+        OC_FINDNEXT(arrayOf(), arrayOf(OBJ)),
+        OC_FINDRESET(arrayOf(), arrayOf()),
+
+        CHAT_GETFILTER_PUBLIC(arrayOf(), arrayOf(INT)),
+        CHAT_SETFILTER(arrayOf(INT, INT, INT), arrayOf()),
+        CHAT_SENDABUSEREPORT(arrayOf(STRING, INT, INT), arrayOf()),
+        CHAT_GETHISTORY_BYTYPEANDLINE(arrayOf(CHATTYPE, INT), arrayOf(INT, INT, STRING, STRING, STRING, INT)),
+        CHAT_GETHISTORY_BYUID(arrayOf(INT), arrayOf(CHATTYPE, INT, STRING, STRING, STRING, INT)),
+        CHAT_GETFILTER_PRIVATE(arrayOf(), arrayOf(INT)),
+        CHAT_SENDPUBLIC(arrayOf(STRING, INT), arrayOf()),
+        CHAT_SENDPRIVATE(arrayOf(STRING, STRING), arrayOf()),
+        CHAT_PLAYERNAME(arrayOf(), arrayOf(STRING)),
+        CHAT_GETFILTER_TRADE(arrayOf(), arrayOf(INT)),
+        CHAT_GETHISTORYLENGTH(arrayOf(CHATTYPE), arrayOf(INT)),
+        CHAT_GETNEXTUID(arrayOf(INT), arrayOf(INT)),
+        CHAT_GETPREVUID(arrayOf(INT), arrayOf(INT)),
+        DOCHEAT(arrayOf(STRING), arrayOf()),
+        CHAT_SETMESSAGEFILTER(arrayOf(STRING), arrayOf()),
+        CHAT_GETMESSAGEFILTER(arrayOf(), arrayOf(STRING)),
+
+        GETWINDOWMODE(arrayOf(), arrayOf(INT)),
+        SETWINDOWMODE(arrayOf(INT), arrayOf()),
+        GETDEFAULTWINDOWMODE(arrayOf(), arrayOf(INT)),
+        SETDEFAULTWINDOWMODE(arrayOf(INT), arrayOf()),
+
+        CAM_FORCEANGLE(arrayOf(INT, INT), arrayOf()),
+        CAM_GETANGLE_XA(arrayOf(), arrayOf(INT)),
+        CAM_GETANGLE_YA(arrayOf(), arrayOf(INT)),
+        CAM_SETFOLLOWHEIGHT(arrayOf(INT), arrayOf()),
+        CAM_GETFOLLOWHEIGHT(arrayOf(), arrayOf(INT)),
+
+        LOGOUT(arrayOf(), arrayOf()),
+
+        VIEWPORT_SETFOV(arrayOf(INT, INT), arrayOf()),
+        VIEWPORT_SETZOOM(arrayOf(INT, INT), arrayOf()),
+        VIEWPORT_CLAMPFOV(arrayOf(INT, INT, INT, INT), arrayOf()),
+        VIEWPORT_GETEFFECTIVESIZE(arrayOf(), arrayOf(INT, INT)),
+        VIEWPORT_GETZOOM(arrayOf(), arrayOf(INT, INT)),
+        VIEWPORT_GETFOV(arrayOf(), arrayOf(INT, INT)),
+
+        WORLDLIST_FETCH(arrayOf(), arrayOf(BOOLEAN)),
+        WORLDLIST_START(arrayOf(), arrayOf(INT, INT, STRING, INT, INT, STRING)),
+        WORLDLIST_NEXT(arrayOf(), arrayOf(INT, INT, STRING, INT, INT, STRING)),
+        WORLDLIST_SPECIFIC(arrayOf(INT), arrayOf(INT, INT, STRING, INT, INT, STRING)),
+        WORLDLIST_SORT(arrayOf(INT, BOOLEAN, INT, BOOLEAN), arrayOf()),
+        _6511(arrayOf(INT), arrayOf(INT, INT, STRING, INT, INT, STRING)),
+        SETFOLLOWEROPSLOWPRIORITY(arrayOf(BOOLEAN), arrayOf()),
+
+        ON_MOBILE(arrayOf(), arrayOf(BOOLEAN)),
+        CLIENTTYPE(arrayOf(), arrayOf(INT)),
+        _6520(arrayOf(), arrayOf()),
+        _6521(arrayOf(), arrayOf()),
+        _6522(arrayOf(STRING, INT), arrayOf()),
+        _6523(arrayOf(STRING, INT), arrayOf()),
+        BATTERYLEVEL(arrayOf(), arrayOf(INT)),
+        BATTERYCHARGING(arrayOf(), arrayOf(BOOLEAN)),
+        WIFIAVAILABLE(arrayOf(), arrayOf(BOOLEAN)),
+
+        _6600(arrayOf(), arrayOf()),
+        WORLDMAP_GETMAPNAME(arrayOf(MAPAREA), arrayOf(STRING)),
+        WORLDMAP_SETMAP(arrayOf(MAPAREA), arrayOf()),
+        WORLDMAP_GETZOOM(arrayOf(), arrayOf(INT)),
+        WORLDMAP_SETZOOM(arrayOf(INT), arrayOf()),
+        WORLDMAP_ISLOADED(arrayOf(), arrayOf(BOOLEAN)),
+        WORLDMAP_JUMPTODISPLAYCOORD(arrayOf(Type.COORD), arrayOf()),
+        WORLDMAP_JUMPTODISPLAYCOORD_INSTANT(arrayOf(Type.COORD), arrayOf()),
+        WORLDMAP_JUMPTOSOURCECOORD(arrayOf(Type.COORD), arrayOf()),
+        WORLDMAP_JUMPTOSOURCECOORD_INSTANT(arrayOf(Type.COORD), arrayOf()),
+        WORLDMAP_GETDISPLAYPOSITION(arrayOf(), arrayOf(INT, INT)),
+        WORLDMAP_GETCONFIGORIGIN(arrayOf(MAPAREA), arrayOf(INT)),
+        WORLDMAP_GETCONFIGSIZE(arrayOf(MAPAREA), arrayOf(INT, INT)),
+        WORLDMAP_GETCONFIGBOUNDS(arrayOf(MAPAREA), arrayOf(INT, INT, INT, INT)),
+        WORLDMAP_GETCONFIGZOOM(arrayOf(MAPAREA), arrayOf(INT)),
+        _6615(arrayOf(), arrayOf(INT, INT)),
+        WORLDMAP_GETCURRENTMAP(arrayOf(), arrayOf(MAPAREA)),
+        WORLDMAP_GETDISPLAYCOORD(arrayOf(Type.COORD), arrayOf(INT, INT)),
+        _6618(arrayOf(Type.COORD), arrayOf(INT, INT)),
+        _6619(arrayOf(INT, Type.COORD), arrayOf()),
+        _6620(arrayOf(INT, Type.COORD), arrayOf()),
+        WORLDMAP_COORDINMAP(arrayOf(MAPAREA, Type.COORD), arrayOf(BOOLEAN)),
+        WORLDMAP_GETSIZE(arrayOf(), arrayOf(INT, INT)),
+        _6623(arrayOf(Type.COORD), arrayOf(INT)),
+        _6624(arrayOf(INT), arrayOf()),
+        _6625(arrayOf(), arrayOf()),
+        _6626(arrayOf(INT), arrayOf()),
+        _6627(arrayOf(), arrayOf()),
+        WORLDMAP_PERPETUALFLASH(arrayOf(INT), arrayOf()),
+        WORLDMAP_FLASHELEMENT(arrayOf(INT), arrayOf()),
+        WORLDMAP_FLASHELEMENTCATEGORY(arrayOf(CATEGORY), arrayOf()),
+        WORLDMAP_STOPCURRENTFLASHES(arrayOf(), arrayOf()),
+        WORLDMAP_DISABLEELEMENTS(arrayOf(BOOLEAN), arrayOf()),
+        WORLDMAP_DISABLEELEMENT(arrayOf(INT, BOOLEAN), arrayOf()),
+        WORLDMAP_DISABLEELEMENTCATEGORY(arrayOf(INT, BOOLEAN), arrayOf()),
+        WORLDMAP_GETDISABLEELEMENTS(arrayOf(), arrayOf(BOOLEAN)),
+        WORLDMAP_GETDISABLEELEMENT(arrayOf(INT), arrayOf(BOOLEAN)),
+        WORLDMAP_GETDISABLEELEMENTCATEGORY(arrayOf(INT), arrayOf(BOOLEAN)),
+        _6638(arrayOf(INT, Type.COORD), arrayOf(INT)),
+        WORLDMAP_LISTELEMENT_START(arrayOf(), arrayOf(INT, INT)),
+        WORLDMAP_LISTELEMENT_NEXT(arrayOf(), arrayOf(INT, INT)),
+        MEC_TEXT(arrayOf(INT), arrayOf(STRING)),
+        MEC_TEXTSIZE(arrayOf(INT), arrayOf(INT)),
+        MEC_CATEGORY(arrayOf(INT), arrayOf(CATEGORY)),
+        MEC_SPRITE(arrayOf(INT), arrayOf(INT)),
+        _6697(arrayOf(), arrayOf(INT)),
+        _6698(arrayOf(), arrayOf(Type.COORD)),
+        _6699(arrayOf(), arrayOf(Type.COORD)),
+        ;
+
+        override val id: Int = namesReverse.getValue(name)
+
+        override fun translate(state: Interpreter.State): Insn {
+            val exprArgs = ArrayList<Expr>(args.size + 1)
+            if (o != null) exprArgs.add(state.operand(o))
+            for (i in args.indices.reversed()) {
+                exprArgs.add(state.pop(args[i]))
             }
-            val exprDefs = ArrayList<Expr.Var>(defs.size)
-            for (def in defs) {
-                when (def.src) {
-                    S -> exprDefs.add(state.push(def.type))
-                    L -> exprDefs.add(Expr.Var(state.intOperand, def.type))
-                    O -> throw IllegalStateException()
-                }
-            }
-            return Insn.Assignment(exprDefs, Expr.Operation(defs.map { it.type }, id, exprArgs))
+            exprArgs.reverse()
+            val exprDefs = defs.mapTo(ArrayList<Expr.Variable>()) { state.push(it) }
+            return Insn.Assignment(exprDefs, Expr.Operation(defs.asList(), id, exprArgs))
         }
     }
 
@@ -751,7 +745,7 @@ internal interface Op {
         override fun translate(state: Interpreter.State): Insn {
             val args = MutableList<Expr>(state.intOperand) { state.pop(STRING) }
             args.reverse()
-            return Insn.Assignment(listOf(state.push(STRING)), Expr.Operation(listOf(STRING), id, args))
+            return Insn.Assignment(mutableListOf(state.push(STRING)), Expr.Operation(listOf(STRING), id, args))
         }
     }
 
@@ -843,7 +837,7 @@ internal interface Op {
             }
             args.add(state.pop(INT))
             args.reverse()
-            return Insn.Assignment(emptyList(), Expr.Operation(emptyList(), id, args))
+            return Insn.Assignment(ArrayList(), Expr.Operation(emptyList(), id, args))
         }
     }
 
@@ -861,7 +855,7 @@ internal interface Op {
             val param = state.pop(PARAM)
             val rec = state.pop(type)
             val paramType = checkNotNull(state.interpreter.paramTypeLoader.load(paramKeyId))
-            return Insn.Assignment(listOf(state.push(paramType)), Expr.Operation(listOf(paramType), id, mutableListOf(rec, param)))
+            return Insn.Assignment(mutableListOf(state.push(paramType)), Expr.Operation(listOf(paramType), id, mutableListOf(rec, param)))
         }
     }
 }

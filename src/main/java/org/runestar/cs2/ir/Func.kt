@@ -5,7 +5,7 @@ import org.runestar.cs2.util.Chain
 
 class Func(
         val id: Int,
-        val args: MutableList<Expr.Var>,
+        val args: MutableList<Expr.Variable.Local>,
         var insns: Chain<Insn>,
         var returns: MutableList<Type>
 ) {

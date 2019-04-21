@@ -2,8 +2,6 @@ package org.runestar.cs2.ir
 
 import org.runestar.cs2.Type
 import org.runestar.cs2.names
-import java.lang.Math.abs
-import java.lang.StringBuilder
 
 interface Expr {
 
@@ -15,24 +13,30 @@ interface Expr {
         get() = types.single()
         set(value) { types = listOf(value) }
 
-    data class Cst(override var type: Type, val cst: Any?) : Expr {
+    data class Cst(override var type: Type, val cst: Any?) : Expr
 
-        override fun toString(): String = cst.toString()
-    }
+    sealed class Variable : Expr {
 
-    class Var(var id: Int, override var type: Type) : Expr {
+        abstract var id: Int
 
-        val name: String get() {
-            val sb = StringBuilder()
-            if (id < 0) sb.append('_')
-            return sb.append(type.nameLiteral).append(abs(id)).toString()
-        }
+        class Stack(override var id: Int, override var type: Type) : Variable()
 
-        override fun hashCode(): Int = type.topType.hashCode() xor id
+        class Local(override var id: Int, override var type: Type) : Variable()
 
-        override fun equals(other: Any?): Boolean = other is Var && id == other.id && type.topType == other.type.topType
+        class Varp(override var id: Int, override var type: Type) : Variable()
 
-        override fun toString(): String = name
+        class Varbit(override var id: Int, override var type: Type) : Variable()
+
+        class Varc(override var id: Int, override var type: Type) : Variable()
+
+        override fun hashCode(): Int = id xor type.topType.hashCode()
+
+        override fun equals(other: Any?): Boolean = other is Variable &&
+                javaClass == other.javaClass &&
+                id == other.id &&
+                type.topType == other.type.topType
+
+        override fun toString(): String = "${javaClass.simpleName}($id)"
     }
 
     class Operation(

@@ -30,7 +30,7 @@ class StrictGenerator(
 
         private var endingLine = true
 
-        private val definedVars = HashSet<Expr.Var>(func.args)
+        private val definedVars = HashSet<Expr.Variable.Local>(func.args)
 
         private val writer = LineWriter(appendable)
 
@@ -45,7 +45,7 @@ class StrictGenerator(
             }
             if (func.args.isNotEmpty() || func.returns.isNotEmpty()) {
                 writer.append('(')
-                func.args.joinTo(writer) { "${it.type.typeLiteral} \$${it.name}" }
+                func.args.joinTo(writer) { "${it.type.typeLiteral} \$${it.type.nameLiteral}${it.id}" }
                 writer.append(')')
             }
             if (func.returns.isNotEmpty()) {
@@ -175,12 +175,12 @@ class StrictGenerator(
             if (insn.definitions.isNotEmpty()) {
                 if (insn.definitions.size == 1) {
                     val def = insn.definitions.single()
-                    if (definedVars.add(def)) {
+                    if (def is Expr.Variable.Local && definedVars.add(def)) {
                         writer.append("def_")
                         writer.append(def.type.typeLiteral)
                         writer.append(' ')
                     }
-                    writeExpr(def)
+                    writeVar(def)
                 } else {
                     writeExprList(insn.definitions)
                 }
@@ -191,14 +191,20 @@ class StrictGenerator(
 
         private fun writeExpr(expr: Expr) {
             when (expr) {
-                is Expr.Var -> writeVar(expr)
+                is Expr.Variable -> writeVar(expr)
                 is Expr.Cst -> writeConst(expr)
                 is Expr.Operation -> writeOperation(expr)
             }
         }
 
-        private fun writeVar(expr: Expr.Var) {
-            writer.append('$').append(expr.type.nameLiteral).append(expr.id)
+        private fun writeVar(v: Expr.Variable) {
+            when (v) {
+                is Expr.Variable.Local -> writer.append('$').append(v.type.nameLiteral).append(v.id)
+                is Expr.Variable.Varp -> writer.append("%var").append(v.id)
+                is Expr.Variable.Varbit -> writer.append("%varbit").append(v.id)
+                is Expr.Variable.Varc -> writer.append("%varc").append(v.type.topType.nameLiteral).append(v.id)
+                else -> error(v)
+            }
         }
 
         private fun writeConst(expr: Expr.Cst) {
@@ -457,54 +463,6 @@ class StrictGenerator(
                     writeExpr(expr.arguments[1])
                     writer.append(") = ")
                     writeExpr(expr.arguments[2])
-                    return
-                }
-                GET_VAR -> {
-                    writer.append("%var")
-                    writeExpr(expr.arguments.single())
-                    return
-                }
-                GET_VARBIT -> {
-                    writer.append("%varbit")
-                    writeExpr(expr.arguments.single())
-                    return
-                }
-                GET_VARC_INT -> {
-                    writer.append("%varcint")
-                    writeExpr(expr.arguments.single())
-                    return
-                }
-                GET_VARC_STRING -> {
-                    writer.append("%varcstring")
-                    writeExpr(expr.arguments.single())
-                    return
-                }
-                SET_VAR -> {
-                    writer.append("%var")
-                    writeExpr(expr.arguments[0])
-                    writer.append(" = ")
-                    writeExpr(expr.arguments[1])
-                    return
-                }
-                SET_VARBIT -> {
-                    writer.append("%varbit")
-                    writeExpr(expr.arguments[0])
-                    writer.append(" = ")
-                    writeExpr(expr.arguments[1])
-                    return
-                }
-                SET_VARC_INT -> {
-                    writer.append("%varcint")
-                    writeExpr(expr.arguments[0])
-                    writer.append(" = ")
-                    writeExpr(expr.arguments[1])
-                    return
-                }
-                SET_VARC_STRING -> {
-                    writer.append("%varcstring")
-                    writeExpr(expr.arguments[0])
-                    writer.append(" = ")
-                    writeExpr(expr.arguments[1])
                     return
                 }
                 JOIN_STRING -> {
