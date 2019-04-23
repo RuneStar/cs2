@@ -1,22 +1,22 @@
 package org.runestar.cs2.dfa
 
 import org.runestar.cs2.ir.Func
-import org.runestar.cs2.ir.Insn
+import org.runestar.cs2.ir.Instruction
 
-object RemoveDeadCode : Phase {
+internal object RemoveDeadCode : Phase {
 
     override fun transform(func: Func) {
-        var insn: Insn? = func.insns.first
+        var insn: Instruction? = func.instructions.first
         while (insn != null) {
-            if (insn is Insn.Return) {
-                insn = func.insns.next(insn)
-                while (insn != null && insn !is Insn.Label) {
-                    val next = func.insns.next(insn)
-                    func.insns.remove(insn)
+            if (insn is Instruction.Return) {
+                insn = func.instructions.next(insn)
+                while (insn != null && insn !is Instruction.Label) {
+                    val next = func.instructions.next(insn)
+                    func.instructions.remove(insn)
                     insn = next
                 }
             } else {
-                insn = func.insns.next(insn)
+                insn = func.instructions.next(insn)
             }
         }
     }

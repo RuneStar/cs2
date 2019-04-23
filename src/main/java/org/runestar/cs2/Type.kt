@@ -62,5 +62,10 @@ enum class Type(
             if ((a == FONTMETRICS || a == GRAPHIC) && (b == FONTMETRICS || b == GRAPHIC)) return FONTMETRICS
             throw IllegalArgumentException("$a $b")
         }
+
+        fun bottom(a: List<Type>, b: List<Type>): List<Type> {
+            require(a.size == b.size)
+            return List(a.size) { bottom(a[it], b[it]) }
+        }
     }
 }

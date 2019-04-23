@@ -1,7 +1,7 @@
 package org.runestar.cs2.cfa
 
-import org.runestar.cs2.ir.Expr
-import org.runestar.cs2.ir.Insn
+import org.runestar.cs2.ir.Expression
+import org.runestar.cs2.ir.Instruction
 import java.util.ArrayList
 
 interface Construct {
@@ -9,13 +9,13 @@ interface Construct {
     var next: Construct?
 
     class Seq(
-            val insns: MutableList<Insn> = ArrayList()
+            val insns: MutableList<Instruction> = ArrayList()
     ) : Construct {
 
         override var next: Construct? = null
     }
 
-    class Branch(var condition: Expr.Operation, var construct: Construct)
+    class Branch(var condition: Expression.Operation, var construct: Construct)
 
     class If(
             val branches: MutableList<Branch> = ArrayList()
@@ -27,7 +27,7 @@ interface Construct {
     }
 
     class While(
-            val condition: Expr.Operation
+            val condition: Expression.Operation
     ): Construct {
 
         lateinit var inside: Construct
@@ -36,7 +36,7 @@ interface Construct {
     }
 
     class Switch(
-            val expr: Expr,
+            val expr: Expression,
             val map: Map<Set<Int>, Construct>
     ) : Construct {
 

@@ -1,21 +1,21 @@
 package org.runestar.cs2.ir
 
 import org.runestar.cs2.Type
-import org.runestar.cs2.names
 
-interface Expr {
+interface Element : Expression {
 
-    var types: List<Type>
+    var type: Type
+
+    override var types: List<Type>
         get() = listOf(type)
         set(value) { type = value.single() }
 
-    var type: Type
-        get() = types.single()
-        set(value) { types = listOf(value) }
+    data class Constant(override var type: Type, val value: Any?) : Element {
 
-    data class Cst(override var type: Type, val cst: Any?) : Expr
+        override fun toString(): String = "Constant($value, $type)"
+    }
 
-    sealed class Variable : Expr {
+    sealed class Variable : Element {
 
         abstract var id: Int
 
@@ -36,15 +36,6 @@ interface Expr {
                 id == other.id &&
                 type.topType == other.type.topType
 
-        override fun toString(): String = "${javaClass.simpleName}($id)"
-    }
-
-    class Operation(
-            override var types: List<Type>,
-            val id: Int,
-            val arguments: MutableList<Expr>
-    ) : Expr {
-
-        override fun toString(): String = "${names[id]}(${arguments.joinToString(", ")})"
+        override fun toString(): String = "${javaClass.simpleName}($id, $type)"
     }
 }

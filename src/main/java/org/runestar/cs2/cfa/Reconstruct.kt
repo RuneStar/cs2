@@ -1,8 +1,8 @@
 package org.runestar.cs2.cfa
 
-import org.runestar.cs2.ir.Expr
+import org.runestar.cs2.ir.Expression
 import org.runestar.cs2.ir.Func
-import org.runestar.cs2.ir.Insn
+import org.runestar.cs2.ir.Instruction
 import org.runestar.cs2.util.isSuccessorAcyclic
 
 internal fun reconstruct(func: Func): Construct {
@@ -27,23 +27,23 @@ private fun reconstructBlock(
         s
     }
     for (insn in block) {
-        if (insn is Insn.Label) continue
+        if (insn is Instruction.Label) continue
         if (insn == block.tail) continue
         seq.insns.add(insn)
     }
     val tail = block.tail
     when (tail) {
-        is Insn.Return -> {
+        is Instruction.Return -> {
             seq.insns.add(tail)
         }
-        is Insn.Goto -> {
+        is Instruction.Goto -> {
             val suc = flow.blocks.block(tail.label)
             return reconstructBlock(flow, seq, dominator, suc)
         }
-        is Insn.Switch -> {
+        is Instruction.Switch -> {
             var after: BasicBlock? = null
             val map = LinkedHashMap<Set<Int>, Construct>()
-            val switch = Construct.Switch(tail.expr, map)
+            val switch = Construct.Switch(tail.expression, map)
             seq.next = switch
             for (v in tail.map.values.toSet()) {
                 val keys = LinkedHashSet<Int>()
@@ -66,12 +66,12 @@ private fun reconstructBlock(
                 return reconstructBlock(flow, switch, block, after)
             }
         }
-        is Insn.Branch -> {
+        is Instruction.Branch -> {
             val pass = flow.blocks.block(tail.pass)
             val fail = flow.blocks.next(block)
             val preds = flow.graph.immediatePredecessors(block)
             if (preds.any { it.index > block.index }) {
-                val whil = Construct.While(tail.expr as Expr.Operation)
+                val whil = Construct.While(tail.expression as Expression.Operation)
                 seq.next = whil
                 whil.inside = Construct.Seq()
                 reconstructBlock(flow, whil.inside, pass, pass)
@@ -79,7 +79,7 @@ private fun reconstructBlock(
             } else {
                 val iff = Construct.If()
                 seq.next = iff
-                val branch = Construct.Branch(tail.expr as Expr.Operation, Construct.Seq())
+                val branch = Construct.Branch(tail.expression as Expression.Operation, Construct.Seq())
                 iff.branches.add(branch)
                 val afterIf = reconstructBlock(flow, branch.construct, pass, pass)
                 val elze = Construct.Seq()
@@ -104,12 +104,12 @@ private fun reconstructBlock(
                 }
             }
         }
-        is Insn.Assignment -> {
+        is Instruction.Assignment -> {
             seq.insns.add(tail)
             val suc = flow.blocks.next(block)
             return reconstructBlock(flow, seq, dominator, suc)
         }
-        is Insn.Label -> {
+        is Instruction.Label -> {
             val suc = flow.blocks.next(block)
             return reconstructBlock(flow, seq, dominator, suc)
         }

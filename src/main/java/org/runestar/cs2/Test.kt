@@ -28,7 +28,7 @@ private fun writeReadme() {
     }
     val saveFile = Path.of("scripts", "README.md")
     Files.createDirectories(saveFile.parent)
-    Files.write(saveFile, sb.toString().toByteArray())
+    Files.writeString(saveFile, sb.toString())
 }
 
 private fun decompile() {

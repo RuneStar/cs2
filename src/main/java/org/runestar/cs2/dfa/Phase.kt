@@ -15,10 +15,10 @@ internal interface Phase {
         val DEFAULT = Composite(
                 RemoveDeadCode,
                 DeleteNops,
-                MergeSingleStackDefs,
-                MergeMultiStackDefs,
-                AddShortCircuitOperators,
-                PropagateTypes
+                PropagateTypes,
+                CombineSameLineOperations,
+                InlineStackDefinitions,
+                AddShortCircuitOperators
         )
     }
 }

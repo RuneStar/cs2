@@ -4,9 +4,11 @@ import org.runestar.cs2.Loader
 import org.runestar.cs2.Opcodes.*
 import org.runestar.cs2.Type
 import org.runestar.cs2.cfa.Construct
-import org.runestar.cs2.ir.Expr
+import org.runestar.cs2.ir.Element
+import org.runestar.cs2.ir.Expression
 import org.runestar.cs2.ir.Func
-import org.runestar.cs2.ir.Insn
+import org.runestar.cs2.ir.Instruction
+import org.runestar.cs2.ir.list
 import org.runestar.cs2.names
 import org.runestar.cs2.util.strip
 
@@ -30,7 +32,7 @@ class StrictGenerator(
 
         private var endingLine = true
 
-        private val definedVars = HashSet<Expr.Variable.Local>(func.args)
+        private val definedVars = HashSet<Element.Variable.Local>(func.arguments)
 
         private val writer = LineWriter(appendable)
 
@@ -43,14 +45,14 @@ class StrictGenerator(
             } else {
                 writer.append(scriptName)
             }
-            if (func.args.isNotEmpty() || func.returns.isNotEmpty()) {
+            if (func.arguments.isNotEmpty() || func.returnTypes.isNotEmpty()) {
                 writer.append('(')
-                func.args.joinTo(writer) { "${it.type.typeLiteral} \$${it.type.nameLiteral}${it.id}" }
+                func.arguments.joinTo(writer) { "${it.type.typeLiteral} \$${it.type.nameLiteral}${it.id}" }
                 writer.append(')')
             }
-            if (func.returns.isNotEmpty()) {
+            if (func.returnTypes.isNotEmpty()) {
                 writer.append('(')
-                func.returns.joinTo(writer) { it.typeLiteral }
+                func.returnTypes.joinTo(writer) { it.typeLiteral }
                 writer.append(')')
             }
             writeConstruct(root)
@@ -122,7 +124,8 @@ class StrictGenerator(
 
         private fun writeSwitch(construct: Construct.Switch) {
             writer.nextLine()
-            writer.append("switch_").append(construct.expr.type.typeLiteral).append(" (")
+            val type = construct.expr.types.single()
+            writer.append("switch_").append(type.typeLiteral).append(" (")
             writeExpr(construct.expr)
             writer.append(") {")
             for ((ns, con) in construct.map) {
@@ -130,10 +133,10 @@ class StrictGenerator(
                 writer.nextLine()
                 val itr = ns.iterator()
                 writer.append("case ")
-                writeConstantInt(itr.next(), construct.expr.type)
+                writeConstantInt(itr.next(), type)
                 while (itr.hasNext()) {
                     writer.append(", ")
-                    writeConstantInt(itr.next(), construct.expr.type)
+                    writeConstantInt(itr.next(), type)
                 }
                 writer.append(" :")
                 writer.indents++
@@ -156,61 +159,69 @@ class StrictGenerator(
             construct.next?.let { writeConstruct(it) }
         }
 
-        private fun writeInsn(insn: Insn) {
+        private fun writeInsn(insn: Instruction) {
             when (insn) {
-                is Insn.Assignment -> writeAssignment(insn)
-                is Insn.Return -> {
-                    if (writer.indents == 0 && func.returns.isEmpty()) {
+                is Instruction.Assignment -> writeAssignment(insn)
+                is Instruction.Return -> {
+                    if (writer.indents == 0 && func.returnTypes.isEmpty()) {
                         endingLine = false
                         return
                     } else {
-                        writeOperation(insn.expr as Expr.Operation)
+                        writer.append("return")
+                        val es = insn.expression.list<Expression>()
+                        if (es.isNotEmpty()) {
+                            writer.append('(')
+                            writeExprList(es)
+                            writer.append(')')
+                        }
                     }
                 }
             }
             writer.append(';')
         }
 
-        private fun writeAssignment(insn: Insn.Assignment) {
-            if (insn.definitions.isNotEmpty()) {
-                if (insn.definitions.size == 1) {
-                    val def = insn.definitions.single()
-                    if (def is Expr.Variable.Local && definedVars.add(def)) {
+        private fun writeAssignment(insn: Instruction.Assignment) {
+            val defs = insn.definitions.list<Element.Variable>()
+            if (defs.isNotEmpty()) {
+                if (defs.size == 1) {
+                    val def = defs.single()
+                    if (def is Element.Variable.Local && definedVars.add(def)) {
                         writer.append("def_")
                         writer.append(def.type.typeLiteral)
                         writer.append(' ')
                     }
                     writeVar(def)
                 } else {
-                    writeExprList(insn.definitions)
+                    writeExprList(defs)
                 }
                 writer.append(" = ")
             }
-            writeExpr(insn.expr)
+            writeExpr(insn.expression)
         }
 
-        private fun writeExpr(expr: Expr) {
+        private fun writeExpr(expr: Expression) {
             when (expr) {
-                is Expr.Variable -> writeVar(expr)
-                is Expr.Cst -> writeConst(expr)
-                is Expr.Operation -> writeOperation(expr)
+                is Element.Variable -> writeVar(expr)
+                is Element.Constant -> writeConst(expr)
+                is Expression.Operation -> writeOperation(expr)
+                is Expression.Compound -> writeExprList(expr.expressions)
             }
         }
 
-        private fun writeVar(v: Expr.Variable) {
+        private fun writeVar(v: Element.Variable) {
             when (v) {
-                is Expr.Variable.Local -> writer.append('$').append(v.type.nameLiteral).append(v.id)
-                is Expr.Variable.Varp -> writer.append("%var").append(v.id)
-                is Expr.Variable.Varbit -> writer.append("%varbit").append(v.id)
-                is Expr.Variable.Varc -> writer.append("%varc").append(v.type.topType.nameLiteral).append(v.id)
+                is Element.Variable.Local -> writer.append('$').append(v.type.nameLiteral).append(v.id)
+                is Element.Variable.Varp -> writer.append("%var").append(v.id)
+                is Element.Variable.Varbit -> writer.append("%varbit").append(v.id)
+                is Element.Variable.Varc -> writer.append("%varc").append(v.type.topType.nameLiteral).append(v.id)
                 else -> error(v)
             }
         }
 
-        private fun writeConst(expr: Expr.Cst) {
+        private fun writeConst(expr: Element.Constant) {
             when (expr.type == Type.STRING) {
-                false -> writeConstantInt(expr.cst as Int, expr.type)
-                true -> writeConstantString(expr.cst as String)
+                false -> writeConstantInt(expr.value as Int, expr.type)
+                true -> writeConstantString(expr.value as String)
             }
         }
 
@@ -431,7 +442,8 @@ class StrictGenerator(
             }
         }
 
-        private fun writeOperation(expr: Expr.Operation) {
+        private fun writeOperation(expr: Expression.Operation) {
+            val args = expr.arguments.list<Expression>()
             val op = expr.id
             when (op) {
                 INVOKE -> {
@@ -440,36 +452,36 @@ class StrictGenerator(
                 }
                 DEFINE_ARRAY -> {
                     writer.append("def_")
-                    writeExpr(expr.arguments[1])
+                    writeExpr(args[1])
                     writer.append(" \$array")
-                    writeExpr(expr.arguments[0])
+                    writeExpr(args[0])
                     writer.append('(')
-                    writeExpr(expr.arguments[2])
+                    writeExpr(args[2])
                     writer.append(')')
                     return
                 }
                 GET_ARRAY_INT -> {
                     writer.append("\$array")
-                    writeExpr(expr.arguments[0])
+                    writeExpr(args[0])
                     writer.append('(')
-                    writeExpr(expr.arguments[1])
+                    writeExpr(args[1])
                     writer.append(')')
                     return
                 }
                 SET_ARRAY_INT -> {
                     writer.append("\$array")
-                    writeExpr(expr.arguments[0])
+                    writeExpr(args[0])
                     writer.append('(')
-                    writeExpr(expr.arguments[1])
+                    writeExpr(args[1])
                     writer.append(") = ")
-                    writeExpr(expr.arguments[2])
+                    writeExpr(args[2])
                     return
                 }
                 JOIN_STRING -> {
                     writer.append('"')
-                    for (a in expr.arguments) {
-                        if (a is Expr.Cst && a.cst is String) {
-                            writer.append(a.cst)
+                    for (a in args) {
+                        if (a is Element.Constant && a.value is String) {
+                            writer.append(a.value)
                         } else {
                             writer.append('<')
                             writeExpr(a)
@@ -488,11 +500,11 @@ class StrictGenerator(
             val calcInfix = CALC_INFIX_MAP[expr.id]
             if (branchInfix != null) {
                 writer.append('(')
-                writeExpr(expr.arguments[0])
+                writeExpr(args[0])
                 writer.append(' ')
                 writer.append(branchInfix)
                 writer.append(' ')
-                writeExpr(expr.arguments[1])
+                writeExpr(args[1])
                 writer.append(')')
             }  else if (calcInfix != null) {
                 val wasCalc = inCalc
@@ -501,31 +513,31 @@ class StrictGenerator(
                     inCalc = true
                 }
                 writer.append('(')
-                writeExpr(expr.arguments[0])
+                writeExpr(args[0])
                 writer.append(' ')
                 writer.append(calcInfix)
                 writer.append(' ')
-                writeExpr(expr.arguments[1])
+                writeExpr(args[1])
                 writer.append(')')
                 inCalc = wasCalc
             } else {
-                var args: List<Expr> = expr.arguments
+                var args2: List<Expression> = args
                 if (expr.id in DOT_OPCODES) {
-                    if ((args.last() as Expr.Cst).cst == 1) {
+                    if ((args2.last() as Element.Constant).value == 1) {
                         writer.append('.')
                     }
-                    args = args.dropLast(1)
+                    args2 = args2.dropLast(1)
                 }
                 writer.append(names.getValue(op))
-                if (args.isNotEmpty()) {
+                if (args2.isNotEmpty()) {
                     writer.append('(')
-                    writeExprList(args)
+                    writeExprList(args2)
                     writer.append(')')
                 }
             }
         }
 
-        private fun writeExprList(exprs: List<Expr>) {
+        private fun writeExprList(exprs: List<Expression>) {
             val es = exprs.iterator()
             if (es.hasNext()) {
                 writeExpr(es.next())
@@ -536,16 +548,16 @@ class StrictGenerator(
             }
         }
 
-        private fun writeAddHook(operation: Expr.Operation) {
-            val args = operation.arguments.toMutableList()
+        private fun writeAddHook(operation: Expression.Operation) {
+            val args = operation.arguments.list<Expression>().toMutableList()
             val component = args.removeAt(args.lastIndex)
 
-            if (operation.id < 2000 && (component as Expr.Cst).cst == 1) {
+            if (operation.id < 2000 && (component as Element.Constant).value == 1) {
                 writer.append('.')
             }
             writer.append(names[operation.id]).append('(')
 
-            val invokeId = (args.removeAt(0) as Expr.Cst).cst as Int
+            val invokeId = (args.removeAt(0) as Element.Constant).value as Int
             if (invokeId == -1) {
                 writer.append(null)
             } else {
@@ -556,7 +568,7 @@ class StrictGenerator(
                 } else {
                     writer.append(scriptName.strip("[clientscript,", ']'))
                 }
-                val triggerCount = (args.removeAt(args.lastIndex) as Expr.Cst).cst as Int
+                val triggerCount = (args.removeAt(args.lastIndex) as Element.Constant).value as Int
                 val triggers = args.takeLast(triggerCount)
                 repeat(triggerCount) { args.removeAt(args.lastIndex) }
 
@@ -578,18 +590,19 @@ class StrictGenerator(
             writer.append(')')
         }
 
-        private fun writeInvoke(invoke: Expr.Operation) {
+        private fun writeInvoke(invoke: Expression.Operation) {
+            val args = invoke.arguments.list<Expression>()
             writer.append('~')
-            val invokeId = (invoke.arguments.first() as Expr.Cst).cst as Int
+            val invokeId = (args.first() as Element.Constant).value as Int
             val scriptName = scriptNameLoader.load(invokeId)
             if (scriptName == null) {
                 writer.append("script").append(invokeId)
             } else {
                 writer.append(scriptName.strip("[proc,", ']'))
             }
-            if (invoke.arguments.size > 1) {
+            if (args.size > 1) {
                 writer.append('(')
-                writeExprList(invoke.arguments.subList(1, invoke.arguments.size))
+                writeExprList(args.subList(1, args.size))
                 writer.append(')')
             }
         }
