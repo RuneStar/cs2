@@ -7,7 +7,7 @@ interface Expression {
 
     var types: List<Type>
 
-    class Compound(val expressions: MutableList<Expression>) : Expression {
+    class Compound(val expressions: List<Expression>) : Expression {
 
         override var types: List<Type>
             get() = expressions.flatMap { it.types }
@@ -33,12 +33,13 @@ interface Expression {
     }
 }
 
-fun Expression(vararg expressions: Expression) = Expression(expressions.toMutableList())
+fun Expression(): Expression = Expression.Compound(emptyList())
 
-fun Expression(expressions: MutableList<Expression>) = expressions.singleOrNull() ?: Expression.Compound(expressions)
+fun Expression(expression: Expression): Expression = error(expression)
 
-@JvmName("Expression2")
-fun Expression(expressions: List<Expression>) = expressions.singleOrNull() ?: Expression(expressions.toMutableList())
+fun Expression(vararg expressions: Expression): Expression = Expression.Compound(expressions.asList())
+
+fun Expression(expressions: List<Expression>): Expression = expressions.singleOrNull() ?: Expression.Compound(expressions)
 
 operator fun Expression.plus(other: Expression): Expression = Expression(list<Expression>() + other.list())
 

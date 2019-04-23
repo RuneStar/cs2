@@ -1,6 +1,6 @@
 package org.runestar.cs2.cfa
 
-import org.runestar.cs2.ir.Func
+import org.runestar.cs2.ir.Function
 import org.runestar.cs2.ir.Instruction
 import org.runestar.cs2.util.DirectedGraph
 import org.runestar.cs2.util.LinkedGraph
@@ -8,16 +8,16 @@ import org.runestar.cs2.util.PartitionedChain
 
 internal typealias BasicBlock = PartitionedChain<Instruction>.Block
 
-internal fun partitionBlocks(func: Func): PartitionedChain<Instruction> {
+internal fun partitionBlocks(f: Function): PartitionedChain<Instruction> {
     val blockHeads = ArrayList<Instruction>()
-    blockHeads.add(func.instructions.first)
-    for (insn in func.instructions) {
+    blockHeads.add(f.instructions.first)
+    for (insn in f.instructions) {
         when (insn) {
             is Instruction.Label -> if (blockHeads.last() != insn) blockHeads.add(insn)
-            is Instruction.Branch, is Instruction.Switch -> blockHeads.add(func.instructions.next(insn)!!)
+            is Instruction.Branch, is Instruction.Switch -> blockHeads.add(f.instructions.next(insn)!!)
         }
     }
-    return PartitionedChain(func.instructions, blockHeads)
+    return PartitionedChain(f.instructions, blockHeads)
 }
 
 internal fun graphBlocks(blockList: PartitionedChain<Instruction>): DirectedGraph<BasicBlock> {

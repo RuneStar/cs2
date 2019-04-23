@@ -6,7 +6,7 @@ import org.runestar.cs2.Type
 import org.runestar.cs2.cfa.Construct
 import org.runestar.cs2.ir.Element
 import org.runestar.cs2.ir.Expression
-import org.runestar.cs2.ir.Func
+import org.runestar.cs2.ir.Function
 import org.runestar.cs2.ir.Instruction
 import org.runestar.cs2.ir.list
 import org.runestar.cs2.names
@@ -22,37 +22,37 @@ class StrictGenerator(
         private val paramNameLoader: Loader<String> = Loader.PARAM_NAMES
 ) : Generator {
 
-    override fun write(appendable: StringBuilder, func: Func, root: Construct) {
-        State(appendable, func, root).write()
+    override fun write(buf: StringBuilder, f: Function, root: Construct) {
+        State(buf, f, root).write()
     }
 
-    private inner class State(appendable: StringBuilder, private val func: Func, private val root: Construct) {
+    private inner class State(buf: StringBuilder, private val f: Function, private val root: Construct) {
 
         private var inCalc = false
 
         private var endingLine = true
 
-        private val definedVars = HashSet<Element.Variable.Local>(func.arguments)
+        private val definedVars = HashSet<Element.Variable.Local>(f.arguments)
 
-        private val writer = LineWriter(appendable)
+        private val writer = LineWriter(buf)
 
         internal fun write() {
-            writer.append("// ").append(func.id)
+            writer.append("// ").append(f.id)
             writer.nextLine()
-            val scriptName = scriptNameLoader.load(func.id)
+            val scriptName = scriptNameLoader.load(f.id)
             if (scriptName == null) {
-                writer.append("script").append(func.id)
+                writer.append("script").append(f.id)
             } else {
                 writer.append(scriptName)
             }
-            if (func.arguments.isNotEmpty() || func.returnTypes.isNotEmpty()) {
+            if (f.arguments.isNotEmpty() || f.returnTypes.isNotEmpty()) {
                 writer.append('(')
-                func.arguments.joinTo(writer) { "${it.type.typeLiteral} \$${it.type.nameLiteral}${it.id}" }
+                f.arguments.joinTo(writer) { "${it.type.typeLiteral} \$${it.type.nameLiteral}${it.id}" }
                 writer.append(')')
             }
-            if (func.returnTypes.isNotEmpty()) {
+            if (f.returnTypes.isNotEmpty()) {
                 writer.append('(')
-                func.returnTypes.joinTo(writer) { it.typeLiteral }
+                f.returnTypes.joinTo(writer) { it.typeLiteral }
                 writer.append(')')
             }
             writeConstruct(root)
@@ -69,7 +69,7 @@ class StrictGenerator(
         }
 
         private fun writeSeq(construct: Construct.Seq) {
-            for (insn in construct.insns) {
+            for (insn in construct.instructions) {
                 writer.nextLine()
                 writeInsn(insn)
             }
@@ -78,21 +78,22 @@ class StrictGenerator(
 
         private fun writeIf(construct: Construct.If) {
             writer.nextLine()
-            val if0 = construct.branches.first()
+            val branches = construct.branches.iterator()
+            val if0 = branches.next()
             writer.append("if ")
             writeExpr(if0.condition)
             writer.append(" {")
             writer.indents++
-            writeConstruct(if0.construct)
+            writeConstruct(if0.body)
             writer.indents--
             writer.nextLine()
             writer.append('}')
-            for (ifn in construct.branches.drop(1)) {
+            for (ifn in branches) {
                 writer.append(" else if ")
                 writeExpr(ifn.condition)
                 writer.append(" {")
                 writer.indents++
-                writeConstruct(ifn.construct)
+                writeConstruct(ifn.body)
                 writer.indents--
                 writer.nextLine()
                 writer.append('}')
@@ -115,7 +116,7 @@ class StrictGenerator(
             writeExpr(construct.condition)
             writer.append(" {")
             writer.indents++
-            writeConstruct(construct.inside)
+            writeConstruct(construct.body)
             writer.indents--
             writer.nextLine()
             writer.append('}')
@@ -124,11 +125,11 @@ class StrictGenerator(
 
         private fun writeSwitch(construct: Construct.Switch) {
             writer.nextLine()
-            val type = construct.expr.types.single()
+            val type = construct.expression.types.single()
             writer.append("switch_").append(type.typeLiteral).append(" (")
-            writeExpr(construct.expr)
+            writeExpr(construct.expression)
             writer.append(") {")
-            for ((ns, con) in construct.map) {
+            for ((ns, body) in construct.cases) {
                 writer.indents++
                 writer.nextLine()
                 val itr = ns.iterator()
@@ -140,17 +141,17 @@ class StrictGenerator(
                 }
                 writer.append(" :")
                 writer.indents++
-                writeConstruct(con)
+                writeConstruct(body)
                 writer.indents--
                 writer.indents--
             }
-            val elze = construct.elze
-            if (elze != null) {
+            val default = construct.default
+            if (default != null) {
                 writer.indents++
                 writer.nextLine()
                 writer.append("case default :")
                 writer.indents++
-                writeConstruct(elze)
+                writeConstruct(default)
                 writer.indents--
                 writer.indents--
             }
@@ -163,7 +164,7 @@ class StrictGenerator(
             when (insn) {
                 is Instruction.Assignment -> writeAssignment(insn)
                 is Instruction.Return -> {
-                    if (writer.indents == 0 && func.returnTypes.isEmpty()) {
+                    if (writer.indents == 0 && f.returnTypes.isEmpty()) {
                         endingLine = false
                         return
                     } else {
@@ -219,9 +220,10 @@ class StrictGenerator(
         }
 
         private fun writeConst(expr: Element.Constant) {
-            when (expr.type == Type.STRING) {
-                false -> writeConstantInt(expr.value as Int, expr.type)
-                true -> writeConstantString(expr.value as String)
+            if (expr.type == Type.STRING) {
+                writeConstantString(expr.value as String)
+            } else {
+                writeConstantInt(expr.value as Int, expr.type)
             }
         }
 
@@ -444,8 +446,8 @@ class StrictGenerator(
 
         private fun writeOperation(expr: Expression.Operation) {
             val args = expr.arguments.list<Expression>()
-            val op = expr.id
-            when (op) {
+            val opcode = expr.id
+            when (opcode) {
                 INVOKE -> {
                     writeInvoke(expr)
                     return
@@ -492,7 +494,7 @@ class StrictGenerator(
                     return
                 }
             }
-            if (op in CC_SETONCLICK..CC_SETONRESIZE || op in IF_SETONCLICK..IF_SETONRESIZE) {
+            if (opcode in CC_SETONCLICK..CC_SETONRESIZE || opcode in IF_SETONCLICK..IF_SETONRESIZE) {
                 writeAddHook(expr)
                 return
             }
@@ -528,7 +530,7 @@ class StrictGenerator(
                     }
                     args2 = args2.dropLast(1)
                 }
-                writer.append(names.getValue(op))
+                writer.append(names.getValue(opcode))
                 if (args2.isNotEmpty()) {
                     writer.append('(')
                     writeExprList(args2)
@@ -538,10 +540,9 @@ class StrictGenerator(
         }
 
         private fun writeExprList(exprs: List<Expression>) {
+            if (exprs.isEmpty()) return
             val es = exprs.iterator()
-            if (es.hasNext()) {
-                writeExpr(es.next())
-            }
+            writeExpr(es.next())
             while (es.hasNext()) {
                 writer.append(", ")
                 writeExpr(es.next())

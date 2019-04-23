@@ -1,14 +1,14 @@
 package org.runestar.cs2.dfa
 
-import org.runestar.cs2.ir.Func
+import org.runestar.cs2.ir.Function
 
 internal interface Phase {
 
-    fun transform(func: Func)
+    fun transform(f: Function)
 
     class Composite(private vararg val ps: Phase) : Phase {
 
-        override fun transform(func: Func) = ps.forEach { it.transform(func) }
+        override fun transform(f: Function) = ps.forEach { it.transform(f) }
     }
 
     companion object {

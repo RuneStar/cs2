@@ -14,17 +14,17 @@ internal class Interpreter(
         val paramTypeLoader: Loader<Type>
 ) {
 
-    private val cache = HashMap<Int, Func>()
+    private val cache = HashMap<Int, Function>()
 
-    fun interpret(id: Int): Func {
+    fun interpret(id: Int): Function {
         return cache[id] ?: interpret0(id, checkNotNull(scriptLoader.load(id)))
     }
 
-    private fun interpret0(id: Int, script: Script): Func {
-        return makeFunc(id, script, interpretInsns(id, script))
+    private fun interpret0(id: Int, script: Script): Function {
+        return makeFunction(id, script, interpretInstructions(id, script))
     }
 
-    private fun interpretInsns(id: Int, script: Script): Array<Instruction> {
+    private fun interpretInstructions(id: Int, script: Script): Array<Instruction> {
         val state = State(this, id, script)
         return Array(script.opcodes.size) {
             val insn = Op.translate(state)
@@ -36,29 +36,29 @@ internal class Interpreter(
         }
     }
 
-    private fun makeFunc(id: Int, script: Script, insns: Array<Instruction>): Func {
-        val returnInstruction = insns.last { it is Instruction.Return } as Instruction.Return
+    private fun makeFunction(id: Int, script: Script, instructions: Array<Instruction>): Function {
+        val returnInstruction = instructions.last { it is Instruction.Return } as Instruction.Return
         val args = ArrayList<Element.Variable.Local>()
         repeat(script.intArgumentCount) { args.add(Element.Variable.Local(it, Type.INT)) }
         repeat(script.stringArgumentCount) { args.add(Element.Variable.Local(it, Type.STRING)) }
-        val returnTypes = returnInstruction.expression.list<Expression>().flatMapTo(ArrayList()) { it.types }
-        val func = Func(id, args, addLabels(insns), returnTypes)
-        Phase.DEFAULT.transform(func)
-        cache[id] = func
-        return func
+        val returnTypes = returnInstruction.expression.list<Expression>().flatMap { it.types }
+        val f = Function(id, args, addLabels(instructions), returnTypes)
+        Phase.DEFAULT.transform(f)
+        cache[id] = f
+        return f
     }
 
-    private fun addLabels(insns: Array<Instruction>): Chain<Instruction> {
+    private fun addLabels(instructions: Array<Instruction>): Chain<Instruction> {
         val chain = HashChain<Instruction>()
         val labels = HashSet<Int>()
-        insns.forEach { insn ->
+        instructions.forEach { insn ->
             when (insn) {
                 is Instruction.Branch -> labels.add(insn.pass.id)
                 is Instruction.Goto -> labels.add(insn.label.id)
                 is Instruction.Switch -> insn.map.values.mapTo(labels) { it.id }
             }
         }
-        insns.forEachIndexed { index, insn ->
+        instructions.forEachIndexed { index, insn ->
             if (index in labels) {
                 chain.addLast(Instruction.Label(index))
             }
@@ -75,7 +75,7 @@ internal class Interpreter(
 
         var pc: Int = 0
 
-        val stack: ListStack<Val> = ListStack()
+        val stack: ListStack<StackValue> = ListStack()
 
         private var stackIdCounter: Int = 0
 
@@ -85,15 +85,15 @@ internal class Interpreter(
 
         val intOperand: Int get() = script.intOperands[pc]
 
-        val strOperand: String? get() = script.stringOperands[pc]
+        val stringOperand: String? get() = script.stringOperands[pc]
 
-        fun operand(type: Type): Element.Constant = Element.Constant(type, if (type == Type.STRING) strOperand else intOperand)
+        fun operand(type: Type): Element.Constant = Element.Constant(if (type == Type.STRING) stringOperand else intOperand, type)
 
         val switch: Map<Int, Int> get() = script.switches[intOperand]
 
-        fun pop(type: Type): Element.Variable.Stack = stack.pop().toExpr(type)
+        fun pop(type: Type): Element.Variable.Stack = stack.pop().toExpression(type)
 
-        fun takeAll(): List<Element.Variable.Stack> = stack.takeAll().map { it.toExpr() }
+        fun takeAll(): List<Element.Variable.Stack> = stack.takeAll().map { it.toExpression() }
 
         fun take(types: List<Type>): List<Element.Variable.Stack> {
             val ts = types.toMutableList()
@@ -110,10 +110,10 @@ internal class Interpreter(
             return v
         }
 
-        fun push(type: Type, cst: Any? = null): Element.Variable.Stack {
-            val v = Val(cst, type, ++stackIdCounter)
+        fun push(type: Type, value: Any? = null): Element.Variable.Stack {
+            val v = StackValue(value, type, ++stackIdCounter)
             stack.push(v)
-            return v.toExpr()
+            return v.toExpression()
         }
     }
 }

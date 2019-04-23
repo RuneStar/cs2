@@ -10,7 +10,9 @@ interface Element : Expression {
         get() = listOf(type)
         set(value) { type = value.single() }
 
-    data class Constant(override var type: Type, val value: Any?) : Element {
+    data class Constant(val value: Any?, override var type: Type) : Element {
+
+        constructor(value: Int) : this(value, Type.INT)
 
         override fun toString(): String = "Constant($value, $type)"
     }

@@ -1,11 +1,11 @@
 package org.runestar.cs2.cfa
 
-import org.runestar.cs2.ir.Func
+import org.runestar.cs2.ir.Function
 import org.runestar.cs2.util.dominatorTree
 
-internal class FlowGraph(val func: Func) {
+internal class FlowGraph(val f: Function) {
 
-    val blocks = partitionBlocks(func)
+    val blocks = partitionBlocks(f)
 
     val graph = graphBlocks(blocks)
 

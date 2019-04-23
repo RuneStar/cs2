@@ -1,8 +1,6 @@
 package org.runestar.cs2
 
-enum class Type(
-        val desc: Char? = null
-) {
+enum class Type(val desc: Char? = null) {
 
     INT('i'),
     STRING('s'),
@@ -43,7 +41,7 @@ enum class Type(
 
     val typeLiteral: String get() = if (desc == null) INT.nameLiteral else nameLiteral
 
-    val topType: Type get() = if (this == STRING) Type.STRING else Type.INT
+    val topType: Type get() = if (this == STRING) STRING else INT
 
     companion object {
 

@@ -2,28 +2,28 @@ package org.runestar.cs2.dfa
 
 import org.runestar.cs2.ir.Element
 import org.runestar.cs2.ir.Expression
-import org.runestar.cs2.ir.Func
+import org.runestar.cs2.ir.Function
 import org.runestar.cs2.ir.Instruction
 import org.runestar.cs2.ir.plus
 
 internal object CombineSameLineOperations : Phase {
 
-    override fun transform(func: Func) {
-        val itr = func.instructions.iterator()
+    override fun transform(f: Function) {
+        val itr = f.instructions.iterator()
         for (start in itr) {
             if (!isStackAssign(start)) continue
             var end = start
             while (isStackAssign(end)) end = itr.next()
-            if (start != end && func.instructions.next(start) != end) {
+            if (start != end && f.instructions.next(start) != end) {
                 val newInsn = Instruction.Assignment(Expression(), Expression())
-                func.instructions.insertBefore(newInsn, start)
+                f.instructions.insertBefore(newInsn, start)
                 var n = start
                 while (n != end) {
-                    func.instructions.remove(n)
+                    f.instructions.remove(n)
                     n as Instruction.Assignment
                     newInsn.expression = n.expression + newInsn.expression
                     newInsn.definitions = n.definitions + newInsn.definitions
-                    n = func.instructions.next(n)!!
+                    n = f.instructions.next(n)!!
                 }
             }
         }

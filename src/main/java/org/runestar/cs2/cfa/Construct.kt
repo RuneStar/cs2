@@ -9,13 +9,13 @@ interface Construct {
     var next: Construct?
 
     class Seq(
-            val insns: MutableList<Instruction> = ArrayList()
+            val instructions: MutableList<Instruction> = ArrayList()
     ) : Construct {
 
         override var next: Construct? = null
     }
 
-    class Branch(var condition: Expression.Operation, var construct: Construct)
+    class Branch(var condition: Expression.Operation, var body: Construct)
 
     class If(
             val branches: MutableList<Branch> = ArrayList()
@@ -30,17 +30,17 @@ interface Construct {
             val condition: Expression.Operation
     ): Construct {
 
-        lateinit var inside: Construct
+        lateinit var body: Construct
 
         override var next: Construct? = null
     }
 
     class Switch(
-            val expr: Expression,
-            val map: Map<Set<Int>, Construct>
+            val expression: Expression,
+            val cases: Map<Set<Int>, Construct>
     ) : Construct {
 
-        var elze: Construct? = null
+        var default: Construct? = null
 
         override var next: Construct? = null
     }

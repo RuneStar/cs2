@@ -2,14 +2,14 @@ package org.runestar.cs2.dfa
 
 import org.runestar.cs2.ir.Element
 import org.runestar.cs2.ir.Expression
-import org.runestar.cs2.ir.Func
+import org.runestar.cs2.ir.Function
 import org.runestar.cs2.ir.Instruction
 import org.runestar.cs2.ir.list
 
 internal object DeleteNops : Phase {
 
-    override fun transform(func: Func) {
-        val itr = func.instructions.iterator()
+    override fun transform(f: Function) {
+        val itr = f.instructions.iterator()
         for (insn in itr) {
             if (insn !is Instruction.Assignment) continue
             val defs = insn.definitions.list<Element.Variable>()

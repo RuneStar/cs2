@@ -2,30 +2,30 @@ package org.runestar.cs2.dfa
 
 import org.runestar.cs2.ir.Element
 import org.runestar.cs2.ir.Expression
-import org.runestar.cs2.ir.Func
+import org.runestar.cs2.ir.Function
 import org.runestar.cs2.ir.Instruction
 import org.runestar.cs2.ir.list
 import java.util.Collections
 
 internal object InlineStackDefinitions : Phase {
 
-    override fun transform(func: Func) {
+    override fun transform(f: Function) {
         out@
-        for (insn in func.instructions) {
+        for (insn in f.instructions) {
             if (insn !is Instruction.Assignment) continue
             if (insn.definitions.list<Element.Variable>().any { it !is Element.Variable.Stack }) continue
             val defs = insn.definitions.list<Element.Variable.Stack>()
             if (defs.isEmpty()) continue
-            var a: Instruction? = func.instructions.next(insn)!!
+            var a: Instruction? = f.instructions.next(insn)!!
             while (a is Instruction.Evaluation) {
                 if (replaceExprs(a, defs, insn.expression)) {
-                    func.instructions.remove(insn)
+                    f.instructions.remove(insn)
                     continue@out
                 }
-                a = func.instructions.next(a)
+                a = f.instructions.next(a)
             }
             if (insn.expression is Element.Constant) {
-                func.instructions.remove(insn)
+                f.instructions.remove(insn)
             } else {
                 insn.definitions = Expression()
             }

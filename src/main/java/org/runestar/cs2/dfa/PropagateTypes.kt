@@ -4,24 +4,24 @@ import org.runestar.cs2.Opcodes
 import org.runestar.cs2.Type
 import org.runestar.cs2.ir.Element
 import org.runestar.cs2.ir.Expression
-import org.runestar.cs2.ir.Func
+import org.runestar.cs2.ir.Function
 import org.runestar.cs2.ir.Instruction
 import org.runestar.cs2.ir.list
 
 internal object PropagateTypes : Phase {
 
-    override fun transform(func: Func) {
+    override fun transform(f: Function) {
         while (
-                propagateAssignments(func) or
-                propagateVars(func) or
-                propagateComparisons(func) or
-                propagateReturns(func)
+                propagateAssignments(f) or
+                propagateVars(f) or
+                propagateComparisons(f) or
+                propagateReturns(f)
         ) { }
     }
 
-    private fun propagateAssignments(func: Func): Boolean {
+    private fun propagateAssignments(f: Function): Boolean {
         var changed = false
-        for (insn in func.instructions) {
+        for (insn in f.instructions) {
             if (insn !is Instruction.Assignment) continue
             val oldLeft = insn.definitions.types
             val oldRight = insn.expression.types
@@ -35,9 +35,9 @@ internal object PropagateTypes : Phase {
         return changed
     }
 
-    private fun propagateVars(func: Func): Boolean {
+    private fun propagateVars(f: Function): Boolean {
         var changed = false
-        val vars = findVars(func)
+        val vars = findVars(f)
         val types = HashMap<Element.Variable, Type>()
         for (v in vars) {
             val prev = types[v]
@@ -57,10 +57,10 @@ internal object PropagateTypes : Phase {
         return changed
     }
 
-    private fun findVars(func: Func): List<Element.Variable> {
+    private fun findVars(f: Function): List<Element.Variable> {
         val list = ArrayList<Element.Variable>()
-        list.addAll(func.arguments)
-        for (insn in func.instructions) {
+        list.addAll(f.arguments)
+        for (insn in f.instructions) {
             if (insn !is Instruction.Evaluation) continue
             if (insn is Instruction.Assignment) {
                 list.addAll(insn.definitions.list())
@@ -81,9 +81,9 @@ internal object PropagateTypes : Phase {
         return list
     }
 
-    private fun propagateComparisons(func: Func): Boolean {
+    private fun propagateComparisons(f: Function): Boolean {
         var changed = false
-        for (insn in func.instructions) {
+        for (insn in f.instructions) {
             if (insn !is Instruction.Branch) continue
             val operation = insn.expression.list<Expression.Operation>().single()
             val args = operation.arguments.list<Element>().iterator()
@@ -100,11 +100,11 @@ internal object PropagateTypes : Phase {
         return changed
     }
 
-    private fun propagateReturns(func: Func): Boolean {
+    private fun propagateReturns(f: Function): Boolean {
         var changed = false
-        val returns = findReturns(func)
+        val returns = findReturns(f)
         val newTypes = returns.map { it.types }.reduce { acc, types -> Type.bottom(acc, types) }
-        func.returnTypes = newTypes.toMutableList()
+        f.returnTypes = newTypes
         for (r in returns) {
             if (r.types != newTypes) {
                 changed = true
@@ -114,9 +114,9 @@ internal object PropagateTypes : Phase {
         return changed
     }
 
-    private fun findReturns(func: Func): List<Expression> {
+    private fun findReturns(f: Function): List<Expression> {
         val list = ArrayList<Expression>()
-        for (insn in func.instructions) {
+        for (insn in f.instructions) {
             if (insn is Instruction.Return) {
                 list.add(insn.expression)
             }

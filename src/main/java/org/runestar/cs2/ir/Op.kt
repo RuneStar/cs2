@@ -61,7 +61,7 @@ internal interface Op {
         override fun translate(state: Interpreter.State): Instruction {
             val invokeId = state.intOperand
             val args = ArrayList<Element>()
-            args.add(Element.Constant(INT, invokeId))
+            args.add(Element.Constant(invokeId))
             val returns = ArrayList<Element.Variable>()
             if (invokeId == state.id) {
                 args.addAll(state.takeAll())
@@ -90,14 +90,13 @@ internal interface Op {
         override fun translate(state: Interpreter.State): Instruction {
             val key = state.pop(INT)
             val enumId = state.pop(ENUM)
-            val valueType = Type.of(checkNotNull(state.stack.peek().cst as Int))
+            val valueType = Type.of(state.stack.peek().value as Int)
             val valueTypeVar = state.pop(TYPE)
-            val keyType = Type.of(checkNotNull(state.stack.peek().cst as Int))
+            val keyType = Type.of(state.stack.peek().value as Int)
             val keyTypeVar = state.pop(TYPE)
             val args = Expression(keyTypeVar, valueTypeVar, enumId, key)
             key.type = keyType
-            val value = state.push(valueType)
-            return Instruction.Assignment(value, Expression.Operation(listOf(valueType), id, args))
+            return Instruction.Assignment(state.push(valueType), Expression.Operation(listOf(valueType), id, args))
         }
     }
 
@@ -126,11 +125,10 @@ internal interface Op {
 
         override fun translate(state: Interpreter.State): Instruction {
             val length = state.pop(INT)
-            val intOperand = state.intOperand
-            val arrayId = intOperand shr 16
-            val arrayIdVar = Element.Constant(INT, arrayId)
-            val typeDesc = intOperand and 0xFFFF
-            val type = Element.Constant(TYPE, typeDesc)
+            val arrayId = state.intOperand shr 16
+            val arrayIdVar = Element.Constant(arrayId)
+            val typeDesc = state.intOperand and 0xFFFF
+            val type = Element.Constant(typeDesc, TYPE)
             state.arrayTypes[arrayId] = Type.of(typeDesc)
             return Instruction.Assignment(Expression(), Expression.Operation(emptyList(), id, Expression(arrayIdVar, type, length)))
         }
@@ -142,11 +140,10 @@ internal interface Op {
 
         override fun translate(state: Interpreter.State): Instruction {
             val arrayId = state.intOperand
-            val arrayIdVar = Element.Constant(INT, arrayId)
+            val arrayIdVar = Element.Constant(arrayId)
             val arrayIndex = state.pop(INT)
             val arrayType = state.arrayTypes[arrayId] ?: INT
-            val def = state.push(arrayType)
-            return Instruction.Assignment(def, Expression.Operation(listOf(arrayType), id, Expression(arrayIdVar, arrayIndex)))
+            return Instruction.Assignment(state.push(arrayType), Expression.Operation(listOf(arrayType), id, Expression(arrayIdVar, arrayIndex)))
         }
     }
 
@@ -157,7 +154,7 @@ internal interface Op {
         override fun translate(state: Interpreter.State): Instruction {
             val arrayId = state.intOperand
             val arrayType = state.arrayTypes[arrayId] ?: INT
-            val arrayIdVar = Element.Constant(INT, arrayId)
+            val arrayIdVar = Element.Constant(arrayId)
             val value = state.pop(arrayType)
             val arrayIndex = state.pop(INT)
             return Instruction.Assignment(Expression(), Expression.Operation(emptyList(), id, Expression(arrayIdVar, arrayIndex, value)))
@@ -189,7 +186,7 @@ internal interface Op {
         override fun translate(state: Interpreter.State): Instruction {
             return when (this) {
                 PUSH_CONSTANT_INT -> Instruction.Assignment(state.push(INT, state.intOperand), state.operand(INT))
-                PUSH_CONSTANT_STRING -> Instruction.Assignment(state.push(STRING, state.strOperand), state.operand(STRING))
+                PUSH_CONSTANT_STRING -> Instruction.Assignment(state.push(STRING, state.stringOperand), state.operand(STRING))
                 GET_VAR -> Instruction.Assignment(state.push(INT), Element.Variable.Varp(state.intOperand, INT))
                 SET_VAR -> Instruction.Assignment(Element.Variable.Varp(state.intOperand, INT), state.pop(INT))
                 GET_VARBIT -> Instruction.Assignment(state.push(INT), Element.Variable.Varbit(state.intOperand, INT))
@@ -807,7 +804,7 @@ internal interface Op {
             } else {
                 args.add(state.operand(BOOLEAN))
             }
-            var s = checkNotNull(state.stack.pop().cst as String)
+            var s = checkNotNull(state.stack.pop().value as String)
             if (s.isNotEmpty() && s.last() == 'Y') {
                 val triggerType = when (id) {
                     Opcodes.IF_SETONSTATTRANSMIT, Opcodes.CC_SETONSTATTRANSMIT -> STAT
@@ -815,14 +812,14 @@ internal interface Op {
                     Opcodes.IF_SETONVARTRANSMIT, Opcodes.CC_SETONVARTRANSMIT -> VAR
                     else -> error(this)
                 }
-                val n = checkNotNull(state.stack.pop().cst as Int)
-                args.add(Element.Constant(INT, n))
+                val n = checkNotNull(state.stack.pop().value as Int)
+                args.add(Element.Constant(n))
                 repeat(n) {
                     args.add(state.pop(triggerType))
                 }
                 s = s.dropLast(1)
             } else {
-                args.add(Element.Constant(INT, 0))
+                args.add(Element.Constant(0))
             }
             for (i in s.lastIndex downTo 0) {
                 args.add(state.pop(Type.of(s[i])))
@@ -843,7 +840,7 @@ internal interface Op {
         override val id = namesReverse.getValue(name)
 
         override fun translate(state: Interpreter.State): Instruction {
-            val paramKeyId = checkNotNull(state.stack.peek().cst as Int)
+            val paramKeyId = state.stack.peek().value as Int
             val param = state.pop(PARAM)
             val rec = state.pop(type)
             val paramType = checkNotNull(state.interpreter.paramTypeLoader.load(paramKeyId))
