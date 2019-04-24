@@ -47,7 +47,8 @@ internal object InlineStackDefinitions : Phase {
     private fun replaceSubExpr(es: List<Expression>, defs: List<Element.Variable.Stack>, by: Expression): List<Expression>? {
         val idx = Collections.indexOfSubList(es, defs)
         if (idx == -1) return null
-        val newEs = ArrayList<Expression>(es.subList(0, idx))
+        val newEs = ArrayList<Expression>(es.size - defs.size + 1)
+        newEs.addAll(es.subList(0, idx))
         newEs.add(by)
         newEs.addAll(es.subList(idx + defs.size, es.size))
         return newEs

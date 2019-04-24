@@ -43,9 +43,9 @@ private fun reconstructBlock(
             val cases = LinkedHashMap<Set<Int>, Construct>()
             val switch = Construct.Switch(tail.expression, cases)
             seq.next = switch
-            for (v in tail.map.values.toSet()) {
+            for (v in tail.cases.values.toSet()) {
                 val keys = LinkedHashSet<Int>()
-                for (e in tail.map) {
+                for (e in tail.cases) {
                     if (e.value == v) keys.add(e.key)
                 }
                 val nxt = Construct.Seq()

@@ -25,12 +25,11 @@ internal object PropagateTypes : Phase {
             if (insn !is Instruction.Assignment) continue
             val oldLeft = insn.definitions.types
             val oldRight = insn.expression.types
+            if (oldLeft == oldRight) continue
             val newTypes = Type.bottom(oldLeft, oldRight)
-            if (oldLeft != newTypes || oldRight != newTypes) {
-                changed = true
-                insn.definitions.types = newTypes
-                insn.expression.types = newTypes
-            }
+            changed = true
+            insn.definitions.types = newTypes
+            insn.expression.types = newTypes
         }
         return changed
     }
@@ -40,12 +39,7 @@ internal object PropagateTypes : Phase {
         val vars = findVars(f)
         val types = HashMap<Element.Variable, Type>()
         for (v in vars) {
-            val prev = types[v]
-            if (prev == null) {
-                types[v] = v.type
-            } else {
-                types[v] = Type.bottom(prev, v.type)
-            }
+            types.compute(v) { _, u -> if (u == null) v.type else Type.bottom(u, v.type) }
         }
         for (v in vars) {
             val newType = types.getValue(v)
@@ -85,17 +79,16 @@ internal object PropagateTypes : Phase {
         var changed = false
         for (insn in f.instructions) {
             if (insn !is Instruction.Branch) continue
-            val operation = insn.expression.list<Expression.Operation>().single()
-            val args = operation.arguments.list<Element>().iterator()
-            val arg1 = args.next()
-            val arg2 = args.next()
+            val operation = insn.expression as Expression.Operation
+            val args = operation.arguments.list<Element>()
+            val arg1 = args[0]
+            val arg2 = args[1]
+            if (arg1.type == arg2.type) continue
             val newType = Type.bottom(arg1.type, arg2.type)
             if (newType == Type.COLOUR && operation.id != Opcodes.BRANCH_EQUALS && operation.id != Opcodes.BRANCH_NOT) continue
-            if (arg1.type != newType || arg2.type != newType) {
-                changed = true
-                arg1.type = newType
-                arg2.type = newType
-            }
+            changed = true
+            arg1.type = newType
+            arg2.type = newType
         }
         return changed
     }

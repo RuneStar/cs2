@@ -53,17 +53,19 @@ enum class Type(val desc: Char? = null) {
 
         fun bottom(a: Type, b: Type): Type {
             if (a == b) return a
-            require(a.topType == b.topType) { "$a $b" }
+            if (a.topType != b.topType) incompatibleTypes(a, b)
             if (a == a.topType) return b
             if (b == b.topType) return a
             if ((a == OBJ || a == NAMEDOBJ) && (b == OBJ || b == NAMEDOBJ)) return OBJ
             if ((a == FONTMETRICS || a == GRAPHIC) && (b == FONTMETRICS || b == GRAPHIC)) return FONTMETRICS
-            throw IllegalArgumentException("$a $b")
+            incompatibleTypes(a, b)
         }
 
         fun bottom(a: List<Type>, b: List<Type>): List<Type> {
-            require(a.size == b.size)
+            if (a.size != b.size) incompatibleTypes(a, b)
             return List(a.size) { bottom(a[it], b[it]) }
         }
+
+        private fun <T> incompatibleTypes(a: T, b: T): Nothing = throw IllegalArgumentException("Incompatible types: $a & $b")
     }
 }

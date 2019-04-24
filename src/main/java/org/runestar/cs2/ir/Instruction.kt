@@ -29,12 +29,12 @@ interface Instruction {
         override fun toString() = "if $expression goto $pass"
     }
 
-    class Switch(override var expression: Expression, val map: Map<Int, Label>) : Evaluation {
+    class Switch(override var expression: Expression, val cases: Map<Int, Label>) : Evaluation {
 
         override fun toString(): String {
             val sb = StringBuilder()
             sb.append("switch(").append(expression).append("):")
-            for (e in map) {
+            for (e in cases) {
                 sb.append("\n\t\t").append(e.key).append(": ").append(e.value)
             }
             return sb.toString()

@@ -22,21 +22,19 @@ internal fun partitionBlocks(f: Function): PartitionedChain<Instruction> {
 
 internal fun graphBlocks(blockList: PartitionedChain<Instruction>): DirectedGraph<BasicBlock> {
     val graph = LinkedGraph<BasicBlock>()
-    blockList.forEach { block ->
-        val last = block.tail
-        when (last) {
-            is Instruction.Goto -> graph.addSuccessor(block, blockList.block(last.label))
+    for (block in blockList) {
+        when (val tail = block.tail) {
+            is Instruction.Goto -> graph.addSuccessor(block, blockList.block(tail.label))
             is Instruction.Switch -> {
                 graph.addSuccessor(block, blockList.next(block))
-                last.map.values.forEach { label -> graph.addSuccessor(block, blockList.block(label)) }
+                tail.cases.values.forEach { label -> graph.addSuccessor(block, blockList.block(label)) }
             }
             is Instruction.Branch -> {
-                graph.addSuccessor(block, blockList.block(last.pass))
+                graph.addSuccessor(block, blockList.block(tail.pass))
                 graph.addSuccessor(block, blockList.next(block))
             }
             is Instruction.Return -> {}
             is Instruction.Assignment, is Instruction.Label -> graph.addSuccessor(block, blockList.next(block))
-            else -> error(last)
         }
     }
     graph.head = blockList.head

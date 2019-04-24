@@ -15,8 +15,7 @@ private fun writeReadme() {
     val sb = StringBuilder()
     val prefix = "scripts/"
     sb.append("[![Discord](https://img.shields.io/discord/384870460640329728.svg?logo=discord)](https://discord.gg/G2kxrnU)\n\n")
-    val ids = File("input").list().map { it.toInt() }.sorted()
-    ids.forEach { scriptId ->
+    for (scriptId in File("input").list().map { it.toInt() }.sorted()) {
         val scriptName = Loader.SCRIPT_NAMES.load(scriptId)
         if (scriptName == null) {
             val link = "${prefix}script$scriptId.cs2"
@@ -28,7 +27,7 @@ private fun writeReadme() {
     }
     val saveFile = Path.of("scripts", "README.md")
     Files.createDirectories(saveFile.parent)
-    Files.writeString(saveFile, sb.toString())
+    Files.writeString(saveFile, sb)
 }
 
 private fun decompile() {

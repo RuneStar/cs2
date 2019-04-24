@@ -51,11 +51,11 @@ internal class Interpreter(
     private fun addLabels(instructions: Array<Instruction>): Chain<Instruction> {
         val chain = HashChain<Instruction>()
         val labels = HashSet<Int>()
-        instructions.forEach { insn ->
+        for (insn in instructions) {
             when (insn) {
                 is Instruction.Branch -> labels.add(insn.pass.id)
                 is Instruction.Goto -> labels.add(insn.label.id)
-                is Instruction.Switch -> insn.map.values.mapTo(labels) { it.id }
+                is Instruction.Switch -> insn.cases.values.mapTo(labels) { it.id }
             }
         }
         instructions.forEachIndexed { index, insn ->
