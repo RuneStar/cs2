@@ -3,7 +3,7 @@ package org.runestar.cs2.dfa
 import org.runestar.cs2.ir.Function
 import org.runestar.cs2.ir.Instruction
 
-internal object RemoveDeadCode : Phase {
+internal object RemoveDeadCode : Phase.Individual() {
 
     override fun transform(f: Function) {
         var insn: Instruction? = f.instructions.first

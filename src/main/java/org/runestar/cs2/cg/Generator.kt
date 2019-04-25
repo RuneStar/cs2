@@ -5,5 +5,5 @@ import org.runestar.cs2.ir.Function
 
 interface Generator {
 
-    fun write(buf: StringBuilder, f: Function, root: Construct)
+    fun write(f: Function, root: Construct)
 }

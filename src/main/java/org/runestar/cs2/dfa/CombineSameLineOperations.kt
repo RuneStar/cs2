@@ -6,7 +6,7 @@ import org.runestar.cs2.ir.Function
 import org.runestar.cs2.ir.Instruction
 import org.runestar.cs2.ir.plus
 
-internal object CombineSameLineOperations : Phase {
+internal object CombineSameLineOperations : Phase.Individual() {
 
     override fun transform(f: Function) {
         val itr = f.instructions.iterator()

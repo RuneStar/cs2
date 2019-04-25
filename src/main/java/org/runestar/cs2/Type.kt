@@ -51,7 +51,7 @@ enum class Type(val desc: Char? = null) {
 
         fun of(desc: Int): Type = of(desc.toChar())
 
-        fun bottom(a: Type, b: Type): Type {
+        fun merge(a: Type, b: Type): Type {
             if (a == b) return a
             if (a.topType != b.topType) incompatibleTypes(a, b)
             if (a == a.topType) return b
@@ -61,9 +61,9 @@ enum class Type(val desc: Char? = null) {
             incompatibleTypes(a, b)
         }
 
-        fun bottom(a: List<Type>, b: List<Type>): List<Type> {
+        fun merge(a: List<Type>, b: List<Type>): List<Type> {
             if (a.size != b.size) incompatibleTypes(a, b)
-            return List(a.size) { bottom(a[it], b[it]) }
+            return List(a.size) { merge(a[it], b[it]) }
         }
 
         private fun <T> incompatibleTypes(a: T, b: T): Nothing = throw IllegalArgumentException("Incompatible types: $a & $b")

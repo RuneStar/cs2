@@ -5,7 +5,7 @@ import org.runestar.cs2.util.Chain
 
 class Function(
         val id: Int,
-        val arguments: List<Element.Variable.Local>,
+        var arguments: List<Element.Variable.Local>,
         var instructions: Chain<Instruction>,
         var returnTypes: List<Type>
 ) {

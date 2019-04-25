@@ -29,7 +29,7 @@ interface Expression {
             var arguments: Expression
     ) : Expression {
 
-        override fun toString(): String = "${names[id]}($arguments)"
+        override fun toString(): String = "${names[id]}($arguments)($types)"
     }
 }
 

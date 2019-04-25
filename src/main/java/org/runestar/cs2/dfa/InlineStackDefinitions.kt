@@ -7,7 +7,7 @@ import org.runestar.cs2.ir.Instruction
 import org.runestar.cs2.ir.list
 import java.util.Collections
 
-internal object InlineStackDefinitions : Phase {
+internal object InlineStackDefinitions : Phase.Individual() {
 
     override fun transform(f: Function) {
         out@

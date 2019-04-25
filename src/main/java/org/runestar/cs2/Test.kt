@@ -1,8 +1,10 @@
 package org.runestar.cs2
 
+import org.runestar.cs2.cg.StrictGenerator
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.TreeSet
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -15,7 +17,7 @@ private fun writeReadme() {
     val sb = StringBuilder()
     val prefix = "scripts/"
     sb.append("[![Discord](https://img.shields.io/discord/384870460640329728.svg?logo=discord)](https://discord.gg/G2kxrnU)\n\n")
-    for (scriptId in File("input").list().map { it.toInt() }.sorted()) {
+    for (scriptId in File("input").list().mapTo(TreeSet()) { it.toInt() }) {
         val scriptName = Loader.SCRIPT_NAMES.load(scriptId)
         if (scriptName == null) {
             val link = "${prefix}script$scriptId.cs2"
@@ -34,19 +36,17 @@ private fun decompile() {
     val loadDir = Path.of("input")
     val saveDir = Path.of("scripts", "scripts")
     Files.createDirectories(saveDir)
-    val decompiler = Decompiler(Loader.Scripts(loadDir))
-    val io = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
-    loadDir.toFile().list().forEach { fileName ->
-        val scriptId = fileName.toInt()
-        val scriptName = Loader.SCRIPT_NAMES.load(scriptId) ?: "script$fileName"
-        println("$scriptId $scriptName")
-        val decompiled = decompiler.decompile(scriptId)
-        val saveFile = saveDir.resolve("$scriptName.cs2")
-        io.submit {
-            Files.writeString(saveFile, decompiled)
-        }
+    val io = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+    val generator = StrictGenerator { scriptName, script ->
+        println(scriptName)
+        io.submit { Files.writeString(saveDir.resolve("$scriptName.cs2"), script) }
     }
+
+    val scriptLoader = Loader { Script.read(Files.readAllBytes(loadDir.resolve(it.toString()))) }.caching()
+    val scriptIds = loadDir.toFile().list().mapTo(TreeSet()) { it.toInt() }
+
+    decompile(scriptLoader.withKeys(scriptIds), generator)
 
     io.shutdown()
     io.awaitTermination(Long.MAX_VALUE, TimeUnit.HOURS)

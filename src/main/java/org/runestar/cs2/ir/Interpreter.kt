@@ -3,7 +3,6 @@ package org.runestar.cs2.ir
 import org.runestar.cs2.Loader
 import org.runestar.cs2.Script
 import org.runestar.cs2.Type
-import org.runestar.cs2.dfa.Phase
 import org.runestar.cs2.util.Chain
 import org.runestar.cs2.util.HashChain
 import org.runestar.cs2.util.ListStack
@@ -14,18 +13,13 @@ internal class Interpreter(
         val paramTypeLoader: Loader<Type>
 ) {
 
-    private val cache = HashMap<Int, Function>()
-
     fun interpret(id: Int): Function {
-        return cache[id] ?: interpret0(id, checkNotNull(scriptLoader.load(id)))
+        val script = checkNotNull(scriptLoader.load(id))
+        return makeFunction(id, script, interpretInstructions(script))
     }
 
-    private fun interpret0(id: Int, script: Script): Function {
-        return makeFunction(id, script, interpretInstructions(id, script))
-    }
-
-    private fun interpretInstructions(id: Int, script: Script): Array<Instruction> {
-        val state = State(this, id, script)
+    private fun interpretInstructions(script: Script): Array<Instruction> {
+        val state = State(this, script)
         return Array(script.opcodes.size) {
             val insn = Op.translate(state)
             state.pc++
@@ -42,10 +36,7 @@ internal class Interpreter(
         repeat(script.intArgumentCount) { args.add(Element.Variable.Local(it, Type.INT)) }
         repeat(script.stringArgumentCount) { args.add(Element.Variable.Local(it, Type.STRING)) }
         val returnTypes = returnInstruction.expression.list<Expression>().flatMap { it.types }
-        val f = Function(id, args, addLabels(instructions), returnTypes)
-        Phase.DEFAULT.transform(f)
-        cache[id] = f
-        return f
+        return Function(id, args, addLabels(instructions), returnTypes)
     }
 
     private fun addLabels(instructions: Array<Instruction>): Chain<Instruction> {
@@ -69,7 +60,6 @@ internal class Interpreter(
 
     internal class State(
             val interpreter: Interpreter,
-            val id: Int,
             val script: Script
     ) {
 

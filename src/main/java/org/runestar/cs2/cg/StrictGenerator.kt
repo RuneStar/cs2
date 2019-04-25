@@ -12,9 +12,20 @@ import org.runestar.cs2.ir.list
 import org.runestar.cs2.names
 import org.runestar.cs2.util.strip
 
-class StrictGenerator : Generator {
+fun StrictGenerator(writer: (scriptName: String, script: String) -> Unit) = object : StrictGenerator() {
+    override fun write(scriptName: String, script: String) = writer(scriptName, script)
+}
 
-    override fun write(buf: StringBuilder, f: Function, root: Construct) = State(buf, f, root).write()
+abstract class StrictGenerator : Generator {
+
+    final override fun write(f: Function, root: Construct) {
+        val buf = StringBuilder()
+        val state = State(buf, f, root)
+        state.write()
+        write(state.name, buf.toString())
+    }
+
+    abstract fun write(scriptName: String, script: String)
 }
 
 private class State(buf: StringBuilder, private val f: Function, private val root: Construct) {
@@ -27,15 +38,13 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
 
     private val writer = LineWriter(buf)
 
+    lateinit var name: String
+
     internal fun write() {
         writer.append("// ").append(f.id)
         writer.nextLine()
-        val scriptName = Loader.SCRIPT_NAMES.load(f.id)
-        if (scriptName == null) {
-            writer.append("script").append(f.id)
-        } else {
-            writer.append(scriptName)
-        }
+        name = Loader.SCRIPT_NAMES.load(f.id) ?: "script${f.id}"
+        writer.append(name)
         if (f.arguments.isNotEmpty() || f.returnTypes.isNotEmpty()) {
             writer.append('(')
             f.arguments.joinTo(writer) { "${it.type.typeLiteral} \$${it.type.nameLiteral}${it.id}" }
@@ -251,7 +260,9 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
             Type.GRAPHIC -> writeQuoteNamedInt(Loader.GRAPHIC_NAMES, n)
             Type.FONTMETRICS -> writeNamedInt(Loader.GRAPHIC_NAMES, n)
             Type.COLOUR -> {
+                if (n < -1) error(n)
                 when (n) {
+                    -1 -> writer.append("-1")
                     0xFF0000 -> writer.append("^red")
                     0x00FF00 -> writer.append("^green")
                     0x0000FF -> writer.append("^blue")
@@ -351,6 +362,10 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
             Type.INV -> writeNamedInt(Loader.INV_NAMES, n)
             Type.MAPAREA -> writeNamedInt(Loader.MAPAREA_NAMES, n)
             Type.CHATTYPE -> {
+                if (n == -1) {
+                    writer.append("-1")
+                    return
+                }
                 val s = when(n) {
                     0 -> "gamemessage"
                     1 -> "modchat"

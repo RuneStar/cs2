@@ -15,7 +15,24 @@ data class Script(
         val switches: Array<Map<Int, Int>>
 ) {
 
+    val returnTypes: List<Type> = run {
+        val ts = ArrayList<Type>()
+        var i = opcodes.size - 2
+        out@
+        while (i >= 0) {
+            when (opcodes[i--].toInt()) {
+                Opcodes.PUSH_CONSTANT_INT -> ts.add(Type.INT)
+                Opcodes.PUSH_CONSTANT_STRING -> ts.add(Type.STRING)
+                else -> break@out
+            }
+        }
+        ts.reverse()
+        ts
+    }
+
     companion object {
+
+        fun read(bytes: ByteArray): Script = read(ByteBuffer.wrap(bytes))
 
         fun read(buffer: ByteBuffer): Script {
             val start = buffer.position()

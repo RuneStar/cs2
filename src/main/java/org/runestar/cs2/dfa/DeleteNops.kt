@@ -6,7 +6,7 @@ import org.runestar.cs2.ir.Function
 import org.runestar.cs2.ir.Instruction
 import org.runestar.cs2.ir.list
 
-internal object DeleteNops : Phase {
+internal object DeleteNops : Phase.Individual() {
 
     override fun transform(f: Function) {
         val itr = f.instructions.iterator()

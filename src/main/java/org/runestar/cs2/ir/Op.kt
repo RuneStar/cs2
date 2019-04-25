@@ -60,16 +60,11 @@ internal interface Op {
 
         override fun translate(state: Interpreter.State): Instruction {
             val invokeId = state.intOperand
+            val invoked = checkNotNull(state.interpreter.scriptLoader.load(invokeId))
             val args = ArrayList<Element>()
             args.add(Element.Constant(invokeId))
-            val returns = ArrayList<Element.Variable>()
-            if (invokeId == state.id) {
-                args.addAll(state.takeAll())
-            } else {
-                val invoked = state.interpreter.interpret(invokeId)
-                args.addAll(state.take(invoked.arguments.map { it.type }))
-                returns.addAll(invoked.returnTypes.map { state.push(it) })
-            }
+            args.addAll(state.take(List(invoked.intArgumentCount) { INT } + List(invoked.stringArgumentCount) { STRING }))
+            val returns = invoked.returnTypes.map { state.push(it) }
             return Instruction.Assignment(Expression(returns), Expression.Operation(returns.map { it.type }, id, Expression(args)))
         }
     }

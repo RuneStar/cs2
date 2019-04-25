@@ -1,16 +1,19 @@
 package org.runestar.cs2
 
-import java.nio.ByteBuffer
-import java.nio.file.Files
-import java.nio.file.Path
-
 interface Loader<T : Any> {
 
     fun load(id: Int): T?
 
-    data class Mapping<T : Any>(private val map: Map<Int, T>) : Loader<T> {
+    interface Keyed<T : Any> : Loader<T> {
+
+        val keys: Set<Int>
+    }
+
+    data class Mapping<T : Any>(private val map: Map<Int, T>) : Keyed<T> {
 
         override fun load(id: Int): T? = map[id]
+
+        override val keys: Set<Int> get() = map.keys
     }
 
     companion object {
@@ -50,13 +53,21 @@ interface Loader<T : Any> {
 
         val PARAM_NAMES = readNames("param-names.tsv")
     }
+}
 
-    class Scripts(val dir: Path) : Loader<Script> {
+fun <T : Any> Loader(load: (id: Int) -> T?) = object : Loader<T> {
+    override fun load(id: Int): T? = load(id)
+}
 
-        override fun load(id: Int): Script {
-            val file = dir.resolve(id.toString())
-            val buffer = ByteBuffer.wrap(Files.readAllBytes(file))
-            return Script.read(buffer)
-        }
+fun <T : Any> Loader<T>.caching(): Loader<T> {
+    return object : Loader<T> {
+        private val cache = HashMap<Int, T?>()
+        override fun load(id: Int): T? = cache[id] ?: if (id in cache) null else this@caching.load(id).also { cache[id] = it }
+    }
+}
+
+fun <T : Any> Loader<T>.withKeys(keys: Set<Int>): Loader.Keyed<T> {
+    return object : Loader.Keyed<T>, Loader<T> by this {
+        override val keys get() = keys
     }
 }
