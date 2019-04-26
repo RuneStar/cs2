@@ -29,11 +29,26 @@ private class State(val fs: Map<Int, Function>) {
             findInvokes(it)
             findGlobalVars(it)
         }
+        for (f in queue) {
+            preCheckInvokeArgs(f)
+        }
         while (queue.isNotEmpty()) {
             val itr = queue.iterator()
             val f = itr.next()
             itr.remove()
             prop(f)
+        }
+    }
+
+    private fun preCheckInvokeArgs(f: Function) {
+        for (insn in f.instructions) {
+            if (insn !is Instruction.Assignment) continue
+            val e = insn.expression
+            if (e is Expression.Operation && e.id == Opcodes.INVOKE) {
+                val y = fs[invokeId(e)] ?: continue
+                val ts = e.arguments.types.drop(1)
+                updateInvokeArguments(ts, y)
+            }
         }
     }
 
