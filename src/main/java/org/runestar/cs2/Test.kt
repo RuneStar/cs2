@@ -39,14 +39,13 @@ private fun decompile() {
 
     val io = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
     val generator = StrictGenerator { scriptName, script ->
-        println(scriptName)
         io.submit { Files.writeString(saveDir.resolve("$scriptName.cs2"), script) }
     }
 
     val scriptLoader = Loader { Script.read(Files.readAllBytes(loadDir.resolve(it.toString()))) }.caching()
     val scriptIds = loadDir.toFile().list().mapTo(TreeSet()) { it.toInt() }
 
-    decompile(scriptLoader.withKeys(scriptIds), generator)
+    decompile(scriptLoader.withIds(scriptIds), generator)
 
     io.shutdown()
     io.awaitTermination(Long.MAX_VALUE, TimeUnit.HOURS)

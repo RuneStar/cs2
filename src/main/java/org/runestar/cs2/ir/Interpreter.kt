@@ -19,7 +19,7 @@ internal class Interpreter(
     }
 
     private fun interpretInstructions(script: Script): Array<Instruction> {
-        val state = State(this, script)
+        val state = State(scriptLoader, paramTypeLoader, script)
         return Array(script.opcodes.size) {
             val insn = Op.translate(state)
             state.pc++
@@ -31,12 +31,10 @@ internal class Interpreter(
     }
 
     private fun makeFunction(id: Int, script: Script, instructions: Array<Instruction>): Function {
-        val returnInstruction = instructions.last { it is Instruction.Return } as Instruction.Return
-        val args = ArrayList<Element.Variable.Local>()
+        val args = ArrayList<Element.Variable.Local>(script.intArgumentCount + script.stringArgumentCount)
         repeat(script.intArgumentCount) { args.add(Element.Variable.Local(it, Type.INT)) }
         repeat(script.stringArgumentCount) { args.add(Element.Variable.Local(it, Type.STRING)) }
-        val returnTypes = returnInstruction.expression.list<Expression>().flatMap { it.types }
-        return Function(id, args, addLabels(instructions), returnTypes)
+        return Function(id, args, addLabels(instructions), script.returnTypes)
     }
 
     private fun addLabels(instructions: Array<Instruction>): Chain<Instruction> {
@@ -59,8 +57,9 @@ internal class Interpreter(
     }
 
     internal class State(
-            val interpreter: Interpreter,
-            val script: Script
+            val scriptLoader: Loader<Script>,
+            val paramTypeLoader: Loader<Type>,
+            private val script: Script
     ) {
 
         var pc: Int = 0
@@ -81,24 +80,15 @@ internal class Interpreter(
 
         val switch: Map<Int, Int> get() = script.switches[intOperand]
 
+        fun peekValue(): Any? = stack.peek().value
+
+        fun popValue(): Any? = stack.pop().value
+
         fun pop(type: Type): Element.Variable.Stack = stack.pop().toExpression(type)
 
-        fun takeAll(): List<Element.Variable.Stack> = stack.takeAll().map { it.toExpression() }
+        fun popAll(): List<Element.Variable.Stack> = stack.popAll().map { it.toExpression() }
 
-        fun take(types: List<Type>): List<Element.Variable.Stack> {
-            val ts = types.toMutableList()
-            val v = ArrayList<Element.Variable.Stack>(types.size)
-            while (ts.isNotEmpty()) {
-                val idx = if (stack.peek().type == Type.STRING) {
-                    ts.indexOfLast { it == Type.STRING }
-                } else {
-                    ts.indexOfLast { it != Type.STRING }
-                }
-                v.add(pop(ts.removeAt(idx)))
-            }
-            v.reverse()
-            return v
-        }
+        fun pop(count: Int): List<Element.Variable.Stack> = stack.pop(count).map { it.toExpression() }
 
         fun push(type: Type, value: Any? = null): Element.Variable.Stack {
             val v = StackValue(value, type, ++stackIdCounter)

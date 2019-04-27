@@ -4,8 +4,6 @@ internal data class ListStack<T : Any>(
         val delegate: MutableList<T> = ArrayList()
 ) {
 
-    constructor(initialCapacity: Int) : this(ArrayList(initialCapacity))
-
     val size: Int get() = delegate.size
 
     fun isEmpty(): Boolean = delegate.isEmpty()
@@ -16,5 +14,13 @@ internal data class ListStack<T : Any>(
 
     fun pop(): T = delegate.removeAt(delegate.lastIndex)
 
-    fun takeAll(): MutableList<T> = delegate.toMutableList().also { delegate.clear() }
+    fun popAll(): MutableList<T> = delegate.toMutableList().also { delegate.clear() }
+
+    fun pop(count: Int): MutableList<T> {
+        val l = MutableList(count) {
+            pop()
+        }
+        l.reverse()
+        return l
+    }
 }

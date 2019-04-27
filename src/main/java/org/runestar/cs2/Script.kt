@@ -1,6 +1,5 @@
 package org.runestar.cs2
 
-import org.runestar.cs2.util.readString
 import org.runestar.cs2.util.toUnsignedInt
 import java.nio.ByteBuffer
 
@@ -85,6 +84,20 @@ data class Script(
                     opcodes,
                     switches
             )
+        }
+
+        val CHARSET = charset("windows-1252")
+
+        private fun ByteBuffer.readString(): String {
+            val origPos = position()
+            var length = 0
+            while (get() != 0.toByte()) length++
+            if (length == 0) return ""
+            val byteArray = ByteArray(length)
+            position(origPos)
+            get(byteArray)
+            position(position() + 1)
+            return String(byteArray, CHARSET)
         }
     }
 }

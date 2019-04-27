@@ -11,7 +11,7 @@ fun decompile(
         paramTypes: Loader<Type> = Loader.PARAM_TYPES
 ) {
     val interpreter = Interpreter(scripts, paramTypes)
-    val fs = scripts.keys.associate { it to interpreter.interpret(it) }
+    val fs = scripts.ids.associate { it to interpreter.interpret(it) }
     Phase.DEFAULT.transform(fs)
     fs.values.forEach { generator.write(it, reconstruct(it)) }
 }

@@ -60,12 +60,12 @@ internal interface Op {
 
         override fun translate(state: Interpreter.State): Instruction {
             val invokeId = state.intOperand
-            val invoked = checkNotNull(state.interpreter.scriptLoader.load(invokeId))
+            val invoked = checkNotNull(state.scriptLoader.load(invokeId))
             val args = ArrayList<Element>()
             args.add(Element.Constant(invokeId))
-            args.addAll(state.take(List(invoked.intArgumentCount) { INT } + List(invoked.stringArgumentCount) { STRING }))
+            args.addAll(state.pop(invoked.intArgumentCount + invoked.stringArgumentCount))
             val returns = invoked.returnTypes.map { state.push(it) }
-            return Instruction.Assignment(Expression(returns), Expression.Operation(returns.map { it.type }, id, Expression(args)))
+            return Instruction.Assignment(Expression(returns), Expression.Operation(invoked.returnTypes, id, Expression(args)))
         }
     }
 
@@ -74,7 +74,7 @@ internal interface Op {
         override val id = Opcodes.RETURN
 
         override fun translate(state: Interpreter.State): Instruction {
-            return Instruction.Return(Expression(state.takeAll()))
+            return Instruction.Return(Expression(state.popAll()))
         }
     }
 
@@ -85,9 +85,9 @@ internal interface Op {
         override fun translate(state: Interpreter.State): Instruction {
             val key = state.pop(INT)
             val enumId = state.pop(ENUM)
-            val valueType = Type.of(state.stack.peek().value as Int)
+            val valueType = Type.of(state.peekValue() as Int)
             val valueTypeVar = state.pop(TYPE)
-            val keyType = Type.of(state.stack.peek().value as Int)
+            val keyType = Type.of(state.peekValue() as Int)
             val keyTypeVar = state.pop(TYPE)
             val args = Expression(keyTypeVar, valueTypeVar, enumId, key)
             key.type = keyType
@@ -799,7 +799,7 @@ internal interface Op {
             } else {
                 args.add(state.operand(BOOLEAN))
             }
-            var s = checkNotNull(state.stack.pop().value as String)
+            var s = state.popValue() as String
             if (s.isNotEmpty() && s.last() == 'Y') {
                 val triggerType = when (id) {
                     Opcodes.IF_SETONSTATTRANSMIT, Opcodes.CC_SETONSTATTRANSMIT -> STAT
@@ -807,7 +807,7 @@ internal interface Op {
                     Opcodes.IF_SETONVARTRANSMIT, Opcodes.CC_SETONVARTRANSMIT -> VAR
                     else -> error(this)
                 }
-                val n = checkNotNull(state.stack.pop().value as Int)
+                val n = state.popValue() as Int
                 args.add(Element.Constant(n))
                 repeat(n) {
                     args.add(state.pop(triggerType))
@@ -835,10 +835,10 @@ internal interface Op {
         override val id = namesReverse.getValue(name)
 
         override fun translate(state: Interpreter.State): Instruction {
-            val paramKeyId = state.stack.peek().value as Int
+            val paramKeyId = state.peekValue() as Int
             val param = state.pop(PARAM)
             val rec = state.pop(type)
-            val paramType = checkNotNull(state.interpreter.paramTypeLoader.load(paramKeyId))
+            val paramType = checkNotNull(state.paramTypeLoader.load(paramKeyId))
             return Instruction.Assignment(state.push(paramType), Expression.Operation(listOf(paramType), id, Expression(rec, param)))
         }
     }

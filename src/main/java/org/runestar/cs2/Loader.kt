@@ -1,26 +1,28 @@
 package org.runestar.cs2
 
+import org.runestar.cs2.util.forEachLine
+
 interface Loader<T : Any> {
 
     fun load(id: Int): T?
 
     interface Keyed<T : Any> : Loader<T> {
 
-        val keys: Set<Int>
+        val ids: Set<Int>
     }
 
     data class Mapping<T : Any>(private val map: Map<Int, T>) : Keyed<T> {
 
         override fun load(id: Int): T? = map[id]
 
-        override val keys: Set<Int> get() = map.keys
+        override val ids: Set<Int> get() = map.keys
     }
 
     companion object {
 
-        private fun readParamTypes(fileName: String): Loader<Type> {
+        private fun readParamTypes(): Loader<Type> {
             val map = HashMap<Int, Type>()
-            Loader::class.java.getResource(fileName).openStream().bufferedReader().forEachLine { line ->
+            this::class.java.getResource("param-types.tsv").forEachLine { line ->
                 val split = line.split('\t')
                 val type = split[1].toInt()
                 map[split[0].toInt()] = if (type == 0) Type.INT else Type.of(type)
@@ -28,11 +30,11 @@ interface Loader<T : Any> {
             return Mapping(map)
         }
 
-        val PARAM_TYPES = readParamTypes("param-types.tsv")
+        val PARAM_TYPES = readParamTypes()
 
         private fun readNames(fileName: String): Loader<String> {
             val map = HashMap<Int, String>()
-            Loader::class.java.getResource(fileName).openStream().bufferedReader().forEachLine { line ->
+            this::class.java.getResource(fileName).forEachLine { line ->
                 val split = line.split('\t')
                 map[split[0].toInt()] = split[1]
             }
@@ -59,15 +61,11 @@ fun <T : Any> Loader(load: (id: Int) -> T?) = object : Loader<T> {
     override fun load(id: Int): T? = load(id)
 }
 
-fun <T : Any> Loader<T>.caching(): Loader<T> {
-    return object : Loader<T> {
-        private val cache = HashMap<Int, T?>()
-        override fun load(id: Int): T? = cache[id] ?: if (id in cache) null else this@caching.load(id).also { cache[id] = it }
-    }
+fun <T : Any> Loader<T>.caching(): Loader<T> = object : Loader<T> {
+    private val cache = HashMap<Int, T?>()
+    override fun load(id: Int): T? = cache[id] ?: if (id in cache) null else this@caching.load(id).also { cache[id] = it }
 }
 
-fun <T : Any> Loader<T>.withKeys(keys: Set<Int>): Loader.Keyed<T> {
-    return object : Loader.Keyed<T>, Loader<T> by this {
-        override val keys get() = keys
-    }
+fun <T : Any> Loader<T>.withIds(keys: Set<Int>): Loader.Keyed<T> = object : Loader.Keyed<T>, Loader<T> by this {
+    override val ids get() = keys
 }

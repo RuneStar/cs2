@@ -7,14 +7,14 @@ import org.runestar.cs2.ir.Expression
 import org.runestar.cs2.ir.Function
 import org.runestar.cs2.ir.Instruction
 import org.runestar.cs2.ir.list
+import org.runestar.cs2.util.removeFirst
 import java.util.ArrayDeque
 
-object PropagateTypes : Phase {
+class PropagateTypes(val fs: Map<Int, Function>) {
 
-    override fun transform(fs: Map<Int, Function>) = State(fs).transform()
-}
-
-private class State(val fs: Map<Int, Function>) {
+    companion object : Phase {
+        override fun transform(fs: Map<Int, Function>) = PropagateTypes(fs).transform()
+    }
 
     private val invokes = HashMap<Function, MutableSet<Function>>()
 
@@ -33,10 +33,7 @@ private class State(val fs: Map<Int, Function>) {
             preCheckInvokeArgs(f)
         }
         while (queue.isNotEmpty()) {
-            val itr = queue.iterator()
-            val f = itr.next()
-            itr.remove()
-            prop(f)
+            prop(queue.removeFirst())
         }
     }
 
@@ -58,8 +55,7 @@ private class State(val fs: Map<Int, Function>) {
             val e = insn.expression
             if (e !is Expression.Operation) continue
             if (e.id != Opcodes.INVOKE) continue
-            val invokedId = (e.arguments.list<Expression>().first() as Element.Constant).value as Int
-            invokes.getOrPut(fs[invokedId] ?: continue) { HashSet() }.add(f)
+            invokes.getOrPut(fs[invokeId(e)] ?: continue) { HashSet() }.add(f)
         }
     }
 
@@ -67,15 +63,15 @@ private class State(val fs: Map<Int, Function>) {
         for (insn in f.instructions) {
             if (insn !is Instruction.Evaluation) continue
             for (e in insn.expression.list<Expression>()) {
-                addGlobalVariables(e, f)
+                addGlobalVariable(e, f)
             }
             if (insn is Instruction.Assignment) {
-                addGlobalVariables(insn.definitions, f)
+                addGlobalVariable(insn.definitions, f)
             }
         }
     }
 
-    private fun addGlobalVariables(e: Expression, f: Function) {
+    private fun addGlobalVariable(e: Expression, f: Function) {
         if (e !is Element.Variable) return
         if (e is Element.Variable.Stack || e is Element.Variable.Local) return
         globalVars.getOrPut(e) { HashSet() }.add(f)
@@ -151,7 +147,7 @@ private class State(val fs: Map<Int, Function>) {
         for (insn in f.instructions) {
             if (insn !is Instruction.Evaluation) continue
             if (insn is Instruction.Assignment) {
-                list.addAll(insn.definitions.list<Element.Variable>())
+                list.addAll(insn.definitions.list())
             }
             for (e in insn.expression.list<Expression>()) {
                 if (e is Element.Variable) {
