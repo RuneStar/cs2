@@ -1,4 +1,5 @@
 0	[clientscript,tt_rewards_init]
+2	[proc,hex_to_rgb]
 3	[proc,target_world]
 6	[clientscript,wom_tab_init]
 8	[proc,tt_reward_set_desc]
@@ -476,6 +477,7 @@
 629	[clientscript,poll_historyreset]
 630	[clientscript,ignore_update]
 631	[clientscript,friend_update]
+633	[proc,int_to_bool]
 634	[proc,displayname_draw]
 635	[clientscript,displayname_lookup]
 637	[proc,pet_insurance_drawlist]
