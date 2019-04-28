@@ -61,11 +61,9 @@ internal interface Op {
         override fun translate(state: Interpreter.State): Instruction {
             val invokeId = state.intOperand
             val invoked = checkNotNull(state.scriptLoader.load(invokeId))
-            val args = ArrayList<Element>()
-            args.add(Element.Constant(invokeId))
-            args.addAll(state.pop(invoked.intArgumentCount + invoked.stringArgumentCount))
+            val args = state.pop(invoked.intArgumentCount + invoked.stringArgumentCount)
             val returns = invoked.returnTypes.map { state.push(it) }
-            return Instruction.Assignment(Expression(returns), Expression.Operation(invoked.returnTypes, id, Expression(args)))
+            return Instruction.Assignment(Expression(returns), Expression.Operation.Invoke(invoked.returnTypes, invokeId, Expression(args)))
         }
     }
 
@@ -819,9 +817,9 @@ internal interface Op {
             for (i in s.lastIndex downTo 0) {
                 args.add(state.pop(Type.of(s[i])))
             }
-            args.add(state.pop(INT))
+            val scriptId = state.popValue() as Int
             args.reverse()
-            return Instruction.Assignment(Expression(), Expression.Operation(emptyList(), id, Expression(args)))
+            return Instruction.Assignment(Expression(), Expression.Operation.AddHook(id, scriptId, Expression(args)))
         }
     }
 

@@ -1,5 +1,6 @@
 package org.runestar.cs2.ir
 
+import org.runestar.cs2.Opcodes
 import org.runestar.cs2.Type
 import org.runestar.cs2.names
 
@@ -23,13 +24,44 @@ interface Expression {
         override fun toString(): String = expressions.joinToString(", ")
     }
 
-    class Operation(
+    open class Operation(
             override var types: List<Type>,
             val id: Int,
             var arguments: Expression
     ) : Expression {
 
         override fun toString(): String = "${names[id]}($arguments)($types)"
+
+        interface Scripted {
+
+            val scriptId: Int
+
+            val scriptArguments: Expression
+        }
+
+        class Invoke(
+                types: List<Type>,
+                override val scriptId: Int,
+                arguments: Expression
+        ) : Operation(types, Opcodes.INVOKE, arguments), Scripted {
+
+            override val scriptArguments: Expression get() = arguments
+
+            override fun toString(): String = "~$scriptId($arguments)($types)"
+        }
+
+        class AddHook(
+                id: Int,
+                override val scriptId: Int,
+                arguments: Expression
+        ) : Operation(emptyList(), id, arguments), Scripted {
+
+            override val scriptArguments: Expression get() {
+                val args = arguments.list<Expression>()
+                val triggerCount = (args[args.size - 2] as Element.Constant).value as Int
+                return Expression(args.subList(0, args.size - triggerCount - 2))
+            }
+        }
     }
 }
 

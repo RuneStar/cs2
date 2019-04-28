@@ -41,10 +41,9 @@ class PropagateTypes(val fs: Map<Int, Function>) {
         for (insn in f.instructions) {
             if (insn !is Instruction.Assignment) continue
             val e = insn.expression
-            if (e is Expression.Operation && e.id == Opcodes.INVOKE) {
-                val y = fs[invokeId(e)] ?: continue
-                val ts = e.arguments.types.drop(1)
-                updateInvokeArguments(ts, y)
+            if (e is Expression.Operation.Scripted) {
+                val y = fs[e.scriptId] ?: continue
+                updateInvokeArguments(e.scriptArguments.types, y)
             }
         }
     }
@@ -53,9 +52,8 @@ class PropagateTypes(val fs: Map<Int, Function>) {
         for (insn in f.instructions) {
             if (insn !is Instruction.Evaluation) continue
             val e = insn.expression
-            if (e !is Expression.Operation) continue
-            if (e.id != Opcodes.INVOKE) continue
-            invokes.getOrPut(fs[invokeId(e)] ?: continue) { HashSet() }.add(f)
+            if (e !is Expression.Operation.Scripted) continue
+            invokes.getOrPut(fs[e.scriptId] ?: continue) { HashSet() }.add(f)
         }
     }
 
@@ -100,8 +98,8 @@ class PropagateTypes(val fs: Map<Int, Function>) {
             if (newTypes != oldRight) {
                 setTypes(insn.expression, newTypes)
                 val e = insn.expression
-                if (e is Expression.Operation && e.id == Opcodes.INVOKE) {
-                    val y = fs[invokeId(e)] ?: continue
+                if (e is Expression.Operation.Invoke) {
+                    val y = fs[e.scriptId] ?: continue
                     if (y.returnTypes != newTypes) {
                         y.returnTypes = newTypes
                         updateInvokeReturnUsages(y)
@@ -132,10 +130,9 @@ class PropagateTypes(val fs: Map<Int, Function>) {
             for (insn in f.instructions) {
                 if (insn !is Instruction.Assignment) continue
                 val e = insn.expression
-                if (e !is Expression.Operation) continue
-                if (e.id != Opcodes.INVOKE) continue
-                val y = fs[invokeId(e)] ?: continue
-                updateInvokeArguments(e.arguments.types.drop(1), y)
+                if (e !is Expression.Operation.Scripted) continue
+                val y = fs[e.scriptId] ?: continue
+                updateInvokeArguments(e.scriptArguments.types, y)
             }
         }
         return changed
@@ -236,9 +233,8 @@ class PropagateTypes(val fs: Map<Int, Function>) {
             for (insn in f.instructions) {
                 if (insn !is Instruction.Assignment) continue
                 val e = insn.expression
-                if (e !is Expression.Operation) continue
-                if (e.id != Opcodes.INVOKE) continue
-                if (invokeId(e) != invoked.id) continue
+                if (e !is Expression.Operation.Scripted) continue
+                if (e.scriptId != invoked.id) continue
                 if (setInvokeArgs(argTypes, e)) queue.add(f)
             }
         }
@@ -249,10 +245,8 @@ class PropagateTypes(val fs: Map<Int, Function>) {
             for (insn in f.instructions) {
                 if (insn !is Instruction.Assignment) continue
                 val e = insn.expression
-                if (e !is Expression.Operation) continue
-                if (e.id != Opcodes.INVOKE) continue
-                val scriptId = invokeId(e)
-                if (scriptId != invoked.id) continue
+                if (e !is Expression.Operation.Invoke) continue
+                if (e.scriptId != invoked.id) continue
                 if (insn.definitions.types != invoked.returnTypes) {
                     insn.definitions.types = invoked.returnTypes
                     queue.add(f)
@@ -305,12 +299,8 @@ class PropagateTypes(val fs: Map<Int, Function>) {
         }
     }
 
-    private fun invokeId(e: Expression.Operation): Int {
-        return (e.arguments.list<Element>().first() as Element.Constant).value as Int
-    }
-
-    private fun setInvokeArgs(argTypes: List<Type>, e: Expression.Operation): Boolean {
-        val args = e.arguments.list<Element>().drop(1)
+    private fun setInvokeArgs(argTypes: List<Type>, e: Expression.Operation.Scripted): Boolean {
+        val args = e.scriptArguments.list<Element>()
         val oldTypes = args.map { it.type }
         if (oldTypes == argTypes) return false
         val newTypes = fixTypes(argTypes, oldTypes)

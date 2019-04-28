@@ -204,6 +204,8 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
         when (expr) {
             is Element.Variable -> writeVar(expr)
             is Element.Constant -> writeConst(expr)
+            is Expression.Operation.AddHook -> writeAddHook(expr)
+            is Expression.Operation.Invoke -> writeInvoke(expr)
             is Expression.Operation -> writeOperation(expr)
             is Expression.Compound -> writeExprList(expr.expressions)
         }
@@ -454,10 +456,6 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
         val args = expr.arguments.list<Expression>()
         val opcode = expr.id
         when (opcode) {
-            INVOKE -> {
-                writeInvoke(expr)
-                return
-            }
             DEFINE_ARRAY -> {
                 writer.append("def_")
                 writeExpr(args[1])
@@ -499,10 +497,6 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
                 writer.append('"')
                 return
             }
-        }
-        if (opcode in CC_SETONCLICK..CC_SETONRESIZE || opcode in IF_SETONCLICK..IF_SETONRESIZE) {
-            writeAddHook(expr)
-            return
         }
         val branchInfix = BRANCH_INFIX_MAP[expr.id]
         val calcInfix = CALC_INFIX_MAP[expr.id]
@@ -555,7 +549,7 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
         }
     }
 
-    private fun writeAddHook(operation: Expression.Operation) {
+    private fun writeAddHook(operation: Expression.Operation.AddHook) {
         val args = operation.arguments.list<Expression>().toMutableList()
         val component = args.removeAt(args.lastIndex)
 
@@ -564,14 +558,13 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
         }
         writer.append(names[operation.id]).append('(')
 
-        val invokeId = (args.removeAt(0) as Element.Constant).value as Int
-        if (invokeId == -1) {
+        if (operation.scriptId == -1) {
             writer.append(null)
         } else {
-            val scriptName = Loader.SCRIPT_NAMES.load(invokeId)
+            val scriptName = Loader.SCRIPT_NAMES.load(operation.scriptId)
             writer.append('"')
             if (scriptName == null) {
-                writer.append("script").append(invokeId)
+                writer.append("script").append(operation.scriptId)
             } else {
                 writer.append(scriptName.strip("[clientscript,", ']'))
             }
@@ -597,19 +590,18 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
         writer.append(')')
     }
 
-    private fun writeInvoke(invoke: Expression.Operation) {
+    private fun writeInvoke(invoke: Expression.Operation.Invoke) {
         val args = invoke.arguments.list<Expression>()
         writer.append('~')
-        val invokeId = (args.first() as Element.Constant).value as Int
-        val scriptName = Loader.SCRIPT_NAMES.load(invokeId)
+        val scriptName = Loader.SCRIPT_NAMES.load(invoke.scriptId)
         if (scriptName == null) {
-            writer.append("script").append(invokeId)
+            writer.append("script").append(invoke.scriptId)
         } else {
             writer.append(scriptName.strip("[proc,", ']'))
         }
-        if (args.size > 1) {
+        if (args.isNotEmpty()) {
             writer.append('(')
-            writeExprList(args.subList(1, args.size))
+            writeExprList(args)
             writer.append(')')
         }
     }
