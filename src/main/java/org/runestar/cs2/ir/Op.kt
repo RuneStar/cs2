@@ -403,7 +403,7 @@ internal interface Op {
         GETREMOVEROOFS(arrayOf(), arrayOf(BOOLEAN)),
         SETREMOVEROOFS(arrayOf(BOOLEAN), arrayOf()),
         OPENURL(arrayOf(STRING, BOOLEAN), arrayOf()),
-        RESUME_OBJDIALOG(arrayOf(INT), arrayOf()),
+        RESUME_OBJDIALOG(arrayOf(OBJ), arrayOf()),
         BUG_REPORT(arrayOf(INT, STRING, STRING), arrayOf()),
         SETSHIFTCLICKDROP(arrayOf(BOOLEAN), arrayOf()),
         SETSHOWMOUSEOVERTEXT(arrayOf(BOOLEAN), arrayOf()),
