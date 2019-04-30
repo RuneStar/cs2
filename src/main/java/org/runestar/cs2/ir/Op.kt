@@ -621,10 +621,10 @@ internal interface Op {
         CHAT_SETMESSAGEFILTER(arrayOf(STRING), arrayOf()),
         CHAT_GETMESSAGEFILTER(arrayOf(), arrayOf(STRING)),
 
-        GETWINDOWMODE(arrayOf(), arrayOf(INT)),
-        SETWINDOWMODE(arrayOf(INT), arrayOf()),
-        GETDEFAULTWINDOWMODE(arrayOf(), arrayOf(INT)),
-        SETDEFAULTWINDOWMODE(arrayOf(INT), arrayOf()),
+        GETWINDOWMODE(arrayOf(), arrayOf(WINDOWMODE)),
+        SETWINDOWMODE(arrayOf(WINDOWMODE), arrayOf()),
+        GETDEFAULTWINDOWMODE(arrayOf(), arrayOf(WINDOWMODE)),
+        SETDEFAULTWINDOWMODE(arrayOf(WINDOWMODE), arrayOf()),
 
         CAM_FORCEANGLE(arrayOf(INT, INT), arrayOf()),
         CAM_GETANGLE_XA(arrayOf(), arrayOf(INT)),

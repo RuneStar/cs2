@@ -410,6 +410,14 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
                 }
                 writer.append(s)
             }
+            Type.WINDOWMODE -> {
+                val s = when (n) {
+                    1 -> "fixed"
+                    2 -> "resizable"
+                    else -> error(n)
+                }
+                writer.append("^windowmode_").append(s)
+            }
             else -> {
                 when (n) {
                     -1 -> writer.append(null)

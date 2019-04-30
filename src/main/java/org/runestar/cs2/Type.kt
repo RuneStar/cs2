@@ -35,6 +35,7 @@ enum class Type(val desc: Char? = null) {
     CHATTYPE,
     PARAM,
     BIT,
+    WINDOWMODE,
     ;
 
     val nameLiteral: String = name.toLowerCase()
