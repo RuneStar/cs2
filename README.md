@@ -66,7 +66,7 @@ embedding it in a `string` literal.
 * `boolean` :
     * `true`, `false`
 * `coord` : a tile. Written as 5 numbers separated by underscores:
-the plane, the x and y ids of the region, then the x and y coordinates inside of the region
+the plane, the coordinates of the region, then the coordinates inside of the region
     * `0_1_2_3_4` 
 * `component` an interface component. Written as the interface, a colon, then the component
     * `poh_jewellery_box:frame`

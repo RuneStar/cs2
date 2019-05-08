@@ -251,12 +251,12 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
                 else -> {
                     val plane = n ushr 28
                     val x = (n ushr 14) and 0x3FFF
-                    val y = n and 0x3FFF
+                    val z = n and 0x3FFF
                     writer.append(plane).append('_')
                     writer.append((x / 64)).append('_')
-                    writer.append((y / 64)).append('_')
+                    writer.append((z / 64)).append('_')
                     writer.append((x and 0x3F)).append('_')
-                    writer.append((y and 0x3F))
+                    writer.append((z and 0x3F))
                 }
             }
             Type.GRAPHIC -> writeQuoteNamedInt(Loader.GRAPHIC_NAMES, n)
