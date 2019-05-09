@@ -564,7 +564,7 @@ public final class Opcodes {
             MEC_TEXTSIZE = 6694,
             MEC_CATEGORY = 6695,
             MEC_SPRITE = 6696,
-            _6697 = 6697,
+            WORLDMAP_ELEMENT = 6697,
             _6698 = 6698,
-            _6699 = 6699;
+            WORLDMAP_ELEMENTCOORD = 6699;
 }

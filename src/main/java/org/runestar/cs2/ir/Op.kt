@@ -704,9 +704,9 @@ internal interface Op {
         MEC_TEXTSIZE(arrayOf(MAPELEMENT), arrayOf(INT)),
         MEC_CATEGORY(arrayOf(MAPELEMENT), arrayOf(CATEGORY)),
         MEC_SPRITE(arrayOf(MAPELEMENT), arrayOf(INT)),
-        _6697(arrayOf(), arrayOf(MAPELEMENT)),
+        WORLDMAP_ELEMENT(arrayOf(), arrayOf(MAPELEMENT)),
         _6698(arrayOf(), arrayOf(Type.COORD)),
-        _6699(arrayOf(), arrayOf(Type.COORD)),
+        WORLDMAP_ELEMENTCOORD(arrayOf(), arrayOf(Type.COORD)),
         ;
 
         override val id: Int = namesReverse.getValue(name)
