@@ -22,6 +22,7 @@ enum class Type(val desc: Char? = null) {
     CHAR('z'),
     STRUCT('J'),
     SYNTH('P'),
+    MAPELEMENT('µ'),
 
     TYPE,
     COLOUR,
