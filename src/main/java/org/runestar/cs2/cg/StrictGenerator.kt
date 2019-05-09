@@ -2,6 +2,7 @@ package org.runestar.cs2.cg
 
 import org.runestar.cs2.Loader
 import org.runestar.cs2.Opcodes.*
+import org.runestar.cs2.Trigger
 import org.runestar.cs2.Type
 import org.runestar.cs2.cfa.Construct
 import org.runestar.cs2.ir.Element
@@ -10,7 +11,6 @@ import org.runestar.cs2.ir.Function
 import org.runestar.cs2.ir.Instruction
 import org.runestar.cs2.ir.list
 import org.runestar.cs2.names
-import org.runestar.cs2.util.strip
 
 fun StrictGenerator(writer: (scriptName: String, script: String) -> Unit) = object : StrictGenerator() {
     override fun write(scriptName: String, script: String) = writer(scriptName, script)
@@ -43,7 +43,7 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
     internal fun write() {
         writer.append("// ").append(f.id)
         writer.nextLine()
-        name = Loader.SCRIPT_NAMES.load(f.id) ?: "script${f.id}"
+        name = Loader.SCRIPT_NAMES.load(f.id)?.toString() ?: "script${f.id}"
         writer.append(name)
         if (f.arguments.isNotEmpty() || f.returnTypes.isNotEmpty()) {
             writer.append('(')
@@ -574,7 +574,8 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
             if (scriptName == null) {
                 writer.append("script").append(operation.scriptId)
             } else {
-                writer.append(scriptName.strip("[clientscript,", ']'))
+                require(scriptName.trigger == Trigger.clientscript) { "$scriptName must be a ${Trigger.clientscript}" }
+                writer.append(scriptName.name)
             }
             val triggerCount = (args.removeAt(args.lastIndex) as Element.Constant).value as Int
             val triggers = args.takeLast(triggerCount)
@@ -605,7 +606,8 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
         if (scriptName == null) {
             writer.append("script").append(invoke.scriptId)
         } else {
-            writer.append(scriptName.strip("[proc,", ']'))
+            require(scriptName.trigger == Trigger.proc) { "$scriptName must be a ${Trigger.proc}" }
+            writer.append(scriptName.name)
         }
         if (args.isNotEmpty()) {
             writer.append('(')

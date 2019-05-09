@@ -32,6 +32,17 @@ interface Loader<T : Any> {
 
         val PARAM_TYPES = readParamTypes()
 
+        private fun readScriptNames(): Loader<ScriptName> {
+            val map = HashMap<Int, ScriptName>()
+            this::class.java.getResource("script-names.tsv").forEachLine { line ->
+                val split = line.split('\t')
+                map[split[0].toInt()] = ScriptName.of(split[1])
+            }
+            return Mapping(map)
+        }
+
+        val SCRIPT_NAMES = readScriptNames()
+
         private fun readNames(fileName: String): Loader<String> {
             val map = HashMap<Int, String>()
             this::class.java.getResource(fileName).forEachLine { line ->
@@ -42,8 +53,6 @@ interface Loader<T : Any> {
         }
 
         val GRAPHIC_NAMES = readNames("graphic-names.tsv")
-
-        val SCRIPT_NAMES = readNames("script-names.tsv")
 
         val STAT_NAMES = readNames("stat-names.tsv")
 
