@@ -54,9 +54,9 @@ Arguments are also local variables which are initialized to the passed in values
 
 #### Types
 
-`null` is a valid value for all types except for `int` and `string`
+`null` is a valid value for all types except for `string`
 
-* `int` : a 32-bit signed integer. Written normally or as a hexadecimal literal
+* `int` : a 32-bit signed integer. Written normally or as a hexadecimal literal. `null` is equivalent to `-1`
     * `5`, `-10`, `0x7f7f7f`
 * `string` : a sequence of characters, can be empty.
 Written enclosed in quotes.
