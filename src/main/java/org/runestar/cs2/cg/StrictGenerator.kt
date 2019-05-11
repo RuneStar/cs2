@@ -474,7 +474,7 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
                 writer.append(')')
                 return
             }
-            GET_ARRAY_INT -> {
+            PUSH_ARRAY_INT -> {
                 writer.append("\$array")
                 writeExpr(args[0])
                 writer.append('(')
@@ -482,7 +482,7 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
                 writer.append(')')
                 return
             }
-            SET_ARRAY_INT -> {
+            POP_ARRAY_INT -> {
                 writer.append("\$array")
                 writeExpr(args[0])
                 writer.append('(')

@@ -43,7 +43,7 @@ interface Expression {
                 types: List<Type>,
                 override val scriptId: Int,
                 arguments: Expression
-        ) : Operation(types, Opcodes.INVOKE, arguments), Scripted {
+        ) : Operation(types, Opcodes.GOSUB_WITH_PARAMS, arguments), Scripted {
 
             override val scriptArguments: Expression get() = arguments
 

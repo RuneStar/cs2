@@ -56,7 +56,7 @@ internal interface Op {
 
     private object Invoke : Op {
 
-        override val id = Opcodes.INVOKE
+        override val id = Opcodes.GOSUB_WITH_PARAMS
 
         override fun translate(state: Interpreter.State): Instruction {
             val invokeId = state.intOperand
@@ -129,7 +129,7 @@ internal interface Op {
 
     private object GetArrayInt : Op {
 
-        override val id = Opcodes.GET_ARRAY_INT
+        override val id = Opcodes.PUSH_ARRAY_INT
 
         override fun translate(state: Interpreter.State): Instruction {
             val arrayId = state.intOperand
@@ -142,7 +142,7 @@ internal interface Op {
 
     private object SetArrayInt : Op {
 
-        override val id = Opcodes.SET_ARRAY_INT
+        override val id = Opcodes.POP_ARRAY_INT
 
         override fun translate(state: Interpreter.State): Instruction {
             val arrayId = state.intOperand
@@ -158,20 +158,20 @@ internal interface Op {
 
         PUSH_CONSTANT_INT,
         PUSH_CONSTANT_STRING,
-        GET_VAR,
-        SET_VAR,
-        GET_VARBIT,
-        SET_VARBIT,
+        PUSH_VAR,
+        POP_VAR,
+        PUSH_VARBIT,
+        POP_VARBIT,
         PUSH_INT_LOCAL,
         POP_INT_LOCAL,
         PUSH_STRING_LOCAL,
         POP_STRING_LOCAL,
         POP_INT_DISCARD,
         POP_STRING_DISCARD,
-        GET_VARC_INT,
-        SET_VARC_INT,
-        GET_VARC_STRING,
-        SET_VARC_STRING,
+        PUSH_VARC_INT,
+        POP_VARC_INT,
+        PUSH_VARC_STRING,
+        POP_VARC_STRING,
         ;
 
         override val id: Int = namesReverse.getValue(name)
@@ -180,20 +180,20 @@ internal interface Op {
             return when (this) {
                 PUSH_CONSTANT_INT -> Instruction.Assignment(state.push(INT, state.intOperand), state.operand(INT))
                 PUSH_CONSTANT_STRING -> Instruction.Assignment(state.push(STRING, state.stringOperand), state.operand(STRING))
-                GET_VAR -> Instruction.Assignment(state.push(INT), Element.Variable.Varp(state.intOperand, INT))
-                SET_VAR -> Instruction.Assignment(Element.Variable.Varp(state.intOperand, INT), state.pop(INT))
-                GET_VARBIT -> Instruction.Assignment(state.push(INT), Element.Variable.Varbit(state.intOperand, INT))
-                SET_VARBIT -> Instruction.Assignment(Element.Variable.Varbit(state.intOperand, INT), state.pop(INT))
+                PUSH_VAR -> Instruction.Assignment(state.push(INT), Element.Variable.Varp(state.intOperand, INT))
+                POP_VAR -> Instruction.Assignment(Element.Variable.Varp(state.intOperand, INT), state.pop(INT))
+                PUSH_VARBIT -> Instruction.Assignment(state.push(INT), Element.Variable.Varbit(state.intOperand, INT))
+                POP_VARBIT -> Instruction.Assignment(Element.Variable.Varbit(state.intOperand, INT), state.pop(INT))
                 PUSH_INT_LOCAL -> Instruction.Assignment(state.push(INT), Element.Variable.Local(state.intOperand, INT))
                 POP_INT_LOCAL -> Instruction.Assignment(Element.Variable.Local(state.intOperand, INT), state.pop(INT))
                 PUSH_STRING_LOCAL -> Instruction.Assignment(state.push(STRING), Element.Variable.Local(state.intOperand, STRING))
                 POP_STRING_LOCAL -> Instruction.Assignment(Element.Variable.Local(state.intOperand, STRING), state.pop(STRING))
                 POP_INT_DISCARD -> Instruction.Assignment(Expression(), state.pop(INT))
                 POP_STRING_DISCARD -> Instruction.Assignment(Expression(), state.pop(STRING))
-                GET_VARC_INT -> Instruction.Assignment(state.push(INT), Element.Variable.Varc(state.intOperand, INT))
-                SET_VARC_INT -> Instruction.Assignment(Element.Variable.Varc(state.intOperand, INT), state.pop(INT))
-                GET_VARC_STRING -> Instruction.Assignment(state.push(STRING), Element.Variable.Varc(state.intOperand, STRING))
-                SET_VARC_STRING -> Instruction.Assignment(Element.Variable.Varc(state.intOperand, STRING), state.pop(STRING))
+                PUSH_VARC_INT -> Instruction.Assignment(state.push(INT), Element.Variable.Varc(state.intOperand, INT))
+                POP_VARC_INT -> Instruction.Assignment(Element.Variable.Varc(state.intOperand, INT), state.pop(INT))
+                PUSH_VARC_STRING -> Instruction.Assignment(state.push(STRING), Element.Variable.Varc(state.intOperand, STRING))
+                POP_VARC_STRING -> Instruction.Assignment(Element.Variable.Varc(state.intOperand, STRING), state.pop(STRING))
             }
         }
     }
@@ -203,8 +203,8 @@ internal interface Op {
             val defs: Array<Type>,
             val o: Type? = null
     ) : Op {
-        GET_VARC_STRING_OLD(arrayOf(), arrayOf(STRING), INT),
-        SET_VARC_STRING_OLD(arrayOf(STRING), arrayOf(), INT),
+        PUSH_VARC_STRING_OLD(arrayOf(), arrayOf(STRING), INT),
+        POP_VARC_STRING_OLD(arrayOf(STRING), arrayOf(), INT),
         CC_CREATE(arrayOf(COMPONENT, IFTYPE, INT), arrayOf(), BOOLEAN),
         CC_DELETE(arrayOf(), arrayOf(), BOOLEAN),
         CC_DELETEALL(arrayOf(COMPONENT), arrayOf()),
