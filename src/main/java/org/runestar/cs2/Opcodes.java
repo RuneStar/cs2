@@ -292,7 +292,7 @@ public final class Opcodes {
             _3130 = 3130,
             _3131 = 3131,
             GETCANVASSIZE = 3132,
-            _3133 = 3133,
+            MOBILE_SETFPS = 3133,
             MOBILE_OPENSTORE = 3134,
             MOBILE_OPENSTORECATEGORY = 3135,
             _3136 = 3136,
