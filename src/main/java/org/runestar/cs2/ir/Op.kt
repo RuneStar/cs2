@@ -423,7 +423,7 @@ internal interface Op {
         GETCANVASSIZE(arrayOf(), arrayOf(INT, INT)),
         MOBILE_SETFPS(arrayOf(INT), arrayOf()),
         MOBILE_OPENSTORE(arrayOf(), arrayOf()),
-        MOBILE_OPENSTORECATEGORY(arrayOf(INT, INT), arrayOf()),
+        MOBILE_OPENSTORECATEGORY(arrayOf(INT, BOOLEAN), arrayOf()),
         _3136(arrayOf(BOOLEAN), arrayOf()),
         _3137(arrayOf(BOOLEAN), arrayOf()),
         _3138(arrayOf(), arrayOf()),
