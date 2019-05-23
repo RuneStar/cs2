@@ -513,7 +513,7 @@ public final class Opcodes {
             ON_MOBILE = 6518,
             CLIENTTYPE = 6519,
             _6520 = 6520,
-            _6521 = 6521,
+            MOBILE_KEYBOARDHIDE = 6521,
             _6522 = 6522,
             _6523 = 6523,
             BATTERYLEVEL = 6524,

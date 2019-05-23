@@ -652,7 +652,7 @@ internal interface Op {
         ON_MOBILE(arrayOf(), arrayOf(BOOLEAN)),
         CLIENTTYPE(arrayOf(), arrayOf(INT)),
         _6520(arrayOf(), arrayOf()),
-        _6521(arrayOf(), arrayOf()),
+        MOBILE_KEYBOARDHIDE(arrayOf(), arrayOf()),
         _6522(arrayOf(STRING, INT), arrayOf()),
         _6523(arrayOf(STRING, INT), arrayOf()),
         BATTERYLEVEL(arrayOf(), arrayOf(INT)),
