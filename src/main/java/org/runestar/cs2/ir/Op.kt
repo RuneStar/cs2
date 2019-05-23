@@ -655,9 +655,9 @@ internal interface Op {
         MOBILE_KEYBOARDHIDE(arrayOf(), arrayOf()),
         _6522(arrayOf(STRING, INT), arrayOf()),
         _6523(arrayOf(STRING, INT), arrayOf()),
-        BATTERYLEVEL(arrayOf(), arrayOf(INT)),
-        BATTERYCHARGING(arrayOf(), arrayOf(BOOLEAN)),
-        WIFIAVAILABLE(arrayOf(), arrayOf(BOOLEAN)),
+        MOBILE_BATTERYLEVEL(arrayOf(), arrayOf(INT)),
+        MOBILE_BATTERYCHARGING(arrayOf(), arrayOf(BOOLEAN)),
+        MOBILE_WIFIAVAILABLE(arrayOf(), arrayOf(BOOLEAN)),
 
         _6600(arrayOf(), arrayOf()),
         WORLDMAP_GETMAPNAME(arrayOf(MAPAREA), arrayOf(STRING)),
