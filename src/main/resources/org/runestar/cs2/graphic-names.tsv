@@ -1504,6 +1504,9 @@
 1609	orb_filler,11
 1610	orb_icon,6
 1611	mini_bottom
+1612	keyboard_key_left
+1613	keyboard_key_middle
+1614	keyboard_key_right
 1617	options_slider,8
 1622	options_slider,9
 1625	clickcircle_filled
