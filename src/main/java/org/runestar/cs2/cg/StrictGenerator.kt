@@ -285,8 +285,14 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
                     -2147483644 -> writer.append("event_opindex")
                     -2147483643 -> writer.append("event_comid")
                     -2147483641 -> writer.append("event_dragtargetid")
-                    -2147483640 -> writer.append("event_keytyped")
                     else -> writer.append(n)
+                }
+            }
+            Type.KEY -> {
+                when (n) {
+                    -1 -> writer.append(null)
+                    -2147483640 -> writer.append("event_keytyped")
+                    else -> writer.append("^key_").append(checkNotNull(Loader.KEY_NAMES.load(n)))
                 }
             }
             Type.CHAR -> {

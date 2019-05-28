@@ -63,6 +63,8 @@ interface Loader<T : Any> {
         val MAPAREA_NAMES = readNames("maparea-names.tsv")
 
         val PARAM_NAMES = readNames("param-names.tsv")
+
+        val KEY_NAMES = readNames("key-names.tsv")
     }
 }
 

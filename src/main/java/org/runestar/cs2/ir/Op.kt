@@ -815,7 +815,12 @@ internal interface Op {
                 args.add(Element.Constant(0))
             }
             for (i in s.lastIndex downTo 0) {
-                args.add(state.pop(Type.of(s[i])))
+                val t = if (state.peekValue() == -2147483640) {
+                    KEY
+                } else {
+                    Type.of(s[i])
+                }
+                args.add(state.pop(t))
             }
             val scriptId = state.popValue() as Int
             args.reverse()
