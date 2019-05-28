@@ -1,8 +1,5 @@
 package org.runestar.cs2
 
-import org.runestar.cs2.util.forEachLine
-import org.runestar.cs2.util.getResource
-
 interface Loader<T : Any> {
 
     fun load(id: Int): T?
@@ -21,37 +18,23 @@ interface Loader<T : Any> {
 
     companion object {
 
-        private fun readParamTypes(): Loader<Type> {
-            val map = HashMap<Int, Type>()
-            getResource("param-types.tsv").forEachLine { line ->
-                val split = line.split('\t')
-                val type = split[1].toInt()
-                map[split[0].toInt()] = if (type == 0) Type.INT else Type.of(type)
+        private fun <T : Any> readLoader(fileName: String, valueMapper: (String) -> T): Loader<T> {
+            val map = HashMap<Int, T>()
+            this::class.java.getResource(fileName).openStream().bufferedReader().use {
+                while (true) {
+                    val line = it.readLine() ?: break
+                    val tab = line.indexOf('\t')
+                    map[line.substring(0, tab).toInt()] = valueMapper(line.substring(tab + 1))
+                }
             }
             return Mapping(map)
         }
 
-        val PARAM_TYPES = readParamTypes()
+        private fun readNames(fileName: String): Loader<String> = readLoader(fileName) { it }
 
-        private fun readScriptNames(): Loader<ScriptName> {
-            val map = HashMap<Int, ScriptName>()
-            getResource("script-names.tsv").forEachLine { line ->
-                val split = line.split('\t')
-                map[split[0].toInt()] = ScriptName.of(split[1])
-            }
-            return Mapping(map)
-        }
+        val PARAM_TYPES = readLoader("param-types.tsv") { it.toInt().let { if (it == 0) Type.INT else Type.of(it) } }
 
-        val SCRIPT_NAMES = readScriptNames()
-
-        private fun readNames(fileName: String): Loader<String> {
-            val map = HashMap<Int, String>()
-            getResource(fileName).forEachLine { line ->
-                val split = line.split('\t')
-                map[split[0].toInt()] = split[1]
-            }
-            return Mapping(map)
-        }
+        val SCRIPT_NAMES = readLoader("script-names.tsv") { ScriptName.of(it) }
 
         val GRAPHIC_NAMES = readNames("graphic-names.tsv")
 
