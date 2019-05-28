@@ -18,3 +18,5 @@ inline fun URL.forEachLine(action: (String) -> Unit) {
         }
     }
 }
+
+fun Any.getResource(name: String): URL = javaClass.getResource(name)

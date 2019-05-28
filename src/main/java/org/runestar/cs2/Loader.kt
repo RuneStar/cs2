@@ -1,6 +1,7 @@
 package org.runestar.cs2
 
 import org.runestar.cs2.util.forEachLine
+import org.runestar.cs2.util.getResource
 
 interface Loader<T : Any> {
 
@@ -22,7 +23,7 @@ interface Loader<T : Any> {
 
         private fun readParamTypes(): Loader<Type> {
             val map = HashMap<Int, Type>()
-            this::class.java.getResource("param-types.tsv").forEachLine { line ->
+            getResource("param-types.tsv").forEachLine { line ->
                 val split = line.split('\t')
                 val type = split[1].toInt()
                 map[split[0].toInt()] = if (type == 0) Type.INT else Type.of(type)
@@ -34,7 +35,7 @@ interface Loader<T : Any> {
 
         private fun readScriptNames(): Loader<ScriptName> {
             val map = HashMap<Int, ScriptName>()
-            this::class.java.getResource("script-names.tsv").forEachLine { line ->
+            getResource("script-names.tsv").forEachLine { line ->
                 val split = line.split('\t')
                 map[split[0].toInt()] = ScriptName.of(split[1])
             }
@@ -45,7 +46,7 @@ interface Loader<T : Any> {
 
         private fun readNames(fileName: String): Loader<String> {
             val map = HashMap<Int, String>()
-            this::class.java.getResource(fileName).forEachLine { line ->
+            getResource(fileName).forEachLine { line ->
                 val split = line.split('\t')
                 map[split[0].toInt()] = split[1]
             }
