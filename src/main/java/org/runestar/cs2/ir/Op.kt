@@ -1,5 +1,6 @@
 package org.runestar.cs2.ir
 
+import org.runestar.cs2.EventProperty
 import org.runestar.cs2.Opcodes
 import org.runestar.cs2.Type
 import org.runestar.cs2.Type.*
@@ -815,12 +816,9 @@ internal interface Op {
                 args.add(Element.Constant(0))
             }
             for (i in s.lastIndex downTo 0) {
-                val t = if (state.peekValue() == -2147483640) {
-                    KEY
-                } else {
-                    Type.of(s[i])
-                }
-                args.add(state.pop(t))
+                val ep = state.peekValue()?.let { EventProperty.of(it) }
+                val pop = state.pop(Type.of(s[i]))
+                args.add(ep ?: pop)
             }
             val scriptId = state.popValue() as Int
             args.reverse()

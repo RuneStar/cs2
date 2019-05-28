@@ -1,5 +1,6 @@
 package org.runestar.cs2.cg
 
+import org.runestar.cs2.EventProperty
 import org.runestar.cs2.Loader
 import org.runestar.cs2.Opcodes.*
 import org.runestar.cs2.Trigger
@@ -202,6 +203,7 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
 
     private fun writeExpr(expr: Expression) {
         when (expr) {
+            is EventProperty -> writer.append(expr.literal)
             is Element.Variable -> writeVar(expr)
             is Element.Constant -> writeConst(expr)
             is Expression.Operation.AddHook -> writeAddHook(expr)
@@ -223,7 +225,7 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
 
     private fun writeConst(expr: Element.Constant) {
         if (expr.type == Type.STRING) {
-            writeConstantString(expr.value as String)
+            writer.append('"').append(expr.value as String).append('"')
         } else {
             writeConstantInt(expr.value as Int, expr.type)
         }
@@ -235,8 +237,6 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
             Type.COMPONENT -> {
                 when (n) {
                     -1 -> writer.append(null)
-                    -2147483645 -> writer.append("event_com")
-                    -2147483642 -> writer.append("event_dragtarget")
                     else -> writer.append(n ushr 16).append(':').append(n and 0xFFFF)
                 }
             }
@@ -280,24 +280,17 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
                 when (n) {
                     Int.MAX_VALUE -> writer.append("^max_32bit_int")
                     Int.MIN_VALUE -> writer.append("^min_32bit_int")
-                    -2147483647 -> writer.append("event_mousex")
-                    -2147483646 -> writer.append("event_mousey")
-                    -2147483644 -> writer.append("event_opindex")
-                    -2147483643 -> writer.append("event_comid")
-                    -2147483641 -> writer.append("event_dragtargetid")
                     else -> writer.append(n)
                 }
             }
             Type.KEY -> {
                 when (n) {
                     -1 -> writer.append(null)
-                    -2147483640 -> writer.append("event_keytyped")
                     else -> writer.append("^key_").append(checkNotNull(Loader.KEY_NAMES.load(n)))
                 }
             }
             Type.CHAR -> {
                 when (n) {
-                    -2147483639 -> writer.append("event_keypressed")
                     -1 -> writer.append(null)
                     else -> error(n)
                 }
@@ -456,13 +449,6 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
             writer.append(n)
         } else {
             writer.append(name)
-        }
-    }
-
-    private fun writeConstantString(s: String) {
-        when (s) {
-            "event_opbase" -> writer.append(s)
-            else -> writer.append('"').append(s).append('"')
         }
     }
 
