@@ -363,42 +363,10 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
             Type.INV -> writeNamedInt(Loader.INV_NAMES, n)
             Type.MAPAREA -> writeNamedInt(Loader.MAPAREA_NAMES, n)
             Type.CHATTYPE -> {
-                if (n == -1) {
-                    writer.append("-1")
-                    return
+                when (n) {
+                    -1 -> writer.append("-1")
+                    else -> writer.append("^chattype_").append(checkNotNull(Loader.CHATTYPE_NAMES.load(n)))
                 }
-                val s = when(n) {
-                    0 -> "gamemessage"
-                    1 -> "modchat"
-                    2 -> "publicchat"
-                    3 -> "privatechat"
-                    4 -> "engine"
-                    5 -> "loginlogoutnotification"
-                    6 -> "privatechatout"
-                    7 -> "modprivatechat"
-                    9 -> "friendschat"
-                    11 -> "friendschatnotification"
-                    14 -> "broadcast"
-                    26 -> "snapshotfeedback"
-                    27 -> "obj_examine"
-                    28 -> "npc_examine"
-                    29 -> "loc_examine"
-                    30 -> "friendnotification"
-                    31 -> "ignorenotification"
-                    90 -> "autotyper"
-                    91 -> "modautotyper"
-                    99 -> "console"
-                    101 -> "tradereq"
-                    102 -> "trade"
-                    103 -> "chalreq_trade"
-                    104 -> "chalreq_friendschat"
-                    105 -> "spam"
-                    106 -> "playerrelated"
-                    107 -> "10sectimeout"
-                    108 -> "108"
-                    else -> error(n)
-                }
-                writer.append("^chattype_").append(s)
             }
             Type.PARAM -> writeNamedInt(Loader.PARAM_NAMES, n)
             Type.BIT -> {

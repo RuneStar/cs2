@@ -65,6 +65,8 @@ interface Loader<T : Any> {
         val PARAM_NAMES = readNames("param-names.tsv")
 
         val KEY_NAMES = readNames("key-names.tsv")
+
+        val CHATTYPE_NAMES = readNames("chattype-names.tsv")
     }
 }
 
