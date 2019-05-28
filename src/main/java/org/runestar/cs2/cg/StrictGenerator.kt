@@ -232,39 +232,33 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
     }
 
     private fun writeConstantInt(n: Int, type: Type) {
+        if (n == -1 && type != Type.INT) {
+            writer.append(null)
+            return
+        }
         when (type) {
             Type.TYPE -> writer.append(Type.of(n).nameLiteral)
-            Type.COMPONENT -> {
-                when (n) {
-                    -1 -> writer.append(null)
-                    else -> writer.append(n ushr 16).append(':').append(n and 0xFFFF)
-                }
-            }
+            Type.COMPONENT -> writer.append(n ushr 16).append(':').append(n and 0xFFFF)
             Type.BOOLEAN -> when (n) {
                 0 -> writer.append(false)
                 1 -> writer.append(true)
-                -1 -> writer.append(null)
                 else -> error(n)
             }
-            Type.COORD -> when (n) {
-                -1 -> writer.append(null)
-                else -> {
-                    val plane = n ushr 28
-                    val x = (n ushr 14) and 0x3FFF
-                    val z = n and 0x3FFF
-                    writer.append(plane).append('_')
-                    writer.append((x / 64)).append('_')
-                    writer.append((z / 64)).append('_')
-                    writer.append((x and 0x3F)).append('_')
-                    writer.append((z and 0x3F))
-                }
+            Type.COORD ->  {
+                val plane = n ushr 28
+                val x = (n ushr 14) and 0x3FFF
+                val z = n and 0x3FFF
+                writer.append(plane).append('_')
+                writer.append((x / 64)).append('_')
+                writer.append((z / 64)).append('_')
+                writer.append((x and 0x3F)).append('_')
+                writer.append((z and 0x3F))
             }
             Type.GRAPHIC -> writeQuoteNamedInt(Loader.GRAPHIC_NAMES, n)
             Type.FONTMETRICS -> writeNamedInt(Loader.GRAPHIC_NAMES, n)
             Type.COLOUR -> {
-                if (n < -1) error(n)
+                if (n shr 24 != 0) error(n)
                 when (n) {
-                    -1 -> writer.append("-1")
                     0xFF0000 -> writer.append("^red")
                     0x00FF00 -> writer.append("^green")
                     0x0000FF -> writer.append("^blue")
@@ -283,18 +277,8 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
                     else -> writer.append(n)
                 }
             }
-            Type.KEY -> {
-                when (n) {
-                    -1 -> writer.append(null)
-                    else -> writer.append("^key_").append(checkNotNull(Loader.KEY_NAMES.load(n)))
-                }
-            }
-            Type.CHAR -> {
-                when (n) {
-                    -1 -> writer.append(null)
-                    else -> error(n)
-                }
-            }
+            Type.KEY -> writer.append("^key_").append(checkNotNull(Loader.KEY_NAMES.load(n)))
+            Type.CHAR -> error(n)
             Type.STAT -> writeNamedInt(Loader.STAT_NAMES, n)
             Type.OBJ, Type.NAMEDOBJ -> writeNamedInt(Loader.OBJ_NAMES, n)
             Type.IFTYPE -> {
@@ -362,12 +346,7 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
             Type.VAR -> writer.append("var").append(n)
             Type.INV -> writeNamedInt(Loader.INV_NAMES, n)
             Type.MAPAREA -> writeNamedInt(Loader.MAPAREA_NAMES, n)
-            Type.CHATTYPE -> {
-                when (n) {
-                    -1 -> writer.append("-1")
-                    else -> writer.append("^chattype_").append(checkNotNull(Loader.CHATTYPE_NAMES.load(n)))
-                }
-            }
+            Type.CHATTYPE -> writer.append("^chattype_").append(checkNotNull(Loader.CHATTYPE_NAMES.load(n)))
             Type.PARAM -> writeNamedInt(Loader.PARAM_NAMES, n)
             Type.BIT -> {
                 val s = when (n) {
@@ -385,20 +364,11 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
                 }
                 writer.append("^windowmode_").append(s)
             }
-            else -> {
-                when (n) {
-                    -1 -> writer.append(null)
-                    else -> writer.append(n)
-                }
-            }
+            else -> writer.append(n)
         }
     }
 
     private fun writeQuoteNamedInt(nameLoader: Loader<String>, n: Int) {
-        if (n == -1) {
-            writer.append(null)
-            return
-        }
         val name = nameLoader.load(n)
         if (name == null) {
             writer.append(n)
@@ -408,10 +378,6 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
     }
 
     private fun writeNamedInt(nameLoader: Loader<String>, n: Int) {
-        if (n == -1) {
-            writer.append(null)
-            return
-        }
         val name = nameLoader.load(n)
         if (name == null) {
             writer.append(n)
