@@ -1,6 +1,5 @@
 package org.runestar.cs2.ir
 
-import org.runestar.cs2.EventProperty
 import org.runestar.cs2.Opcodes
 import org.runestar.cs2.Type
 import org.runestar.cs2.Type.*

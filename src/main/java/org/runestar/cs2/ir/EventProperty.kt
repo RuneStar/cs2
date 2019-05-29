@@ -1,6 +1,6 @@
-package org.runestar.cs2
+package org.runestar.cs2.ir
 
-import org.runestar.cs2.ir.Element
+import org.runestar.cs2.Type
 
 enum class EventProperty(val magic: Any, private val _type: Type) : Element {
 

@@ -1,6 +1,6 @@
 package org.runestar.cs2.cg
 
-import org.runestar.cs2.EventProperty
+import org.runestar.cs2.ir.EventProperty
 import org.runestar.cs2.Loader
 import org.runestar.cs2.Opcodes.*
 import org.runestar.cs2.Trigger
