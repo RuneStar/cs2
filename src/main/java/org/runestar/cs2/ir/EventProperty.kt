@@ -12,8 +12,8 @@ enum class EventProperty(val magic: Any, private val _type: Type) : Element {
     comid(Integer.MIN_VALUE + 5, Type.INT),
     dragtarget(Integer.MIN_VALUE + 6, Type.COMPONENT),
     dragtargetid(Integer.MIN_VALUE + 7, Type.INT),
-    keytyped(Integer.MIN_VALUE + 8, Type.KEY),
-    keypressed(Integer.MIN_VALUE + 9, Type.CHAR),
+    keypressed(Integer.MIN_VALUE + 8, Type.KEY),
+    keytyped(Integer.MIN_VALUE + 9, Type.CHAR),
     ;
 
     override var type: Type
