@@ -90,10 +90,14 @@ internal class Interpreter(
 
         fun pop(count: Int): List<Element.Variable.Stack> = stack.pop(count).map { it.toExpression() }
 
+        fun pop(types: List<Type>): List<Element.Variable.Stack> = stack.pop(types.size).mapIndexed { i, x -> x.toExpression(types[i])}
+
         fun push(type: Type, value: Any? = null): Element.Variable.Stack {
             val v = StackValue(value, type, ++stackIdCounter)
             stack.push(v)
             return v.toExpression()
         }
+
+        fun push(types: List<Type>): List<Element.Variable.Stack> = types.map { push(it) }
     }
 }

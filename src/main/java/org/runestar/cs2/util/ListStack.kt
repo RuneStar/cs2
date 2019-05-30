@@ -14,13 +14,7 @@ internal data class ListStack<T : Any>(
 
     fun pop(): T = delegate.removeAt(delegate.lastIndex)
 
-    fun popAll(): MutableList<T> = delegate.toMutableList().also { delegate.clear() }
+    fun popAll(): List<T> = delegate.toMutableList().also { delegate.clear() }
 
-    fun pop(count: Int): MutableList<T> {
-        val l = MutableList(count) {
-            pop()
-        }
-        l.reverse()
-        return l
-    }
+    fun pop(count: Int): List<T> = MutableList(count) { pop() }.also { it.reverse() }
 }
