@@ -11,6 +11,7 @@ import org.runestar.cs2.ir.Expression
 import org.runestar.cs2.ir.Function
 import org.runestar.cs2.ir.Instruction
 import org.runestar.cs2.ir.list
+import org.runestar.cs2.loadNotNull
 import org.runestar.cs2.names
 
 fun StrictGenerator(writer: (scriptName: String, script: String) -> Unit) = object : StrictGenerator() {
@@ -277,7 +278,7 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
                     else -> writer.append(n)
                 }
             }
-            Type.KEY -> writer.append("^key_").append(checkNotNull(Loader.KEY_NAMES.load(n)))
+            Type.KEY -> writer.append("^key_").append(Loader.KEY_NAMES.loadNotNull(n))
             Type.CHAR -> error(n)
             Type.STAT -> writeNamedInt(Loader.STAT_NAMES, n)
             Type.OBJ, Type.NAMEDOBJ -> writeNamedInt(Loader.OBJ_NAMES, n)
@@ -346,7 +347,7 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
             Type.VAR -> writer.append("var").append(n)
             Type.INV -> writeNamedInt(Loader.INV_NAMES, n)
             Type.MAPAREA -> writeNamedInt(Loader.MAPAREA_NAMES, n)
-            Type.CHATTYPE -> writer.append("^chattype_").append(checkNotNull(Loader.CHATTYPE_NAMES.load(n)))
+            Type.CHATTYPE -> writer.append("^chattype_").append(Loader.CHATTYPE_NAMES.loadNotNull(n))
             Type.PARAM -> writeNamedInt(Loader.PARAM_NAMES, n)
             Type.BIT -> {
                 val s = when (n) {

@@ -3,6 +3,7 @@ package org.runestar.cs2.ir
 import org.runestar.cs2.Opcodes
 import org.runestar.cs2.Type
 import org.runestar.cs2.Type.*
+import org.runestar.cs2.loadNotNull
 import org.runestar.cs2.namesReverse
 
 internal interface Op {
@@ -60,7 +61,7 @@ internal interface Op {
 
         override fun translate(state: Interpreter.State): Instruction {
             val invokeId = state.intOperand
-            val invoked = checkNotNull(state.scriptLoader.load(invokeId))
+            val invoked = state.scripts.loadNotNull(invokeId)
             val args = state.pop(invoked.intArgumentCount + invoked.stringArgumentCount)
             val defs = state.push(invoked.returnTypes)
             return Instruction.Assignment(Expression(defs), Expression.Operation.Invoke(invoked.returnTypes, invokeId, Expression(args)))
@@ -836,7 +837,7 @@ internal interface Op {
             val paramKeyId = state.peekValue() as Int
             val param = state.pop(PARAM)
             val rec = state.pop(type)
-            val paramType = checkNotNull(state.paramTypeLoader.load(paramKeyId))
+            val paramType = state.paramTypes.loadNotNull(paramKeyId)
             return Instruction.Assignment(state.push(paramType), Expression.Operation(listOf(paramType), id, Expression(rec, param)))
         }
     }

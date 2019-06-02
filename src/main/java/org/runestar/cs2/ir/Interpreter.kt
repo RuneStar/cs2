@@ -3,6 +3,7 @@ package org.runestar.cs2.ir
 import org.runestar.cs2.Loader
 import org.runestar.cs2.Script
 import org.runestar.cs2.Type
+import org.runestar.cs2.loadNotNull
 import org.runestar.cs2.util.Chain
 import org.runestar.cs2.util.HashChain
 import org.runestar.cs2.util.ListStack
@@ -14,7 +15,7 @@ internal class Interpreter(
 ) {
 
     fun interpret(id: Int): Function {
-        val script = checkNotNull(scriptLoader.load(id))
+        val script = scripts.loadNotNull(id)
         return makeFunction(id, script, interpretInstructions(script))
     }
 
