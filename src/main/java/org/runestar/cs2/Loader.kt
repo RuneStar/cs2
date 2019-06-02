@@ -63,6 +63,6 @@ fun <T : Any> Loader<T>.caching(): Loader<T> = object : Loader<T> {
     override fun load(id: Int): T? = cache[id] ?: if (id in cache) null else this@caching.load(id).also { cache[id] = it }
 }
 
-fun <T : Any> Loader<T>.withIds(keys: Set<Int>): Loader.Keyed<T> = object : Loader.Keyed<T>, Loader<T> by this {
-    override val ids get() = keys
+fun <T : Any> Loader<T>.withIds(ids: Set<Int>): Loader.Keyed<T> = object : Loader.Keyed<T>, Loader<T> by this {
+    override val ids get() = ids
 }

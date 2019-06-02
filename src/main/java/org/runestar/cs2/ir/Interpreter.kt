@@ -9,8 +9,8 @@ import org.runestar.cs2.util.ListStack
 import org.runestar.cs2.util.toUnsignedInt
 
 internal class Interpreter(
-        val scriptLoader: Loader<Script>,
-        val paramTypeLoader: Loader<Type>
+        val scripts: Loader<Script>,
+        val paramTypes: Loader<Type>
 ) {
 
     fun interpret(id: Int): Function {
@@ -19,7 +19,7 @@ internal class Interpreter(
     }
 
     private fun interpretInstructions(script: Script): Array<Instruction> {
-        val state = State(scriptLoader, paramTypeLoader, script)
+        val state = State(scripts, paramTypes, script)
         return Array(script.opcodes.size) {
             val insn = Op.translate(state)
             state.pc++
@@ -57,8 +57,8 @@ internal class Interpreter(
     }
 
     internal class State(
-            val scriptLoader: Loader<Script>,
-            val paramTypeLoader: Loader<Type>,
+            val scripts: Loader<Script>,
+            val paramTypes: Loader<Type>,
             private val script: Script
     ) {
 
