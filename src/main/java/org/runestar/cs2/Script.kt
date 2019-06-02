@@ -1,5 +1,6 @@
 package org.runestar.cs2
 
+import org.runestar.cs2.Opcodes.*
 import org.runestar.cs2.util.toUnsignedInt
 import java.nio.ByteBuffer
 
@@ -8,8 +9,7 @@ data class Script(
         val localStringCount: Int,
         val intArgumentCount: Int,
         val stringArgumentCount: Int,
-        val intOperands: IntArray,
-        val stringOperands: Array<String?>,
+        val operands: Array<Any>,
         val opcodes: ShortArray,
         val switches: Array<Map<Int, Int>>
 ) {
@@ -20,8 +20,8 @@ data class Script(
         out@
         while (i >= 0) {
             when (opcodes[i--].toInt()) {
-                Opcodes.PUSH_CONSTANT_INT -> ts.add(Type.INT)
-                Opcodes.PUSH_CONSTANT_STRING -> ts.add(Type.STRING)
+                PUSH_CONSTANT_INT -> ts.add(Type.INT)
+                PUSH_CONSTANT_STRING -> ts.add(Type.STRING)
                 else -> break@out
             }
         }
@@ -34,15 +34,16 @@ data class Script(
         fun read(bytes: ByteArray): Script = read(ByteBuffer.wrap(bytes))
 
         fun read(buffer: ByteBuffer): Script {
+            check(buffer.get() == 0.toByte())
             val start = buffer.position()
-            val end = buffer.limit()
-            val mid = end - 2 - buffer.getShort(end - 2) - 12
-            buffer.position(mid)
+            buffer.position(buffer.limit() - buffer.getShort(buffer.limit() - 2) - 14)
+
             val instructionCount = buffer.int
             val localIntCount = buffer.short.toUnsignedInt()
             val localStringCount = buffer.short.toUnsignedInt()
             val intArgumentCount = buffer.short.toUnsignedInt()
             val stringArgumentCount = buffer.short.toUnsignedInt()
+
             val switches = Array<Map<Int, Int>>(buffer.get().toUnsignedInt()) {
                 val caseCount = buffer.short.toUnsignedInt()
                 val switch = LinkedHashMap<Int, Int>(caseCount)
@@ -53,34 +54,27 @@ data class Script(
             }
 
             buffer.position(start)
-            buffer.readString()
 
             val opcodes = ShortArray(instructionCount)
-            val intOperands = IntArray(instructionCount)
-            val stringOperands = arrayOfNulls<String>(instructionCount)
-
-            var i = 0
-            while (buffer.position() < mid) {
+            val operands = Array<Any>(instructionCount) {
                 val opcodeShort = buffer.short
-                opcodes[i] = opcodeShort
+                opcodes[it] = opcodeShort
                 val opcode = opcodeShort.toUnsignedInt()
-                if (opcode == 3) {
-                    stringOperands[i] = buffer.readString()
-                } else if (opcode < 100 && opcode != 21 && opcode != 38 && opcode != 39) {
-                    intOperands[i] = buffer.int
-                } else {
-                    intOperands[i] = buffer.get().toUnsignedInt()
+                when {
+                    opcode >= 100 || opcode == RETURN || opcode == POP_INT_DISCARD || opcode == POP_STRING_DISCARD -> buffer.get().toUnsignedInt()
+                    opcode == PUSH_CONSTANT_STRING -> buffer.readString()
+                    else -> buffer.int
                 }
-                i++
             }
+
+            buffer.position(buffer.limit())
 
             return Script(
                     localIntCount,
                     localStringCount,
                     intArgumentCount,
                     stringArgumentCount,
-                    intOperands,
-                    stringOperands,
+                    operands,
                     opcodes,
                     switches
             )

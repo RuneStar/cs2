@@ -73,9 +73,9 @@ internal class Interpreter(
 
         val opcode: Int get() = script.opcodes[pc].toUnsignedInt()
 
-        val intOperand: Int get() = script.intOperands[pc]
+        val intOperand: Int get() = script.operands[pc] as Int
 
-        val stringOperand: String? get() = script.stringOperands[pc]
+        val stringOperand: String get() = script.operands[pc] as String
 
         fun operand(type: Type): Element.Constant = Element.Constant(if (type == Type.STRING) stringOperand else intOperand, type)
 
