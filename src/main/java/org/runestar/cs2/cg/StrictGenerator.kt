@@ -281,7 +281,11 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
             Type.KEY -> writer.append("^key_").append(Loader.KEY_NAMES.loadNotNull(n))
             Type.CHAR -> error(n)
             Type.STAT -> writeNamedInt(Loader.STAT_NAMES, n)
-            Type.OBJ, Type.NAMEDOBJ -> writeNamedInt(Loader.OBJ_NAMES, n)
+            Type.OBJ, Type.NAMEDOBJ -> {
+                val name = Loader.OBJ_NAMES.load(n)
+                if (name != null) writer.append(name).append('_')
+                writer.append(n)
+            }
             Type.IFTYPE -> {
                 val s = when (n) {
                     3 -> "rectangle"
