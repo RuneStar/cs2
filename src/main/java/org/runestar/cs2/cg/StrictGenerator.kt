@@ -365,6 +365,11 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
                 }
                 writer.append("^windowmode_").append(s)
             }
+            Type.LOC -> {
+                val name = Loader.LOC_NAMES.load(n)
+                if (name != null) writer.append(name).append('_')
+                writer.append(n)
+            }
             else -> writer.append(n)
         }
     }
