@@ -21,16 +21,22 @@ fun StrictGenerator(writer: (scriptName: String, script: String) -> Unit) = obje
 abstract class StrictGenerator : Generator {
 
     final override fun write(f: Function, root: Construct) {
-        val buf = StringBuilder()
-        val state = State(buf, f, root)
-        state.write()
-        write(state.name, buf.toString())
+        val name = Loader.SCRIPT_NAMES.load(f.id)?.toString() ?: "script${f.id}"
+        write(name, Writer(name, f, root).write())
     }
 
     abstract fun write(scriptName: String, script: String)
 }
 
-private class State(buf: StringBuilder, private val f: Function, private val root: Construct) {
+private class Writer(
+        private val name: String,
+        private val f: Function,
+        private val root: Construct
+) {
+
+    private val buf = StringBuilder()
+
+    private var indents = 0
 
     private var inCalc = false
 
@@ -38,254 +44,245 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
 
     private val definedLocalVariables = HashSet<Element.Variable.Local>(f.arguments)
 
-    private val writer = LineWriter(buf)
-
-    lateinit var name: String
-
-    internal fun write() {
-        writer.append("// ").append(f.id)
-        writer.nextLine()
-        name = Loader.SCRIPT_NAMES.load(f.id)?.toString() ?: "script${f.id}"
-        writer.append(name)
-        if (f.arguments.isNotEmpty() || f.returnTypes.isNotEmpty()) {
-            writer.append('(')
-            f.arguments.joinTo(writer) { "${it.type.typeLiteral} \$${it.type.nameLiteral}${it.id}" }
-            writer.append(')')
+    fun write(): String {
+        append("// ").append(f.id).nextLine()
+        append(name)
+        if (f.arguments.isNotEmpty()) {
+            append('(')
+            val args = f.arguments.iterator()
+            appendArg(args.next())
+            for (arg in args) {
+                append(", ").appendArg(arg)
+            }
+            append(')')
+        } else if (f.returnTypes.isNotEmpty()) {
+            append("()")
         }
         if (f.returnTypes.isNotEmpty()) {
-            writer.append('(')
-            f.returnTypes.joinTo(writer) { it.typeLiteral }
-            writer.append(')')
+            append('(')
+            val returnTypes = f.returnTypes.iterator()
+            append(returnTypes.next().typeLiteral)
+            for (returnType in returnTypes) {
+                append(", ").append(returnType.typeLiteral)
+            }
+            append(')')
         }
-        writeConstruct(root)
-        if (endingLine) writer.nextLine()
+        appendConstruct(root)
+        if (endingLine) nextLine()
+        return buf.toString()
     }
 
-    private fun writeConstruct(construct: Construct) {
+    private fun appendArg(arg: Element.Variable.Local) {
+        append(arg.type.typeLiteral).append(" $").append(arg.type.nameLiteral).append(arg.id)
+    }
+
+    private fun appendConstruct(construct: Construct) {
         when (construct) {
-            is Construct.Seq -> writeSeq(construct)
-            is Construct.If -> writeIf(construct)
-            is Construct.While -> writeWhile(construct)
-            is Construct.Switch -> writeSwitch(construct)
+            is Construct.Seq -> appendSeq(construct)
+            is Construct.If -> appendIf(construct)
+            is Construct.While -> appendWhile(construct)
+            is Construct.Switch -> appendSwitch(construct)
         }
     }
 
-    private fun writeSeq(construct: Construct.Seq) {
+    private fun appendSeq(construct: Construct.Seq) {
         for (insn in construct.instructions) {
-            writer.nextLine()
-            writeInsn(insn)
+            nextLine()
+            appendInsn(insn)
         }
-        construct.next?.let { writeConstruct(it) }
+        construct.next?.let { appendConstruct(it) }
     }
 
-    private fun writeIf(construct: Construct.If) {
-        writer.nextLine()
+    private fun appendIf(construct: Construct.If) {
+        nextLine()
         val branches = construct.branches.iterator()
         val if0 = branches.next()
-        writer.append("if ")
-        writeExpr(if0.condition)
-        writer.append(" {")
-        writer.indents++
-        writeConstruct(if0.body)
-        writer.indents--
-        writer.nextLine()
-        writer.append('}')
+        append("if ").appendExpr(if0.condition).append(" {")
+        indent {
+            appendConstruct(if0.body)
+        }
+        nextLine()
+        append('}')
         for (ifn in branches) {
-            writer.append(" else if ")
-            writeExpr(ifn.condition)
-            writer.append(" {")
-            writer.indents++
-            writeConstruct(ifn.body)
-            writer.indents--
-            writer.nextLine()
-            writer.append('}')
+            append(" else if ").appendExpr(ifn.condition).append(" {")
+            indent {
+                appendConstruct(ifn.body)
+            }
+            nextLine()
+            append('}')
         }
         val elze = construct.elze
         if (elze != null) {
-            writer.append(" else {")
-            writer.indents++
-            writeConstruct(elze)
-            writer.indents--
-            writer.nextLine()
-            writer.append('}')
-        }
-        construct.next?.let { writeConstruct(it) }
-    }
-
-    private fun writeWhile(construct: Construct.While) {
-        writer.nextLine()
-        writer.append("while ")
-        writeExpr(construct.condition)
-        writer.append(" {")
-        writer.indents++
-        writeConstruct(construct.body)
-        writer.indents--
-        writer.nextLine()
-        writer.append('}')
-        construct.next?.let { writeConstruct(it) }
-    }
-
-    private fun writeSwitch(construct: Construct.Switch) {
-        writer.nextLine()
-        val type = construct.expression.types.single()
-        writer.append("switch_").append(type.typeLiteral).append(" (")
-        writeExpr(construct.expression)
-        writer.append(") {")
-        for ((ns, body) in construct.cases) {
-            writer.indents++
-            writer.nextLine()
-            val itr = ns.iterator()
-            writer.append("case ")
-            writeConstantInt(itr.next(), type)
-            while (itr.hasNext()) {
-                writer.append(", ")
-                writeConstantInt(itr.next(), type)
+            append(" else {")
+            indent {
+                appendConstruct(elze)
             }
-            writer.append(" :")
-            writer.indents++
-            writeConstruct(body)
-            writer.indents--
-            writer.indents--
+            nextLine()
+            append('}')
+        }
+        construct.next?.let { appendConstruct(it) }
+    }
+
+    private fun appendWhile(construct: Construct.While) {
+        nextLine()
+        append("while ").appendExpr(construct.condition).append(" {")
+        indent {
+            appendConstruct(construct.body)
+        }
+        nextLine()
+        append('}')
+        construct.next?.let { appendConstruct(it) }
+    }
+
+    private fun appendSwitch(construct: Construct.Switch) {
+        nextLine()
+        val type = construct.expression.types.single()
+        append("switch_").append(type.typeLiteral).append(" (").appendExpr(construct.expression).append(") {")
+        for ((ns, body) in construct.cases) {
+            indent {
+                nextLine()
+                val cases = ns.iterator()
+                append("case ").appendConstantInt(cases.next(), type)
+                for (case in cases) {
+                    append(", ").appendConstantInt(case, type)
+                }
+                append(" :")
+                indent {
+                    appendConstruct(body)
+                }
+            }
         }
         val default = construct.default
         if (default != null) {
-            writer.indents++
-            writer.nextLine()
-            writer.append("case default :")
-            writer.indents++
-            writeConstruct(default)
-            writer.indents--
-            writer.indents--
+            indent {
+                nextLine()
+                append("case default :")
+                indent {
+                    appendConstruct(default)
+                }
+            }
         }
-        writer.nextLine()
-        writer.append('}')
-        construct.next?.let { writeConstruct(it) }
+        nextLine()
+        append('}')
+        construct.next?.let { appendConstruct(it) }
     }
 
-    private fun writeInsn(insn: Instruction) {
+    private fun appendInsn(insn: Instruction) {
         when (insn) {
-            is Instruction.Assignment -> writeAssignment(insn)
+            is Instruction.Assignment -> appendAssignment(insn)
             is Instruction.Return -> {
-                if (writer.indents == 0 && f.returnTypes.isEmpty()) {
+                if (indents == 0 && f.returnTypes.isEmpty()) {
                     endingLine = false
                     return
                 } else {
-                    writer.append("return")
+                    append("return")
                     val es = insn.expression.list<Expression>()
                     if (es.isNotEmpty()) {
-                        writer.append('(')
-                        writeExprList(es)
-                        writer.append(')')
+                        append('(').appendExprs(es).append(')')
                     }
                 }
             }
         }
-        writer.append(';')
+        append(';')
     }
 
-    private fun writeAssignment(insn: Instruction.Assignment) {
+    private fun appendAssignment(insn: Instruction.Assignment) {
         val defs = insn.definitions.list<Element.Variable>()
         if (defs.isNotEmpty()) {
             if (defs.size == 1) {
                 val def = defs.single()
                 if (def is Element.Variable.Local && definedLocalVariables.add(def)) {
-                    writer.append("def_")
-                    writer.append(def.type.typeLiteral)
-                    writer.append(' ')
+                    append("def_").append(def.type.typeLiteral).append(' ')
                 }
-                writeVar(def)
+                appendVar(def)
             } else {
-                writeExprList(defs)
+                appendExprs(defs)
             }
-            writer.append(" = ")
+            append(" = ")
         }
-        writeExpr(insn.expression)
+        appendExpr(insn.expression)
     }
 
-    private fun writeExpr(expr: Expression) {
+    private fun appendExpr(expr: Expression): Writer = apply {
         when (expr) {
-            is EventProperty -> writer.append(expr.literal)
-            is Element.Variable -> writeVar(expr)
-            is Element.Constant -> writeConst(expr)
-            is Expression.Operation.AddHook -> writeAddHook(expr)
-            is Expression.Operation.Invoke -> writeInvoke(expr)
-            is Expression.Operation -> writeOperation(expr)
-            is Expression.Compound -> writeExprList(expr.expressions)
+            is EventProperty -> append(expr.literal)
+            is Element.Variable -> appendVar(expr)
+            is Element.Constant -> appendConst(expr)
+            is Expression.Operation.AddHook -> appendHook(expr)
+            is Expression.Operation.Invoke -> appendInvoke(expr)
+            is Expression.Operation -> appendOperation(expr)
+            is Expression.Compound -> appendExprs(expr.expressions)
         }
     }
 
-    private fun writeVar(v: Element.Variable) {
+    private fun appendVar(v: Element.Variable) {
         when (v) {
-            is Element.Variable.Local -> writer.append('$').append(v.type.nameLiteral).append(v.id)
-            is Element.Variable.Varp -> writer.append("%var").append(v.id)
-            is Element.Variable.Varbit -> writer.append("%varbit").append(v.id)
-            is Element.Variable.Varc -> writer.append("%varc").append(v.type.topType.nameLiteral).append(v.id)
+            is Element.Variable.Local -> append('$').append(v.type.nameLiteral).append(v.id)
+            is Element.Variable.Varp -> append("%var").append(v.id)
+            is Element.Variable.Varbit -> append("%varbit").append(v.id)
+            is Element.Variable.Varc -> append("%varc").append(v.type.topType.nameLiteral).append(v.id)
             else -> error(v)
         }
     }
 
-    private fun writeConst(expr: Element.Constant) {
+    private fun appendConst(expr: Element.Constant) {
         if (expr.type == Type.STRING) {
-            writer.append('"').append(expr.value as String).append('"')
+            append('"').append(expr.value as String).append('"')
         } else {
-            writeConstantInt(expr.value as Int, expr.type)
+            appendConstantInt(expr.value as Int, expr.type)
         }
     }
 
-    private fun writeConstantInt(n: Int, type: Type) {
+    private fun appendConstantInt(n: Int, type: Type) {
         if (n == -1 && type != Type.INT) {
-            writer.append(null)
+            append(null)
             return
         }
         when (type) {
-            Type.TYPE -> writer.append(Type.of(n).nameLiteral)
-            Type.COMPONENT -> writer.append(n ushr 16).append(':').append(n and 0xFFFF)
+            Type.TYPE -> append(Type.of(n).nameLiteral)
+            Type.COMPONENT -> append(n ushr 16).append(':').append(n and 0xFFFF)
             Type.BOOLEAN -> when (n) {
-                0 -> writer.append(false)
-                1 -> writer.append(true)
+                0 -> append(false)
+                1 -> append(true)
                 else -> error(n)
             }
             Type.COORD ->  {
                 val plane = n ushr 28
                 val x = (n ushr 14) and 0x3FFF
                 val z = n and 0x3FFF
-                writer.append(plane).append('_')
-                writer.append((x / 64)).append('_')
-                writer.append((z / 64)).append('_')
-                writer.append((x and 0x3F)).append('_')
-                writer.append((z and 0x3F))
+                append(plane).append('_')
+                append((x / 64)).append('_')
+                append((z / 64)).append('_')
+                append((x and 0x3F)).append('_')
+                append((z and 0x3F))
             }
-            Type.GRAPHIC -> writeQuoteNamedInt(Loader.GRAPHIC_NAMES, n)
-            Type.FONTMETRICS -> writeNamedInt(Loader.GRAPHIC_NAMES, n)
+            Type.GRAPHIC -> appendQuoteNamedInt(Loader.GRAPHIC_NAMES, n)
+            Type.FONTMETRICS -> appendNamedInt(Loader.GRAPHIC_NAMES, n)
             Type.COLOUR -> {
                 if (n shr 24 != 0) error(n)
                 when (n) {
-                    0xFF0000 -> writer.append("^red")
-                    0x00FF00 -> writer.append("^green")
-                    0x0000FF -> writer.append("^blue")
-                    0xFFFF00 -> writer.append("^yellow")
-                    0xFF00FF -> writer.append("^magenta")
-                    0x00FFFF -> writer.append("^cyan")
-                    0xFFFFFF -> writer.append("^white")
-                    0x000000 -> writer.append("^black")
-                    else -> writer.append("0x").append(n.toString(16).padStart(6, '0'))
+                    0xFF0000 -> append("^red")
+                    0x00FF00 -> append("^green")
+                    0x0000FF -> append("^blue")
+                    0xFFFF00 -> append("^yellow")
+                    0xFF00FF -> append("^magenta")
+                    0x00FFFF -> append("^cyan")
+                    0xFFFFFF -> append("^white")
+                    0x000000 -> append("^black")
+                    else -> append("0x").append(n.toString(16).padStart(6, '0'))
                 }
             }
             Type.INT -> {
                 when (n) {
-                    Int.MAX_VALUE -> writer.append("^max_32bit_int")
-                    Int.MIN_VALUE -> writer.append("^min_32bit_int")
-                    else -> writer.append(n)
+                    Int.MAX_VALUE -> append("^max_32bit_int")
+                    Int.MIN_VALUE -> append("^min_32bit_int")
+                    else -> append(n)
                 }
             }
-            Type.KEY -> writer.append("^key_").append(Loader.KEY_NAMES.loadNotNull(n))
+            Type.KEY -> append("^key_").append(Loader.KEY_NAMES.loadNotNull(n))
             Type.CHAR -> error(n)
-            Type.STAT -> writeNamedInt(Loader.STAT_NAMES, n)
-            Type.OBJ, Type.NAMEDOBJ -> {
-                val name = Loader.OBJ_NAMES.load(n)
-                if (name != null) writer.append(name).append('_')
-                writer.append(n)
-            }
+            Type.STAT -> appendNamedInt(Loader.STAT_NAMES, n)
+            Type.OBJ, Type.NAMEDOBJ -> appendSuffixNamedInt(Loader.OBJ_NAMES, n)
             Type.IFTYPE -> {
                 val s = when (n) {
                     3 -> "rectangle"
@@ -295,7 +292,7 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
                     9 -> "line"
                     else -> error(n)
                 }
-                writer.append("^iftype_").append(s)
+                append("^iftype_").append(s)
             }
             Type.SETSIZE -> {
                 val s = when (n) {
@@ -304,7 +301,7 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
                     2 -> "2"
                     else -> error(n)
                 }
-                writer.append("^setsize_").append(s)
+                append("^setsize_").append(s)
             }
             Type.SETPOSH -> {
                 val s = when (n) {
@@ -316,7 +313,7 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
                     5 -> "5"
                     else -> error(n)
                 }
-                writer.append("^setpos_").append(s)
+                append("^setpos_").append(s)
             }
             Type.SETPOSV -> {
                 val s = when (n) {
@@ -328,7 +325,7 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
                     5 -> "5"
                     else -> error(n)
                 }
-                writer.append("^setpos_").append(s)
+                append("^setpos_").append(s)
             }
             Type.SETTEXTALIGNH -> {
                 val s = when (n) {
@@ -337,7 +334,7 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
                     2 -> "right"
                     else -> error(n)
                 }
-                writer.append("^settextalign_").append(s)
+                append("^settextalign_").append(s)
             }
             Type.SETTEXTALIGNV -> {
                 val s = when (n) {
@@ -346,20 +343,20 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
                     2 -> "bottom"
                     else -> error(n)
                 }
-                writer.append("^settextalign_").append(s)
+                append("^settextalign_").append(s)
             }
-            Type.VAR -> writer.append("var").append(n)
-            Type.INV -> writeNamedInt(Loader.INV_NAMES, n)
-            Type.MAPAREA -> writeNamedInt(Loader.MAPAREA_NAMES, n)
-            Type.CHATTYPE -> writer.append("^chattype_").append(Loader.CHATTYPE_NAMES.loadNotNull(n))
-            Type.PARAM -> writeNamedInt(Loader.PARAM_NAMES, n)
+            Type.VAR -> append("var").append(n)
+            Type.INV -> appendNamedInt(Loader.INV_NAMES, n)
+            Type.MAPAREA -> appendNamedInt(Loader.MAPAREA_NAMES, n)
+            Type.CHATTYPE -> append("^chattype_").append(Loader.CHATTYPE_NAMES.loadNotNull(n))
+            Type.PARAM -> appendNamedInt(Loader.PARAM_NAMES, n)
             Type.BIT -> {
                 val s = when (n) {
                     0 -> "^false"
                     1 -> "^true"
                     else -> error(n)
                 }
-                writer.append(s)
+                append(s)
             }
             Type.WINDOWMODE -> {
                 val s = when (n) {
@@ -367,203 +364,177 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
                     2 -> "resizable"
                     else -> error(n)
                 }
-                writer.append("^windowmode_").append(s)
+                append("^windowmode_").append(s)
             }
-            Type.LOC -> {
-                val name = Loader.LOC_NAMES.load(n)
-                if (name != null) writer.append(name).append('_')
-                writer.append(n)
-            }
-            else -> writer.append(n)
+            Type.LOC -> appendSuffixNamedInt(Loader.LOC_NAMES, n)
+            else -> append(n)
         }
     }
 
-    private fun writeQuoteNamedInt(nameLoader: Loader<String>, n: Int) {
+    private fun appendSuffixNamedInt(nameLoader: Loader<String>, n: Int) {
         val name = nameLoader.load(n)
-        if (name == null) {
-            writer.append(n)
-        } else {
-            writer.append('"').append(name).append('"')
-        }
+        if (name != null) append(name).append('_')
+        append(n)
     }
 
-    private fun writeNamedInt(nameLoader: Loader<String>, n: Int) {
+    private fun appendQuoteNamedInt(nameLoader: Loader<String>, n: Int) {
         val name = nameLoader.load(n)
-        if (name == null) {
-            writer.append(n)
-        } else {
-            writer.append(name)
-        }
+        if (name == null) append(n) else append('"').append(name).append('"')
     }
 
-    private fun writeOperation(expr: Expression.Operation) {
+    private fun appendNamedInt(nameLoader: Loader<String>, n: Int) {
+        val name = nameLoader.load(n)
+        if (name == null) append(n) else append(name)
+    }
+
+    private fun appendOperation(expr: Expression.Operation) {
         val args = expr.arguments.list<Expression>()
         val opcode = expr.id
         when (opcode) {
             DEFINE_ARRAY -> {
-                writer.append("def_")
-                writeExpr(args[1])
-                writer.append(" \$array")
-                writeExpr(args[0])
-                writer.append('(')
-                writeExpr(args[2])
-                writer.append(')')
+                append("def_").appendExpr(args[1]).append(" \$array").appendExpr(args[0]).append('(').appendExpr(args[2]).append(')')
                 return
             }
             PUSH_ARRAY_INT -> {
-                writer.append("\$array")
-                writeExpr(args[0])
-                writer.append('(')
-                writeExpr(args[1])
-                writer.append(')')
+                append("\$array").appendExpr(args[0]).append('(').appendExpr(args[1]).append(')')
                 return
             }
             POP_ARRAY_INT -> {
-                writer.append("\$array")
-                writeExpr(args[0])
-                writer.append('(')
-                writeExpr(args[1])
-                writer.append(") = ")
-                writeExpr(args[2])
+                append("\$array").appendExpr(args[0]).append('(').appendExpr(args[1]).append(") = ").appendExpr(args[2])
                 return
             }
             JOIN_STRING -> {
-                writer.append('"')
+                append('"')
                 for (a in args) {
                     if (a is Element.Constant && a.value is String) {
-                        writer.append(a.value)
+                        append(a.value)
                     } else {
-                        writer.append('<')
-                        writeExpr(a)
-                        writer.append('>')
+                        append('<').appendExpr(a).append('>')
                     }
                 }
-                writer.append('"')
+                append('"')
                 return
             }
         }
         val branchInfix = BRANCH_INFIX_MAP[expr.id]
         val calcInfix = CALC_INFIX_MAP[expr.id]
         if (branchInfix != null) {
-            writer.append('(')
-            writeExpr(args[0])
-            writer.append(' ')
-            writer.append(branchInfix)
-            writer.append(' ')
-            writeExpr(args[1])
-            writer.append(')')
+            append('(').appendExpr(args[0]).append(' ').append(branchInfix).append(' ').appendExpr(args[1]).append(')')
         }  else if (calcInfix != null) {
             val wasCalc = inCalc
             if (!inCalc) {
-                writer.append("calc")
+                append("calc")
                 inCalc = true
             }
-            writer.append('(')
-            writeExpr(args[0])
-            writer.append(' ')
-            writer.append(calcInfix)
-            writer.append(' ')
-            writeExpr(args[1])
-            writer.append(')')
+            append('(').appendExpr(args[0]).append(' ').append(calcInfix).append(' ').appendExpr(args[1]).append(')')
             inCalc = wasCalc
         } else {
             var args2: List<Expression> = args
             if (expr.id in DOT_OPCODES) {
                 if ((args2.last() as Element.Constant).value == 1) {
-                    writer.append('.')
+                    append('.')
                 }
                 args2 = args2.dropLast(1)
             }
-            writer.append(names.getValue(opcode))
+            append(names.getValue(opcode))
             if (args2.isNotEmpty()) {
-                writer.append('(')
-                writeExprList(args2)
-                writer.append(')')
+                append('(').appendExprs(args2).append(')')
             }
         }
     }
 
-    private fun writeExprList(exprs: List<Expression>) {
-        if (exprs.isEmpty()) return
+    private fun appendExprs(exprs: List<Expression>) = apply {
+        if (exprs.isEmpty()) return this
         val es = exprs.iterator()
-        writeExpr(es.next())
-        while (es.hasNext()) {
-            writer.append(", ")
-            writeExpr(es.next())
+        appendExpr(es.next())
+        for (e in es) {
+            append(", ").appendExpr(e)
         }
     }
 
-    private fun writeAddHook(operation: Expression.Operation.AddHook) {
+    private fun appendHook(operation: Expression.Operation.AddHook) {
         val args = operation.arguments.list<Expression>().toMutableList()
         val component = args.removeAt(args.lastIndex)
 
         if (operation.id < 2000 && (component as Element.Constant).value == 1) {
-            writer.append('.')
+            append('.')
         }
-        writer.append(names[operation.id]).append('(')
+        append(names.getValue(operation.id)).append('(')
 
         if (operation.scriptId == -1) {
-            writer.append(null)
+            append(null)
         } else {
             val scriptName = Loader.SCRIPT_NAMES.load(operation.scriptId)
-            writer.append('"')
+            append('"')
             if (scriptName == null) {
-                writer.append("script").append(operation.scriptId)
+                append("script").append(operation.scriptId)
             } else {
                 require(scriptName.trigger == Trigger.clientscript) { "$scriptName must be a ${Trigger.clientscript}" }
-                writer.append(scriptName.name)
+                append(scriptName.name)
             }
             val triggerCount = (args.removeAt(args.lastIndex) as Element.Constant).value as Int
             val triggers = args.takeLast(triggerCount)
             repeat(triggerCount) { args.removeAt(args.lastIndex) }
 
             if (args.isNotEmpty()) {
-                writer.append('(')
-                writeExprList(args)
-                writer.append(')')
+                append('(').appendExprs(args).append(')')
             }
 
             if (triggers.isNotEmpty()) {
-                writer.append('{')
-                writeExprList(triggers)
-                writer.append('}')
+                append('{').appendExprs(triggers).append('}')
             }
-            writer.append('"')
+            append('"')
         }
         if (operation.id >= 2000) {
-            writer.append(", ")
-            writeExpr(component)
+            append(", ").appendExpr(component)
         }
-        writer.append(')')
+        append(')')
     }
 
-    private fun writeInvoke(invoke: Expression.Operation.Invoke) {
+    private fun appendInvoke(invoke: Expression.Operation.Invoke) {
         val args = invoke.arguments.list<Expression>()
-        writer.append('~')
+        append('~')
         val scriptName = Loader.SCRIPT_NAMES.load(invoke.scriptId)
         if (scriptName == null) {
-            writer.append("script").append(invoke.scriptId)
+            append("script").append(invoke.scriptId)
         } else {
             require(scriptName.trigger == Trigger.proc) { "$scriptName must be a ${Trigger.proc}" }
-            writer.append(scriptName.name)
+            append(scriptName.name)
         }
         if (args.isNotEmpty()) {
-            writer.append('(')
-            writeExprList(args)
-            writer.append(')')
+            append('(').appendExprs(args).append(')')
         }
     }
+
+    private inline fun indent(action: () -> Unit) {
+        indents++
+        action()
+        indents--
+    }
+
+    private fun nextLine() = apply {
+        append('\n')
+        repeat(indents) { append('\t') }
+    }
+
+    private fun append(s: String?) = apply { buf.append(s) }
+
+    private fun append(c: Char) = apply { buf.append(c) }
+
+    private fun append(n: Int) = apply { buf.append(n) }
+
+    private fun append(b: Boolean) = apply { buf.append(b) }
 
     private companion object {
 
         val CALC_INFIX_MAP = mapOf(
-                ADD to "+",
-                SUB to "-",
-                MULTIPLY to "*",
-                DIV to "/",
-                MOD to "%",
-                AND to "&",
-                OR to "|"
+                ADD to '+',
+                SUB to '-',
+                MULTIPLY to '*',
+                DIV to '/',
+                MOD to '%',
+                AND to '&',
+                OR to '|'
         )
 
         val BRANCH_INFIX_MAP = mapOf(
