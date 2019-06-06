@@ -517,9 +517,11 @@ private class State(buf: StringBuilder, private val f: Function, private val roo
             val triggers = args.takeLast(triggerCount)
             repeat(triggerCount) { args.removeAt(args.lastIndex) }
 
-            writer.append('(')
-            writeExprList(args)
-            writer.append(')')
+            if (args.isNotEmpty()) {
+                writer.append('(')
+                writeExprList(args)
+                writer.append(')')
+            }
 
             if (triggers.isNotEmpty()) {
                 writer.append('{')
