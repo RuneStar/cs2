@@ -367,6 +367,7 @@ private class Writer(
                 append("^windowmode_").append(s)
             }
             Type.LOC -> appendSuffixNamedInt(Loader.LOC_NAMES, n)
+            Type.MODEL -> appendSuffixNamedInt(Loader.MODEL_NAMES, n)
             else -> append(n)
         }
     }
