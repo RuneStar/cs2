@@ -55,6 +55,8 @@ interface Loader<T : Any> {
         val LOC_NAMES = readNames("loc-names.tsv")
 
         val MODEL_NAMES = readNames("model-names.tsv")
+
+        val STRUCT_NAMES = readNames("struct-names.tsv")
     }
 }
 

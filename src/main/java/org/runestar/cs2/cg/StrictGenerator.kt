@@ -368,6 +368,7 @@ private class Writer(
             }
             Type.LOC -> appendSuffixNamedInt(Loader.LOC_NAMES, n)
             Type.MODEL -> appendSuffixNamedInt(Loader.MODEL_NAMES, n)
+            Type.STRUCT -> appendSuffixNamedInt(Loader.STRUCT_NAMES, n)
             else -> append(n)
         }
     }
