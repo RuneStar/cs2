@@ -248,7 +248,7 @@ internal interface Op {
         CC_SETMODELTRANSPARENT(listOf(BOOLEAN), listOf(), BOOLEAN),
 
         CC_SETOBJECT(listOf(OBJ, INT), listOf(), BOOLEAN),
-        CC_SETNPCHEAD(listOf(INT), listOf(), BOOLEAN),
+        CC_SETNPCHEAD(listOf(NPC), listOf(), BOOLEAN),
         CC_SETPLAYERHEAD_SELF(listOf(), listOf(), BOOLEAN),
         CC_SETOBJECT_NONUM(listOf(OBJ, INT), listOf(), BOOLEAN),
         CC_SETOBJECT_ALWAYS_NUM(listOf(OBJ, INT), listOf(), BOOLEAN),
@@ -337,7 +337,7 @@ internal interface Op {
         IF_SETMODELTRANSPARENT(listOf(BOOLEAN, COMPONENT), listOf()),
 
         IF_SETOBJECT(listOf(OBJ, INT, COMPONENT), listOf()),
-        IF_SETNPCHEAD(listOf(INT, COMPONENT), listOf()),
+        IF_SETNPCHEAD(listOf(NPC, COMPONENT), listOf()),
         IF_SETPLAYERHEAD_SELF(listOf(COMPONENT), listOf()),
         IF_SETOBJECT_NONUM(listOf(OBJ, INT, COMPONENT), listOf()),
         IF_SETOBJECT_ALWAYS_NUM(listOf(OBJ, INT, COMPONENT), listOf()),
@@ -825,7 +825,7 @@ internal interface Op {
     }
 
     enum class ParamKey(val type: Type) : Op {
-        NC_PARAM(INT),
+        NC_PARAM(NPC),
         LC_PARAM(LOC),
         OC_PARAM(OBJ),
         STRUCT_PARAM(STRUCT),
