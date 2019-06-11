@@ -370,6 +370,7 @@ private class Writer(
             Type.MODEL -> appendSuffixNamedInt(Loader.MODEL_NAMES, n)
             Type.STRUCT -> appendSuffixNamedInt(Loader.STRUCT_NAMES, n)
             Type.NPC -> appendSuffixNamedInt(Loader.NPC_NAMES, n)
+            Type.SEQ -> appendSuffixNamedInt(Loader.SEQ_NAMES, n)
             else -> append(n)
         }
     }

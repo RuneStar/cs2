@@ -59,6 +59,8 @@ interface Loader<T : Any> {
         val STRUCT_NAMES = readNames("struct-names.tsv")
 
         val NPC_NAMES = readNames("npc-names.tsv")
+
+        val SEQ_NAMES = readNames("seq-names.tsv")
     }
 }
 

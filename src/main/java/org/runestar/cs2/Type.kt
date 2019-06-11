@@ -25,6 +25,7 @@ enum class Type(val desc: Char? = null) {
 
     MAPELEMENT('µ'),
     NPC('n'),
+    SEQ('A'),
 
     TYPE,
     COLOUR,
