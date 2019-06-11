@@ -245,7 +245,7 @@ internal interface Op {
         _1124(listOf(INT), listOf(), BOOLEAN),
         _1125(listOf(INT), listOf(), BOOLEAN),
         CC_SETLINEDIRECTION(listOf(BOOLEAN), listOf(), BOOLEAN),
-        _1127(listOf(BOOLEAN), listOf(), BOOLEAN),
+        CC_SETMODELTRANSPARENT(listOf(BOOLEAN), listOf(), BOOLEAN),
 
         CC_SETOBJECT(listOf(OBJ, INT), listOf(), BOOLEAN),
         CC_SETNPCHEAD(listOf(INT), listOf(), BOOLEAN),
@@ -289,7 +289,7 @@ internal interface Op {
         CC_GETCOLOUR(listOf(), listOf(COLOUR), BOOLEAN),
         CC_GETFILLCOLOUR(listOf(), listOf(COLOUR), BOOLEAN),
         _1613(listOf(), listOf(INT), BOOLEAN),
-        _1614(listOf(), listOf(BOOLEAN), BOOLEAN),
+        CC_GETMODELTRANSPARENT(listOf(), listOf(BOOLEAN), BOOLEAN),
 
         CC_GETINVOBJECT(listOf(), listOf(OBJ), BOOLEAN),
         CC_GETINVCOUNT(listOf(), listOf(INT), BOOLEAN),
@@ -334,7 +334,7 @@ internal interface Op {
         _2124(listOf(INT, COMPONENT), listOf()),
         _2125(listOf(INT, COMPONENT), listOf()),
         IF_SETLINEDIRECTION(listOf(BOOLEAN, COMPONENT), listOf()),
-        _2127(listOf(BOOLEAN, COMPONENT), listOf()),
+        IF_SETMODELTRANSPARENT(listOf(BOOLEAN, COMPONENT), listOf()),
 
         IF_SETOBJECT(listOf(OBJ, INT, COMPONENT), listOf()),
         IF_SETNPCHEAD(listOf(INT, COMPONENT), listOf()),
@@ -378,7 +378,7 @@ internal interface Op {
         IF_GETCOLOUR(listOf(COMPONENT), listOf(COLOUR)),
         IF_GETFILLCOLOUR(listOf(COMPONENT), listOf(COLOUR)),
         _2613(listOf(COMPONENT), listOf(INT)),
-        _2614(listOf(COMPONENT), listOf(BOOLEAN)),
+        IF_GETMODELTRANSPARENT(listOf(COMPONENT), listOf(BOOLEAN)),
 
         IF_GETINVOBJECT(listOf(COMPONENT), listOf(OBJ)),
         IF_GETINVCOUNT(listOf(COMPONENT), listOf(INT)),
