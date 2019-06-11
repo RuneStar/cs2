@@ -17212,7 +17212,6 @@
 30391	iron_ladder
 30392	iron_ladder
 30394	cactus
-30395	jad_fest_portal
 30396	shimmering_barrier
 30397	shimmering_barrier
 30398	shimmering_barrier
@@ -18740,7 +18739,6 @@
 33340	pile_of_rubble
 33341	pile_of_rubble
 33342	pile_of_rubble
-33343	hub_portal
 33344	broken_wall
 33346	portal_nexus_space
 33347	rug_space
@@ -19900,3 +19898,5 @@
 34823	mysterious_ruins
 34824	mysterious_ruins
 34825	portal
+34826	jad_fest_portal
+34827	hub_portal
