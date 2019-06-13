@@ -603,6 +603,7 @@ private class Writer(
                 CC_SETOPBASE,
                 CC_SETTARGETVERB,
                 CC_CLEAROPS,
+                _1308,
                 CC_SETOPKEY,
                 CC_SETOPTKEY,
                 CC_SETOPKEYRATE,
