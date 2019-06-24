@@ -1499,6 +1499,9 @@
 1601	thumbs,1
 1602	thumbs,2
 1603	thumbs,3
+1604	spectator,0
+1605	spectator,1
+1606	spectator,2
 1607	orb_filler,9
 1608	orb_filler,10
 1609	orb_filler,11
