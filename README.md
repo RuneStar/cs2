@@ -1,6 +1,4 @@
-# cs2
-
-[![Discord](https://img.shields.io/discord/384870460640329728.svg?logo=discord)](https://discord.gg/G2kxrnU)
+# cs2 [![Discord](https://img.shields.io/discord/384870460640329728.svg?logo=discord)](https://discord.gg/G2kxrnU)
 
 [**View scripts**](https://github.com/RuneStar/cs2-scripts)
 
@@ -9,10 +7,10 @@ Players load scripts from the game cache in a custom bytecode format to be inter
 
 #### Model
 
-There are two kinds of scripts:
+There are two main kinds of scripts:
 
 ClientScript: Added as callbacks for actions such as user interactions with interface components.
-When the user performs the action, such as click or mouse leave, the script is executed.
+When the user performs the action, such as click or mouse-leave, the script is executed.
 Cannot return any values.
 
 Procedure: can only be called inside of another script.
@@ -66,8 +64,8 @@ embedding it in a `string` literal.
 * `boolean` :
     * `true`, `false`
 * `coord` : a tile. Written as 5 numbers separated by underscores:
-the plane, the coordinates of the region, then the coordinates inside of the region
-    * `0_1_2_3_4` 
+the plane, the coordinates of the map-square, then the coordinates inside of the map-square
+    * `0_1_2_3_4`
 * `component` an interface component. Written as the interface, a colon, then the component
     * `poh_jewellery_box:frame`
 * `obj` : an item
@@ -89,6 +87,9 @@ the plane, the coordinates of the region, then the coordinates inside of the reg
 * `char`
 * `struct`
 * `synth`
+* `mapelement`
+* `npc`
+* `seq`
 
 #### Arrays
 
