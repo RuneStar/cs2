@@ -16,11 +16,10 @@ internal object AddShortCircuitOperators : Phase.Individual() {
         val itr = f.instructions.iterator()
         while (itr.hasNext()) {
             val if1 = itr.next() as? Instruction.Branch ?: continue
-            if (!itr.hasNext()) continue
-            val if2 = itr.next() as? Instruction.Branch ?: continue
+            val if2 = f.instructions.next(if1) as? Instruction.Branch ?: continue
             if (if1.pass == if2.pass) {
                 itr.remove()
-                if1.expression = Expression.Operation(emptyList(), Opcodes.SS_OR, Expression(if1.expression, if2.expression))
+                if2.expression = Expression.Operation(emptyList(), Opcodes.SS_OR, Expression(if1.expression, if2.expression))
                 return true
             }
         }
