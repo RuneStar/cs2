@@ -21465,7 +21465,6 @@
 38081	crystal_legs_attuned
 38082	crystal_legs_inactive
 38083	elven_legwear
-38084	elven_skirt
 38085	crystal_crown
 38086	dalldav
 38087	idris
@@ -21586,7 +21585,6 @@
 38215	oronwen
 38216	iorwerth_warrior
 38217	elf_archer
-38218	elven_skirt
 38219	elven_legwear
 38220	crystal_crown
 38221	guard
@@ -21935,3 +21933,5 @@
 38779	dragonstone_armour_set
 38780	pillar_of_light
 38785	crystal_singing_recipes
+38802	elven_skirt
+38803	elven_skirt
