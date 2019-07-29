@@ -485,7 +485,7 @@ public final class Opcodes {
             DOCHEAT = 5020,
             CHAT_SETMESSAGEFILTER = 5021,
             CHAT_GETMESSAGEFILTER = 5022,
-            PRINTLN = 5023,
+            WRITECONSOLE = 5023,
             GETWINDOWMODE = 5306,
             SETWINDOWMODE = 5307,
             GETDEFAULTWINDOWMODE = 5308,

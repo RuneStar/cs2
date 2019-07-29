@@ -623,7 +623,7 @@ internal interface Op {
         DOCHEAT(listOf(STRING), listOf()),
         CHAT_SETMESSAGEFILTER(listOf(STRING), listOf()),
         CHAT_GETMESSAGEFILTER(listOf(), listOf(STRING)),
-        PRINTLN(listOf(STRING), listOf()),
+        WRITECONSOLE(listOf(STRING), listOf()),
 
         GETWINDOWMODE(listOf(), listOf(WINDOWMODE)),
         SETWINDOWMODE(listOf(WINDOWMODE), listOf()),
