@@ -280,7 +280,6 @@ private class Writer(
                 }
             }
             Type.KEY -> append("^key_").append(Loader.KEY_NAMES.loadNotNull(n))
-            Type.CHAR -> error(n)
             Type.STAT -> appendNamedInt(Loader.STAT_NAMES, n)
             Type.OBJ, Type.NAMEDOBJ -> appendSuffixNamedInt(Loader.OBJ_NAMES, n)
             Type.IFTYPE -> {
@@ -371,6 +370,7 @@ private class Writer(
             Type.STRUCT -> appendSuffixNamedInt(Loader.STRUCT_NAMES, n)
             Type.NPC -> appendSuffixNamedInt(Loader.NPC_NAMES, n)
             Type.SEQ -> appendSuffixNamedInt(Loader.SEQ_NAMES, n)
+            Type.AREA, Type.MAPELEMENT, Type.CHAR -> error(n)
             else -> append(n)
         }
     }
