@@ -241,7 +241,7 @@ class PropagateTypes(val fs: Map<Int, Function>) {
     }
 
     private fun updateInvokeReturnUsages(invoked: Function) {
-        for (f in invokes.getValue(invoked)) {
+        for (f in invokes[invoked] ?: return) {
             for (insn in f.instructions) {
                 if (insn !is Instruction.Assignment) continue
                 val e = insn.expression
