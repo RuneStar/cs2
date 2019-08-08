@@ -2411,7 +2411,7 @@
 4001	sample_bottle
 4002	raw_slimy_eel
 4007	bamboo_door
-4011	elf
+4012	adventurer_jon
 4019	tyras_helm
 4033	new_crystal_halberd_full_i
 4037	dragon_warhammer
@@ -5068,6 +5068,7 @@
 8250	milk_urns
 8252	table
 8256	spirit_tree
+8257	banner
 8271	fixed_device
 8277	key_master_teleport
 8278	rotten_apples
@@ -21867,7 +21868,7 @@
 38679	mysterious_figure
 38681	banker
 38682	arianwyn
-38683	goreu
+38683	elf
 38684	gladiator
 38686	oronwen
 38687	lady_kelyn_ithell
