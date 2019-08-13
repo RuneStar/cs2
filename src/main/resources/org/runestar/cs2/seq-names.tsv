@@ -90,7 +90,7 @@
 449	broken_barrel
 456	whirlpool
 459	speartrap
-464	leak
+464	ship_hull
 467	lamp
 468	charms
 470	spooky_picture
@@ -2082,3 +2082,8 @@
 8461	crab_ready
 8489	adventurer_jon_ready
 8490	banner
+8497	basilisk_sentinel_ready
+8498	basilisk_sentinel_walk_f
+8509	the_jormungand_ready
+8512	the_jormungand_ready
+8518	the_jormungand_ready
