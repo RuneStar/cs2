@@ -561,7 +561,7 @@ private class Writer(
                 CC_SETSIZE,
                 CC_SETHIDE,
                 CC_SETNOCLICKTHROUGH,
-                _1006,
+                CC_SETNOSCROLLTHROUGH,
                 CC_SETSCROLLPOS,
                 CC_SETCOLOUR,
                 CC_SETFILL,

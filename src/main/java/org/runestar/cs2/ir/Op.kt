@@ -216,7 +216,7 @@ internal interface Op {
         CC_SETSIZE(listOf(INT, INT, SETSIZE, SETSIZE), listOf(), BOOLEAN),
         CC_SETHIDE(listOf(BOOLEAN), listOf(), BOOLEAN),
         CC_SETNOCLICKTHROUGH(listOf(BOOLEAN), listOf(), BOOLEAN),
-        _1006(listOf(BOOLEAN), listOf(), BOOLEAN),
+        CC_SETNOSCROLLTHROUGH(listOf(BOOLEAN), listOf(), BOOLEAN),
 
         CC_SETSCROLLPOS(listOf(INT, INT), listOf(), BOOLEAN),
         CC_SETCOLOUR(listOf(COLOUR), listOf(), BOOLEAN),
@@ -306,7 +306,7 @@ internal interface Op {
         IF_SETSIZE(listOf(INT, INT, SETSIZE, SETSIZE, COMPONENT), listOf()),
         IF_SETHIDE(listOf(BOOLEAN, COMPONENT), listOf()),
         IF_SETNOCLICKTHROUGH(listOf(BOOLEAN, COMPONENT), listOf()),
-        _2006(listOf(BOOLEAN, COMPONENT), listOf()),
+        IF_SETNOSCROLLTHROUGH(listOf(BOOLEAN, COMPONENT), listOf()),
 
         IF_SETSCROLLPOS(listOf(INT, INT, COMPONENT), listOf()),
         IF_SETCOLOUR(listOf(COLOUR, COMPONENT), listOf()),
