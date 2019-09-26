@@ -644,6 +644,10 @@ internal interface Op {
         VIEWPORT_GETEFFECTIVESIZE(listOf(), listOf(INT, INT)),
         VIEWPORT_GETZOOM(listOf(), listOf(INT, INT)),
         VIEWPORT_GETFOV(listOf(), listOf(INT, INT)),
+        _6220(listOf(), listOf(INT)),
+        _6221(listOf(), listOf(INT)),
+        _6222(listOf(), listOf(INT)),
+        _6223(listOf(), listOf(INT)),
 
         WORLDLIST_FETCH(listOf(), listOf(BOOLEAN)),
         WORLDLIST_START(listOf(), listOf(INT, INT, STRING, INT, INT, STRING)),
