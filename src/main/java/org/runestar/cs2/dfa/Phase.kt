@@ -22,6 +22,7 @@ interface Phase {
 
         val DEFAULT = Composite(
                 RemoveDeadCode,
+                FindArrayArgs,
                 DeleteNops,
                 PropagateTypes,
                 CombineSameLineOperations,

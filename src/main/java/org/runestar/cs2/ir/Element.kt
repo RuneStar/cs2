@@ -1,5 +1,6 @@
 package org.runestar.cs2.ir
 
+import org.runestar.cs2.Primitive
 import org.runestar.cs2.Type
 
 interface Element : Expression {
@@ -12,32 +13,19 @@ interface Element : Expression {
 
     data class Constant(val value: Any?, override var type: Type) : Element {
 
-        constructor(value: Int) : this(value, Type.INT)
-
-        override fun toString(): String = "Constant($value, $type)"
+        constructor(value: Int) : this(value, Primitive.INT)
     }
 
-    sealed class Variable : Element {
+    data class Variable(
+            val source: VarSource,
+            val id: Int,
+            override var type: Type
+    ) : Element {
 
-        abstract var id: Int
-
-        class Stack(override var id: Int, override var type: Type) : Variable()
-
-        class Local(override var id: Int, override var type: Type) : Variable()
-
-        class Varp(override var id: Int, override var type: Type) : Variable()
-
-        class Varbit(override var id: Int, override var type: Type) : Variable()
-
-        class Varc(override var id: Int, override var type: Type) : Variable()
-
-        override fun hashCode(): Int = id xor type.topType.hashCode()
+        override fun hashCode(): Int = id xor source.hashCode()
 
         override fun equals(other: Any?): Boolean = other is Variable &&
-                javaClass == other.javaClass &&
-                id == other.id &&
-                type.topType == other.type.topType
-
-        override fun toString(): String = "${javaClass.simpleName}($id, $type)"
+                source == other.source &&
+                id == other.id
     }
 }

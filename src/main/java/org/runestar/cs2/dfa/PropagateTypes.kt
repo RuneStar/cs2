@@ -1,11 +1,15 @@
 package org.runestar.cs2.dfa
 
+import org.runestar.cs2.ArrayType
 import org.runestar.cs2.Opcodes
+import org.runestar.cs2.Primitive
 import org.runestar.cs2.Type
 import org.runestar.cs2.ir.Element
 import org.runestar.cs2.ir.Expression
 import org.runestar.cs2.ir.Function
 import org.runestar.cs2.ir.Instruction
+import org.runestar.cs2.ir.Op
+import org.runestar.cs2.ir.VarSource
 import org.runestar.cs2.ir.list
 import org.runestar.cs2.util.removeFirst
 import java.util.ArrayDeque
@@ -71,7 +75,7 @@ class PropagateTypes(val fs: Map<Int, Function>) {
 
     private fun addGlobalVariable(e: Expression, f: Function) {
         if (e !is Element.Variable) return
-        if (e is Element.Variable.Stack || e is Element.Variable.Local) return
+        if (!e.source.global) return
         globalVars.getOrPut(e) { HashSet() }.add(f)
         globalVarTypes[e] = e.type
     }
@@ -81,7 +85,8 @@ class PropagateTypes(val fs: Map<Int, Function>) {
                 propagateAssignments(f) or
                 propagateVars(f) or
                 propagateComparisons(f) or
-                propagateReturns(f)
+                propagateReturns(f) or
+                propagateArrays(f)
         ) { }
     }
 
@@ -172,7 +177,7 @@ class PropagateTypes(val fs: Map<Int, Function>) {
             val arg2 = args[1]
             if (arg1.type == arg2.type) continue
             val newType = Type.merge(arg1.type, arg2.type)
-            if (newType == Type.COLOUR && operation.id != Opcodes.BRANCH_EQUALS && operation.id != Opcodes.BRANCH_NOT) continue
+            if (newType == Primitive.COLOUR && operation.id != Opcodes.BRANCH_EQUALS && operation.id != Opcodes.BRANCH_NOT) continue
             changed = true
             if (arg1.type !=  newType) setType(arg1, newType)
             if (arg2.type !=  newType) setType(arg2, newType)
@@ -207,15 +212,47 @@ class PropagateTypes(val fs: Map<Int, Function>) {
         return list
     }
 
+    private fun propagateArrays(f: Function): Boolean {
+        var changed = false
+        val arg = f.arguments.firstOrNull()?.takeIf { it.source == VarSource.ARRAY }
+        for (insn in f.instructions) {
+            if (insn !is Instruction.Assignment) continue
+            val e = insn.expression
+            if (e !is Expression.Operation) continue
+            if (e.id == Opcodes.PUSH_ARRAY_INT) {
+                val array = e.arguments.list<Element>()[0] as Element.Variable
+                val elem = insn.definitions.list<Element.Variable>().single()
+                changed = setArrayType(arg, array, elem) || changed
+            } else if (e.id == Opcodes.POP_ARRAY_INT) {
+                val args = e.arguments.list<Element>()
+                val array = args[0] as Element.Variable
+                val elem = args[2] as Element.Variable
+                changed = setArrayType(arg, array, elem) || changed
+            }
+        }
+        return changed
+    }
+
+    private fun setArrayType(arg: Element.Variable?, array: Element.Variable, elem: Element.Variable): Boolean {
+        val at = array.type as ArrayType
+        val et = elem.type
+        if (at.elementType == et && (arg == null || arg.type == at)) return false
+        val t = Type.merge(at.elementType, et) as Primitive
+        array.type = ArrayType(t)
+        elem.type = t
+        if (array.id == 0 && arg != null) arg.type = array.type
+        return true
+    }
+
     private fun updateInvokeArguments(argTypes: List<Type>, f: Function) {
         val fTypes = f.arguments.map { it.type }
         if (fTypes == argTypes) return
         val newTypes = fixTypes(fTypes, argTypes)
-        val i = ArrayDeque(f.arguments.filter { it.type != Type.STRING })
-        val s = ArrayDeque(f.arguments.filter { it.type == Type.STRING })
+        val i = ArrayDeque(f.arguments.filter { it.type != Primitive.STRING })
+        val s = ArrayDeque(f.arguments.filter { it.type == Primitive.STRING })
         f.arguments = List(argTypes.size) {
             val newType = newTypes[it]
-            val a = if (newType == Type.STRING) {
+            val a = if (newType == Primitive.STRING) {
                 s.removeFirst()
             } else {
                 i.removeFirst()
@@ -291,11 +328,9 @@ class PropagateTypes(val fs: Map<Int, Function>) {
 
     private fun setType(e: Element, t: Type) {
         e.type = t
-        when (e) {
-            is Element.Variable.Varp, is Element.Variable.Varc, is Element.Variable.Varbit -> {
-                globalVarTypes[e as Element.Variable] = t
-                updateGlobalVariable(e)
-            }
+        if (e is Element.Variable && e.source.global) {
+            globalVarTypes[e] = t
+            updateGlobalVariable(e)
         }
     }
 
@@ -311,10 +346,10 @@ class PropagateTypes(val fs: Map<Int, Function>) {
     }
 
     private fun fixTypes(other: List<Type>, ordered: List<Type>): List<Type> {
-        val i = ArrayDeque(Type.merge(other.filter { it.topType == Type.INT }, ordered.filter { it.topType == Type.INT }))
-        val s = ArrayDeque(Type.merge(other.filter { it.topType == Type.STRING }, ordered.filter { it.topType == Type.STRING }))
+        val i = ArrayDeque(Type.merge(other.filter { it.erase() != Primitive.STRING }, ordered.filter { it.erase() != Primitive.STRING }))
+        val s = ArrayDeque(Type.merge(other.filter { it.erase() == Primitive.STRING }, ordered.filter { it.erase() == Primitive.STRING }))
         return List(ordered.size) {
-            if (ordered[it] == Type.STRING) {
+            if (ordered[it] == Primitive.STRING) {
                 s.removeFirst()
             } else {
                 i.removeFirst()

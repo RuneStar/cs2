@@ -32,7 +32,7 @@ interface Loader<T : Any> {
 
         private fun readNames(fileName: String): Loader<String> = readLoader(fileName) { it }
 
-        val PARAM_TYPES = readLoader("param-types.tsv") { it.toInt().let { if (it == 0) Type.INT else Type.of(it) } }
+        val PARAM_TYPES = readLoader("param-types.tsv") { it.toInt().let { if (it == 0) Primitive.INT else Type.of(it) } }
 
         val SCRIPT_NAMES = readLoader("script-names.tsv") { ScriptName.of(it) }
 

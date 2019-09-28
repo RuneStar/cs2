@@ -4,6 +4,7 @@ import org.runestar.cs2.ir.Element
 import org.runestar.cs2.ir.Expression
 import org.runestar.cs2.ir.Function
 import org.runestar.cs2.ir.Instruction
+import org.runestar.cs2.ir.VarSource
 import org.runestar.cs2.ir.list
 import java.util.Collections
 
@@ -13,8 +14,8 @@ internal object InlineStackDefinitions : Phase.Individual() {
         out@
         for (insn in f.instructions) {
             if (insn !is Instruction.Assignment) continue
-            if (insn.definitions.list<Element.Variable>().any { it !is Element.Variable.Stack }) continue
-            val defs = insn.definitions.list<Element.Variable.Stack>()
+            val defs = insn.definitions.list<Element.Variable>()
+            if (defs.any { it.source != VarSource.STACK }) continue
             if (defs.isEmpty()) continue
             var a: Instruction? = f.instructions.next(insn)!!
             while (a is Instruction.Evaluation) {
@@ -32,7 +33,7 @@ internal object InlineStackDefinitions : Phase.Individual() {
         }
     }
 
-    private fun replaceExprs(dst: Instruction.Evaluation, defs: List<Element.Variable.Stack>, by: Expression): Boolean {
+    private fun replaceExprs(dst: Instruction.Evaluation, defs: List<Element.Variable>, by: Expression): Boolean {
         val e = dst.expression
         if (e is Expression.Operation) {
             val newArgs = replaceSubExpr(e.arguments.list(), defs, by) ?: return false
@@ -44,7 +45,7 @@ internal object InlineStackDefinitions : Phase.Individual() {
         return true
     }
 
-    private fun replaceSubExpr(es: List<Expression>, defs: List<Element.Variable.Stack>, by: Expression): List<Expression>? {
+    private fun replaceSubExpr(es: List<Expression>, defs: List<Element.Variable>, by: Expression): List<Expression>? {
         val idx = Collections.indexOfSubList(es, defs)
         if (idx == -1) return null
         val newEs = ArrayList<Expression>(es.size - defs.size + 1)

@@ -8,7 +8,7 @@ import org.runestar.cs2.ir.Interpreter
 fun decompile(
         scripts: Loader.Keyed<Script>,
         generator: Generator,
-        paramTypes: Loader<Type> = Loader.PARAM_TYPES
+        paramTypes: Loader<Primitive> = Loader.PARAM_TYPES
 ) {
     val interpreter = Interpreter(scripts, paramTypes)
     val fs = scripts.ids.associateWith { interpreter.interpret(it) }

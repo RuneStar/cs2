@@ -1,6 +1,7 @@
 package org.runestar.cs2.ir
 
 import org.runestar.cs2.Loader
+import org.runestar.cs2.Primitive
 import org.runestar.cs2.Script
 import org.runestar.cs2.Type
 import org.runestar.cs2.loadNotNull
@@ -11,7 +12,7 @@ import org.runestar.cs2.util.toUnsignedInt
 
 internal class Interpreter(
         val scripts: Loader<Script>,
-        val paramTypes: Loader<Type>
+        val paramTypes: Loader<Primitive>
 ) {
 
     fun interpret(id: Int): Function {
@@ -32,9 +33,9 @@ internal class Interpreter(
     }
 
     private fun makeFunction(id: Int, script: Script, instructions: Array<Instruction>): Function {
-        val args = ArrayList<Element.Variable.Local>(script.intArgumentCount + script.stringArgumentCount)
-        repeat(script.intArgumentCount) { args.add(Element.Variable.Local(it, Type.INT)) }
-        repeat(script.stringArgumentCount) { args.add(Element.Variable.Local(it, Type.STRING)) }
+        val args = ArrayList<Element.Variable>(script.intArgumentCount + script.stringArgumentCount)
+        repeat(script.intArgumentCount) { args.add(Element.Variable(VarSource.LOCALINT, it, Primitive.INT)) }
+        repeat(script.stringArgumentCount) { args.add(Element.Variable(VarSource.LOCALSTRING, it, Primitive.STRING)) }
         return Function(id, args, addLabels(instructions), script.returnTypes)
     }
 
@@ -59,7 +60,7 @@ internal class Interpreter(
 
     internal class State(
             val scripts: Loader<Script>,
-            val paramTypes: Loader<Type>,
+            val paramTypes: Loader<Primitive>,
             private val script: Script
     ) {
 
@@ -69,15 +70,13 @@ internal class Interpreter(
 
         private var stackIdCounter: Int = 0
 
-        val arrayTypes: Array<Type?> = arrayOfNulls(5)
-
         val opcode: Int get() = script.opcodes[pc].toUnsignedInt()
 
         val intOperand: Int get() = script.operands[pc] as Int
 
         val stringOperand: String get() = script.operands[pc] as String
 
-        fun operand(type: Type): Element.Constant = Element.Constant(if (type == Type.STRING) stringOperand else intOperand, type)
+        fun operand(type: Type): Element.Constant = Element.Constant(if (type == Primitive.STRING) stringOperand else intOperand, type)
 
         val switch: Map<Int, Int> get() = script.switches[intOperand]
 
@@ -85,20 +84,20 @@ internal class Interpreter(
 
         fun popValue(): Any? = stack.pop().value
 
-        fun pop(type: Type): Element.Variable.Stack = stack.pop().toExpression(type)
+        fun pop(type: Type): Element.Variable = stack.pop().toExpression(type)
 
-        fun popAll(): List<Element.Variable.Stack> = stack.popAll().map { it.toExpression() }
+        fun popAll(): List<Element.Variable> = stack.popAll().map { it.toExpression() }
 
-        fun pop(count: Int): List<Element.Variable.Stack> = stack.pop(count).map { it.toExpression() }
+        fun pop(count: Int): List<Element.Variable> = stack.pop(count).map { it.toExpression() }
 
-        fun pop(types: List<Type>): List<Element.Variable.Stack> = stack.pop(types.size).mapIndexed { i, x -> x.toExpression(types[i])}
+        fun pop(types: List<Type>): List<Element.Variable> = stack.pop(types.size).mapIndexed { i, x -> x.toExpression(types[i])}
 
-        fun push(type: Type, value: Any? = null): Element.Variable.Stack {
+        fun push(type: Type, value: Any? = null): Element.Variable {
             val v = StackValue(value, type, ++stackIdCounter)
             stack.push(v)
             return v.toExpression()
         }
 
-        fun push(types: List<Type>): List<Element.Variable.Stack> = types.map { push(it) }
+        fun push(types: List<Type>): List<Element.Variable> = types.map { push(it) }
     }
 }

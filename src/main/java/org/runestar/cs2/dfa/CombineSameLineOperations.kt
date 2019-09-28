@@ -4,6 +4,7 @@ import org.runestar.cs2.ir.Element
 import org.runestar.cs2.ir.Expression
 import org.runestar.cs2.ir.Function
 import org.runestar.cs2.ir.Instruction
+import org.runestar.cs2.ir.VarSource
 import org.runestar.cs2.ir.plus
 
 internal object CombineSameLineOperations : Phase.Individual() {
@@ -31,6 +32,7 @@ internal object CombineSameLineOperations : Phase.Individual() {
 
     private fun isStackAssign(insn: Instruction): Boolean {
         if (insn !is Instruction.Assignment) return false
-        return insn.expression is Element.Variable.Stack
+        val expr = insn.expression
+        return expr is Element.Variable && expr.source == VarSource.STACK
     }
 }

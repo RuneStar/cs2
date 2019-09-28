@@ -1,8 +1,10 @@
 package org.runestar.cs2.ir
 
+import org.runestar.cs2.ArrayType
 import org.runestar.cs2.Opcodes
+import org.runestar.cs2.Primitive
+import org.runestar.cs2.Primitive.*
 import org.runestar.cs2.Type
-import org.runestar.cs2.Type.*
 import org.runestar.cs2.loadNotNull
 import org.runestar.cs2.namesReverse
 
@@ -120,11 +122,9 @@ internal interface Op {
         override fun translate(state: Interpreter.State): Instruction {
             val length = state.pop(INT)
             val arrayId = state.intOperand shr 16
-            val arrayIdVar = Element.Constant(arrayId)
-            val typeDesc = state.intOperand and 0xFFFF
-            val type = Element.Constant(typeDesc, TYPE)
-            state.arrayTypes[arrayId] = Type.of(typeDesc)
-            return Instruction.Assignment(Expression(), Expression.Operation(emptyList(), id, Expression(arrayIdVar, type, length)))
+            val arrayType = ArrayType(Type.of(state.intOperand and 0xFFFF))
+            val array = Element.Variable(VarSource.ARRAY, arrayId, arrayType)
+            return Instruction.Assignment(Expression(), Expression.Operation(emptyList(), id, Expression(array, length)))
         }
     }
 
@@ -134,10 +134,9 @@ internal interface Op {
 
         override fun translate(state: Interpreter.State): Instruction {
             val arrayId = state.intOperand
-            val arrayIdVar = Element.Constant(arrayId)
             val arrayIndex = state.pop(INT)
-            val arrayType = state.arrayTypes[arrayId] ?: INT
-            return Instruction.Assignment(state.push(arrayType), Expression.Operation(listOf(arrayType), id, Expression(arrayIdVar, arrayIndex)))
+            val array = Element.Variable(VarSource.ARRAY, arrayId, ArrayType.INT)
+            return Instruction.Assignment(state.push(INT), Expression.Operation(listOf(INT), id, Expression(array, arrayIndex)))
         }
     }
 
@@ -147,11 +146,10 @@ internal interface Op {
 
         override fun translate(state: Interpreter.State): Instruction {
             val arrayId = state.intOperand
-            val arrayType = state.arrayTypes[arrayId] ?: INT
-            val arrayIdVar = Element.Constant(arrayId)
-            val value = state.pop(arrayType)
+            val value = state.pop(INT)
             val arrayIndex = state.pop(INT)
-            return Instruction.Assignment(Expression(), Expression.Operation(emptyList(), id, Expression(arrayIdVar, arrayIndex, value)))
+            val array = Element.Variable(VarSource.ARRAY, arrayId, ArrayType.INT)
+            return Instruction.Assignment(Expression(), Expression.Operation(emptyList(), id, Expression(array, arrayIndex, value)))
         }
     }
 
@@ -181,27 +179,27 @@ internal interface Op {
             return when (this) {
                 PUSH_CONSTANT_INT -> Instruction.Assignment(state.push(INT, state.intOperand), state.operand(INT))
                 PUSH_CONSTANT_STRING -> Instruction.Assignment(state.push(STRING, state.stringOperand), state.operand(STRING))
-                PUSH_VAR -> Instruction.Assignment(state.push(INT), Element.Variable.Varp(state.intOperand, INT))
-                POP_VAR -> Instruction.Assignment(Element.Variable.Varp(state.intOperand, INT), state.pop(INT))
-                PUSH_VARBIT -> Instruction.Assignment(state.push(INT), Element.Variable.Varbit(state.intOperand, INT))
-                POP_VARBIT -> Instruction.Assignment(Element.Variable.Varbit(state.intOperand, INT), state.pop(INT))
-                PUSH_INT_LOCAL -> Instruction.Assignment(state.push(INT), Element.Variable.Local(state.intOperand, INT))
-                POP_INT_LOCAL -> Instruction.Assignment(Element.Variable.Local(state.intOperand, INT), state.pop(INT))
-                PUSH_STRING_LOCAL -> Instruction.Assignment(state.push(STRING), Element.Variable.Local(state.intOperand, STRING))
-                POP_STRING_LOCAL -> Instruction.Assignment(Element.Variable.Local(state.intOperand, STRING), state.pop(STRING))
+                PUSH_VAR -> Instruction.Assignment(state.push(INT), Element.Variable(VarSource.VARP, state.intOperand, INT))
+                POP_VAR -> Instruction.Assignment(Element.Variable(VarSource.VARP, state.intOperand, INT), state.pop(INT))
+                PUSH_VARBIT -> Instruction.Assignment(state.push(INT), Element.Variable(VarSource.VARBIT, state.intOperand, INT))
+                POP_VARBIT -> Instruction.Assignment(Element.Variable(VarSource.VARBIT, state.intOperand, INT), state.pop(INT))
+                PUSH_INT_LOCAL -> Instruction.Assignment(state.push(INT), Element.Variable(VarSource.LOCALINT, state.intOperand, INT))
+                POP_INT_LOCAL -> Instruction.Assignment(Element.Variable(VarSource.LOCALINT, state.intOperand, INT), state.pop(INT))
+                PUSH_STRING_LOCAL -> Instruction.Assignment(state.push(STRING), Element.Variable(VarSource.LOCALSTRING, state.intOperand, STRING))
+                POP_STRING_LOCAL -> Instruction.Assignment(Element.Variable(VarSource.LOCALSTRING, state.intOperand, STRING), state.pop(STRING))
                 POP_INT_DISCARD -> Instruction.Assignment(Expression(), state.pop(INT))
                 POP_STRING_DISCARD -> Instruction.Assignment(Expression(), state.pop(STRING))
-                PUSH_VARC_INT -> Instruction.Assignment(state.push(INT), Element.Variable.Varc(state.intOperand, INT))
-                POP_VARC_INT -> Instruction.Assignment(Element.Variable.Varc(state.intOperand, INT), state.pop(INT))
-                PUSH_VARC_STRING -> Instruction.Assignment(state.push(STRING), Element.Variable.Varc(state.intOperand, STRING))
-                POP_VARC_STRING -> Instruction.Assignment(Element.Variable.Varc(state.intOperand, STRING), state.pop(STRING))
+                PUSH_VARC_INT -> Instruction.Assignment(state.push(INT), Element.Variable(VarSource.VARCINT, state.intOperand, INT))
+                POP_VARC_INT -> Instruction.Assignment(Element.Variable(VarSource.VARCINT, state.intOperand, INT), state.pop(INT))
+                PUSH_VARC_STRING -> Instruction.Assignment(state.push(STRING), Element.Variable(VarSource.VARCSTRING, state.intOperand, STRING))
+                POP_VARC_STRING -> Instruction.Assignment(Element.Variable(VarSource.VARCSTRING, state.intOperand, STRING), state.pop(STRING))
             }
         }
     }
 
     private enum class Basic(
-            val args: List<Type>,
-            val defs: List<Type>,
+            val args: List<Primitive>,
+            val defs: List<Primitive>,
             val o: Type? = null
     ) : Op {
         PUSH_VARC_STRING_OLD(listOf(), listOf(STRING), INT),
@@ -447,13 +445,13 @@ internal interface Op {
         INV_GETNUM(listOf(INV, INT), listOf(INT)),
         INV_TOTAL(listOf(INV, OBJ), listOf(INT)),
         INV_SIZE(listOf(INV), listOf(INT)),
-        STAT(listOf(Type.STAT), listOf(INT)),
-        STAT_BASE(listOf(Type.STAT), listOf(INT)),
-        STAT_XP(listOf(Type.STAT), listOf(INT)),
-        COORD(listOf(), listOf(Type.COORD)),
-        COORDX(listOf(Type.COORD), listOf(INT)),
-        COORDY(listOf(Type.COORD), listOf(INT)),
-        COORDZ(listOf(Type.COORD), listOf(INT)),
+        STAT(listOf(Primitive.STAT), listOf(INT)),
+        STAT_BASE(listOf(Primitive.STAT), listOf(INT)),
+        STAT_XP(listOf(Primitive.STAT), listOf(INT)),
+        COORD(listOf(), listOf(Primitive.COORD)),
+        COORDX(listOf(Primitive.COORD), listOf(INT)),
+        COORDY(listOf(Primitive.COORD), listOf(INT)),
+        COORDZ(listOf(Primitive.COORD), listOf(INT)),
         MAP_MEMBERS(listOf(), listOf(BIT)),
         INVOTHER_GETOBJ(listOf(INV, INT), listOf(OBJ)),
         INVOTHER_GETNUM(listOf(INV, INT), listOf(INT)),
@@ -465,7 +463,7 @@ internal interface Op {
         RUNWEIGHT_VISIBLE(listOf(), listOf(INT)),
         PLAYERMOD(listOf(), listOf(BOOLEAN)),
         WORLDFLAGS(listOf(), listOf(INT)),
-        MOVECOORD(listOf(Type.COORD, INT, INT, INT), listOf(Type.COORD)),
+        MOVECOORD(listOf(Primitive.COORD, INT, INT, INT), listOf(Primitive.COORD)),
 
         ENUM_STRING(listOf(ENUM, INT), listOf(STRING)),
         ENUM_GETOUTPUTCOUNT(listOf(ENUM), listOf(INT)),
@@ -673,10 +671,10 @@ internal interface Op {
         WORLDMAP_GETZOOM(listOf(), listOf(INT)),
         WORLDMAP_SETZOOM(listOf(INT), listOf()),
         WORLDMAP_ISLOADED(listOf(), listOf(BOOLEAN)),
-        WORLDMAP_JUMPTODISPLAYCOORD(listOf(Type.COORD), listOf()),
-        WORLDMAP_JUMPTODISPLAYCOORD_INSTANT(listOf(Type.COORD), listOf()),
-        WORLDMAP_JUMPTOSOURCECOORD(listOf(Type.COORD), listOf()),
-        WORLDMAP_JUMPTOSOURCECOORD_INSTANT(listOf(Type.COORD), listOf()),
+        WORLDMAP_JUMPTODISPLAYCOORD(listOf(Primitive.COORD), listOf()),
+        WORLDMAP_JUMPTODISPLAYCOORD_INSTANT(listOf(Primitive.COORD), listOf()),
+        WORLDMAP_JUMPTOSOURCECOORD(listOf(Primitive.COORD), listOf()),
+        WORLDMAP_JUMPTOSOURCECOORD_INSTANT(listOf(Primitive.COORD), listOf()),
         WORLDMAP_GETDISPLAYPOSITION(listOf(), listOf(INT, INT)),
         WORLDMAP_GETCONFIGORIGIN(listOf(MAPAREA), listOf(INT)),
         WORLDMAP_GETCONFIGSIZE(listOf(MAPAREA), listOf(INT, INT)),
@@ -684,13 +682,13 @@ internal interface Op {
         WORLDMAP_GETCONFIGZOOM(listOf(MAPAREA), listOf(INT)),
         _6615(listOf(), listOf(INT, INT)),
         WORLDMAP_GETCURRENTMAP(listOf(), listOf(MAPAREA)),
-        WORLDMAP_GETDISPLAYCOORD(listOf(Type.COORD), listOf(INT, INT)),
-        _6618(listOf(Type.COORD), listOf(INT, INT)),
-        _6619(listOf(INT, Type.COORD), listOf()),
-        _6620(listOf(INT, Type.COORD), listOf()),
-        WORLDMAP_COORDINMAP(listOf(MAPAREA, Type.COORD), listOf(BOOLEAN)),
+        WORLDMAP_GETDISPLAYCOORD(listOf(Primitive.COORD), listOf(INT, INT)),
+        _6618(listOf(Primitive.COORD), listOf(INT, INT)),
+        _6619(listOf(INT, Primitive.COORD), listOf()),
+        _6620(listOf(INT, Primitive.COORD), listOf()),
+        WORLDMAP_COORDINMAP(listOf(MAPAREA, Primitive.COORD), listOf(BOOLEAN)),
         WORLDMAP_GETSIZE(listOf(), listOf(INT, INT)),
-        _6623(listOf(Type.COORD), listOf(INT)),
+        _6623(listOf(Primitive.COORD), listOf(INT)),
         _6624(listOf(INT), listOf()),
         _6625(listOf(), listOf()),
         _6626(listOf(INT), listOf()),
@@ -705,16 +703,16 @@ internal interface Op {
         WORLDMAP_GETDISABLEELEMENTS(listOf(), listOf(BOOLEAN)),
         WORLDMAP_GETDISABLEELEMENT(listOf(INT), listOf(BOOLEAN)),
         WORLDMAP_GETDISABLEELEMENTCATEGORY(listOf(CATEGORY), listOf(BOOLEAN)),
-        _6638(listOf(INT, Type.COORD), listOf(INT)),
-        WORLDMAP_LISTELEMENT_START(listOf(), listOf(MAPELEMENT, Type.COORD)),
-        WORLDMAP_LISTELEMENT_NEXT(listOf(), listOf(MAPELEMENT, Type.COORD)),
+        _6638(listOf(INT, Primitive.COORD), listOf(INT)),
+        WORLDMAP_LISTELEMENT_START(listOf(), listOf(MAPELEMENT, Primitive.COORD)),
+        WORLDMAP_LISTELEMENT_NEXT(listOf(), listOf(MAPELEMENT, Primitive.COORD)),
         MEC_TEXT(listOf(MAPELEMENT), listOf(STRING)),
         MEC_TEXTSIZE(listOf(MAPELEMENT), listOf(INT)),
         MEC_CATEGORY(listOf(MAPELEMENT), listOf(CATEGORY)),
         MEC_SPRITE(listOf(MAPELEMENT), listOf(INT)),
         WORLDMAP_ELEMENT(listOf(), listOf(MAPELEMENT)),
-        _6698(listOf(), listOf(Type.COORD)),
-        WORLDMAP_ELEMENTCOORD(listOf(), listOf(Type.COORD)),
+        _6698(listOf(), listOf(Primitive.COORD)),
+        WORLDMAP_ELEMENTCOORD(listOf(), listOf(Primitive.COORD)),
         ;
 
         override val id: Int = namesReverse.getValue(name)
@@ -831,7 +829,8 @@ internal interface Op {
         }
     }
 
-    enum class ParamKey(val type: Type) : Op {
+    enum class ParamKey(val type: Primitive) : Op {
+
         NC_PARAM(NPC),
         LC_PARAM(LOC),
         OC_PARAM(OBJ),

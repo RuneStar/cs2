@@ -20,8 +20,8 @@ data class Script(
         out@
         while (i >= 0) {
             when (opcodes[i--].toInt()) {
-                PUSH_CONSTANT_INT -> ts.add(Type.INT)
-                PUSH_CONSTANT_STRING -> ts.add(Type.STRING)
+                PUSH_CONSTANT_INT -> ts.add(Primitive.INT)
+                PUSH_CONSTANT_STRING -> ts.add(Primitive.STRING)
                 else -> break@out
             }
         }
