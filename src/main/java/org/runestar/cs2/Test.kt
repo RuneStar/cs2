@@ -4,13 +4,17 @@ import org.runestar.cs2.cg.StrictGenerator
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.Duration
+import java.time.Instant
 import java.util.TreeSet
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 fun main() {
+    val start = Instant.now()
     writeReadme()
     decompile()
+    println(Duration.between(start, Instant.now()))
 }
 
 private fun writeReadme() {

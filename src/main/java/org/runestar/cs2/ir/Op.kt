@@ -1,9 +1,12 @@
 package org.runestar.cs2.ir
 
+import org.runestar.cs2.Alias
 import org.runestar.cs2.ArrayType
 import org.runestar.cs2.Opcodes
 import org.runestar.cs2.Primitive
 import org.runestar.cs2.Primitive.*
+import org.runestar.cs2.Alias.*
+import org.runestar.cs2.StackType
 import org.runestar.cs2.Type
 import org.runestar.cs2.loadNotNull
 import org.runestar.cs2.namesReverse
@@ -31,7 +34,7 @@ internal interface Op {
                 addAll(Assign.values().asList())
                 addAll(Basic.values().asList())
                 addAll(SetOn.values().asList())
-                addAll(ParamKey.values().asList())
+                addAll(Param.values().asList())
                 associateBy { it.id }
             }
         }
@@ -44,7 +47,7 @@ internal interface Op {
         override val id = Opcodes.SWITCH
 
         override fun translate(state: Interpreter.State): Instruction {
-            return Instruction.Switch(state.pop(INT), state.switch.mapValues { Instruction.Label(it.value + 1 + state.pc) })
+            return Instruction.Switch(state.pop(StackType.INT), state.switch.mapValues { Instruction.Label(it.value + 1 + state.pc) })
         }
     }
 
@@ -66,7 +69,8 @@ internal interface Op {
             val invoked = state.scripts.loadNotNull(invokeId)
             val args = state.pop(invoked.intArgumentCount + invoked.stringArgumentCount)
             val defs = state.push(invoked.returnTypes)
-            return Instruction.Assignment(Expression(defs), Expression.Operation.Invoke(invoked.returnTypes, invokeId, Expression(args)))
+            val returnTypes = state.typingFactory.returned(invokeId, invoked.returnTypes.size)
+            return Instruction.Assignment(Expression(defs), Expression.Operation.Invoke(returnTypes, invokeId, Expression(args)))
         }
     }
 
@@ -84,15 +88,16 @@ internal interface Op {
         override val id = Opcodes.ENUM
 
         override fun translate(state: Interpreter.State): Instruction {
-            val key = state.pop(INT)
+            val key = state.pop(StackType.INT)
             val enumId = state.pop(ENUM)
-            val valueType = Type.of(state.peekValue() as Int)
-            val valueTypeVar = state.pop(TYPE)
-            val keyType = Type.of(state.peekValue() as Int)
-            val keyTypeVar = state.pop(TYPE)
+            val valueType = Type.of((state.peekValue() as Int).toByte())
+            val valueTypeVar = state.pop(Alias.TYPE)
+            val keyType = Type.of((state.peekValue() as Int).toByte())
+            val keyTypeVar = state.pop(Alias.TYPE)
             val args = Expression(keyTypeVar, valueTypeVar, enumId, key)
-            key.type = keyType
-            return Instruction.Assignment(state.push(valueType), Expression.Operation(listOf(valueType), id, args))
+            key.typing.to(keyType)
+            val value = state.push(valueType)
+            return Instruction.Assignment(value, Expression.Operation(listOf(Typing.to(valueType)), id, args))
         }
     }
 
@@ -108,8 +113,8 @@ internal interface Op {
         override val id = namesReverse.getValue(name)
 
         override fun translate(state: Interpreter.State): Instruction {
-            val r = state.pop(INT)
-            val l = state.pop(INT)
+            val r = state.pop(StackType.INT)
+            val l = state.pop(StackType.INT)
             val expr = Expression.Operation(emptyList(), id, Expression(l, r))
             return Instruction.Branch(expr, Instruction.Label(state.pc + state.intOperand + 1))
         }
@@ -122,8 +127,11 @@ internal interface Op {
         override fun translate(state: Interpreter.State): Instruction {
             val length = state.pop(INT)
             val arrayId = state.intOperand shr 16
-            val arrayType = ArrayType(Type.of(state.intOperand and 0xFFFF))
-            val array = Element.Variable(VarSource.ARRAY, arrayId, arrayType)
+            val arrayType = ArrayType(Type.of(state.intOperand.toByte()))
+            val varId = VarId(VarSource.ARRAY, arrayId)
+            val typing = state.typingFactory.variable(varId)
+            typing.to(arrayType)
+            val array = Element.Variable(varId, typing)
             return Instruction.Assignment(Expression(), Expression.Operation(emptyList(), id, Expression(array, length)))
         }
     }
@@ -134,9 +142,11 @@ internal interface Op {
 
         override fun translate(state: Interpreter.State): Instruction {
             val arrayId = state.intOperand
+            val varId = VarId(VarSource.ARRAY, arrayId)
             val arrayIndex = state.pop(INT)
-            val array = Element.Variable(VarSource.ARRAY, arrayId, ArrayType.INT)
-            return Instruction.Assignment(state.push(INT), Expression.Operation(listOf(INT), id, Expression(array, arrayIndex)))
+            val typing = state.typingFactory.variable(varId)
+            val array = Element.Variable(varId, typing)
+            return Instruction.Assignment(state.push(StackType.INT), Expression.Operation(listOf(Typing()), id, Expression(array, arrayIndex)))
         }
     }
 
@@ -146,9 +156,11 @@ internal interface Op {
 
         override fun translate(state: Interpreter.State): Instruction {
             val arrayId = state.intOperand
-            val value = state.pop(INT)
+            val value = state.pop(StackType.INT)
+            val varId = VarId(VarSource.ARRAY, arrayId)
             val arrayIndex = state.pop(INT)
-            val array = Element.Variable(VarSource.ARRAY, arrayId, ArrayType.INT)
+            val typing = state.typingFactory.variable(varId)
+            val array = Element.Variable(varId, typing)
             return Instruction.Assignment(Expression(), Expression.Operation(emptyList(), id, Expression(array, arrayIndex, value)))
         }
     }
@@ -175,32 +187,30 @@ internal interface Op {
 
         override val id: Int = namesReverse.getValue(name)
 
-        override fun translate(state: Interpreter.State): Instruction {
-            return when (this) {
-                PUSH_CONSTANT_INT -> Instruction.Assignment(state.push(INT, state.intOperand), state.operand(INT))
-                PUSH_CONSTANT_STRING -> Instruction.Assignment(state.push(STRING, state.stringOperand), state.operand(STRING))
-                PUSH_VAR -> Instruction.Assignment(state.push(INT), Element.Variable(VarSource.VARP, state.intOperand, INT))
-                POP_VAR -> Instruction.Assignment(Element.Variable(VarSource.VARP, state.intOperand, INT), state.pop(INT))
-                PUSH_VARBIT -> Instruction.Assignment(state.push(INT), Element.Variable(VarSource.VARBIT, state.intOperand, INT))
-                POP_VARBIT -> Instruction.Assignment(Element.Variable(VarSource.VARBIT, state.intOperand, INT), state.pop(INT))
-                PUSH_INT_LOCAL -> Instruction.Assignment(state.push(INT), Element.Variable(VarSource.LOCALINT, state.intOperand, INT))
-                POP_INT_LOCAL -> Instruction.Assignment(Element.Variable(VarSource.LOCALINT, state.intOperand, INT), state.pop(INT))
-                PUSH_STRING_LOCAL -> Instruction.Assignment(state.push(STRING), Element.Variable(VarSource.LOCALSTRING, state.intOperand, STRING))
-                POP_STRING_LOCAL -> Instruction.Assignment(Element.Variable(VarSource.LOCALSTRING, state.intOperand, STRING), state.pop(STRING))
-                POP_INT_DISCARD -> Instruction.Assignment(Expression(), state.pop(INT))
-                POP_STRING_DISCARD -> Instruction.Assignment(Expression(), state.pop(STRING))
-                PUSH_VARC_INT -> Instruction.Assignment(state.push(INT), Element.Variable(VarSource.VARCINT, state.intOperand, INT))
-                POP_VARC_INT -> Instruction.Assignment(Element.Variable(VarSource.VARCINT, state.intOperand, INT), state.pop(INT))
-                PUSH_VARC_STRING -> Instruction.Assignment(state.push(STRING), Element.Variable(VarSource.VARCSTRING, state.intOperand, STRING))
-                POP_VARC_STRING -> Instruction.Assignment(Element.Variable(VarSource.VARCSTRING, state.intOperand, STRING), state.pop(STRING))
-            }
+        override fun translate(state: Interpreter.State): Instruction = when (this) {
+            PUSH_CONSTANT_INT -> Instruction.Assignment(state.push(StackType.INT, state.intOperand), state.operand(StackType.INT))
+            PUSH_CONSTANT_STRING -> Instruction.Assignment(state.push(STRING, state.stringOperand), state.operand(STRING))
+            PUSH_VAR -> Instruction.Assignment(state.push(StackType.INT), state.variable(VarSource.VARP, state.intOperand))
+            POP_VAR -> Instruction.Assignment(state.variable(VarSource.VARP, state.intOperand), state.pop(StackType.INT))
+            PUSH_VARBIT -> Instruction.Assignment(state.push(StackType.INT), state.variable(VarSource.VARBIT, state.intOperand))
+            POP_VARBIT -> Instruction.Assignment(state.variable(VarSource.VARBIT, state.intOperand), state.pop(StackType.INT))
+            PUSH_INT_LOCAL -> Instruction.Assignment(state.push(StackType.INT), state.variable(VarSource.LOCALINT, state.intOperand))
+            POP_INT_LOCAL -> Instruction.Assignment(state.variable(VarSource.LOCALINT, state.intOperand), state.pop(StackType.INT))
+            PUSH_STRING_LOCAL -> Instruction.Assignment(state.push(STRING), state.variable(VarSource.LOCALSTRING, state.intOperand))
+            POP_STRING_LOCAL -> Instruction.Assignment(state.variable(VarSource.LOCALSTRING, state.intOperand), state.pop(STRING))
+            POP_INT_DISCARD -> Instruction.Assignment(Expression(), state.pop(StackType.INT))
+            POP_STRING_DISCARD -> Instruction.Assignment(Expression(), state.pop(STRING))
+            PUSH_VARC_INT -> Instruction.Assignment(state.push(StackType.INT), state.variable(VarSource.VARCINT, state.intOperand))
+            POP_VARC_INT -> Instruction.Assignment(state.variable(VarSource.VARCINT, state.intOperand), state.pop(StackType.INT))
+            PUSH_VARC_STRING -> Instruction.Assignment(state.push(STRING), state.variable(VarSource.VARCSTRING, state.intOperand))
+            POP_VARC_STRING -> Instruction.Assignment(state.variable(VarSource.VARCSTRING, state.intOperand), state.pop(STRING))
         }
     }
 
     private enum class Basic(
-            val args: List<Primitive>,
-            val defs: List<Primitive>,
-            val o: Type? = null
+            val args: List<Type.Stackable>,
+            val defs: List<Type.Stackable>,
+            val o: Type.Stackable? = null
     ) : Op {
         PUSH_VARC_STRING_OLD(listOf(), listOf(STRING), INT),
         POP_VARC_STRING_OLD(listOf(STRING), listOf(), INT),
@@ -252,7 +262,7 @@ internal interface Op {
         CC_SETOBJECT_ALWAYS_NUM(listOf(OBJ, INT), listOf(), BOOLEAN),
 
         CC_SETOP(listOf(INT, STRING), listOf(), BOOLEAN),
-        CC_SETDRAGGABLE(listOf(INT, INT), listOf(), BOOLEAN),
+        CC_SETDRAGGABLE(listOf(COMPONENT, INT), listOf(), BOOLEAN),
         CC_SETDRAGGABLEBEHAVIOR(listOf(INT), listOf(), BOOLEAN),
         CC_SETDRAGDEADZONE(listOf(INT), listOf(), BOOLEAN),
         CC_SETDRAGDEADTIME(listOf(INT), listOf(), BOOLEAN),
@@ -342,7 +352,7 @@ internal interface Op {
         IF_SETOBJECT_ALWAYS_NUM(listOf(OBJ, INT, COMPONENT), listOf()),
 
         IF_SETOP(listOf(INT, STRING, COMPONENT), listOf()),
-        IF_SETDRAGGABLE(listOf(INT, INT, COMPONENT), listOf()),
+        IF_SETDRAGGABLE(listOf(COMPONENT, INT, COMPONENT), listOf()),
         IF_SETDRAGGABLEBEHAVIOR(listOf(INT, COMPONENT), listOf()),
         IF_SETDRAGDEADZONE(listOf(INT, COMPONENT), listOf()),
         IF_SETDRAGDEADTIME(listOf(INT, COMPONENT), listOf()),
@@ -721,7 +731,7 @@ internal interface Op {
             var opArgs: List<Element> = state.pop(args)
             if (o != null) opArgs = opArgs.plus(state.operand(o))
             val opDefs = state.push(defs)
-            return Instruction.Assignment(Expression(opDefs), Expression.Operation(defs, id, Expression(opArgs)))
+            return Instruction.Assignment(Expression(opDefs), Expression.Operation(defs.map { Typing.to(it) }, id, Expression(opArgs)))
         }
     }
 
@@ -731,7 +741,7 @@ internal interface Op {
 
         override fun translate(state: Interpreter.State): Instruction {
             val args = state.pop(state.intOperand)
-            return Instruction.Assignment(state.push(STRING), Expression.Operation(listOf(STRING), id, Expression(args)))
+            return Instruction.Assignment(state.push(STRING), Expression.Operation(listOf(Typing.to(STRING)), id, Expression(args)))
         }
     }
 
@@ -803,24 +813,25 @@ internal interface Op {
             }
             var s = state.popValue() as String
             if (s.isNotEmpty() && s.last() == 'Y') {
-                val triggerType = when (id) {
+                val triggerType: Type.Stackable = when (id) {
                     Opcodes.IF_SETONSTATTRANSMIT, Opcodes.CC_SETONSTATTRANSMIT -> STAT
                     Opcodes.IF_SETONINVTRANSMIT, Opcodes.CC_SETONINVTRANSMIT -> INV
                     Opcodes.IF_SETONVARTRANSMIT, Opcodes.CC_SETONVARTRANSMIT -> VAR
                     else -> error(this)
                 }
                 val n = state.popValue() as Int
-                args.add(Element.Constant(n))
+                args.add(Element.Constant(n, Typing.to(INT)))
                 repeat(n) {
                     args.add(state.pop(triggerType))
                 }
                 s = s.dropLast(1)
             } else {
-                args.add(Element.Constant(0))
+                args.add(Element.Constant(0, Typing.to(INT)))
             }
             for (i in s.lastIndex downTo 0) {
                 val ep = state.peekValue()?.let { EventProperty.of(it) }
-                val pop = state.pop(Type.of(s[i]))
+                val t = Type.of(s[i])
+                val pop = state.pop(t.stackType, t)
                 args.add(ep ?: pop)
             }
             val scriptId = state.popValue() as Int
@@ -829,7 +840,7 @@ internal interface Op {
         }
     }
 
-    enum class ParamKey(val type: Primitive) : Op {
+    enum class Param(val type: Primitive) : Op {
 
         NC_PARAM(NPC),
         LC_PARAM(LOC),
@@ -840,11 +851,11 @@ internal interface Op {
         override val id = namesReverse.getValue(name)
 
         override fun translate(state: Interpreter.State): Instruction {
-            val paramKeyId = state.peekValue() as Int
+            val paramId = state.peekValue() as Int
             val param = state.pop(PARAM)
-            val rec = state.pop(type)
-            val paramType = state.paramTypes.loadNotNull(paramKeyId)
-            return Instruction.Assignment(state.push(paramType), Expression.Operation(listOf(paramType), id, Expression(rec, param)))
+            val recv = state.pop(type)
+            val paramType = state.paramTypes.loadNotNull(paramId)
+            return Instruction.Assignment(state.push(paramType.stackType, paramType), Expression.Operation(listOf(Typing.to(paramType)), id, Expression(recv, param)))
         }
     }
 }

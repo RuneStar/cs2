@@ -33,6 +33,6 @@ internal object CombineSameLineOperations : Phase.Individual() {
     private fun isStackAssign(insn: Instruction): Boolean {
         if (insn !is Instruction.Assignment) return false
         val expr = insn.expression
-        return expr is Element.Variable && expr.source == VarSource.STACK
+        return expr is Element.Variable && expr.varId.source == VarSource.STACK
     }
 }

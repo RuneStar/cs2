@@ -9,7 +9,7 @@ interface Loader<T : Any> {
         val ids: Set<Int>
     }
 
-    data class Mapping<T : Any>(private val map: Map<Int, T>) : Keyed<T> {
+    data class Mapping<T : Any>(val map: Map<Int, T>) : Keyed<T> {
 
         override fun load(id: Int): T? = map[id]
 
@@ -32,7 +32,7 @@ interface Loader<T : Any> {
 
         private fun readNames(fileName: String): Loader<String> = readLoader(fileName) { it }
 
-        val PARAM_TYPES = readLoader("param-types.tsv") { it.toInt().let { if (it == 0) Primitive.INT else Type.of(it) } }
+        val PARAM_TYPES = readLoader("param-types.tsv") { Type.ofAuto(it.toByte()) }
 
         val SCRIPT_NAMES = readLoader("script-names.tsv") { ScriptName.of(it) }
 

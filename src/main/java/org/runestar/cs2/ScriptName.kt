@@ -2,7 +2,7 @@ package org.runestar.cs2
 
 data class ScriptName(val trigger: Trigger, val name: String) {
 
-    override fun toString(): String = "[$trigger,$name]"
+    override fun toString() = "[$trigger,$name]"
 
     companion object {
 

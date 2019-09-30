@@ -1,5 +1,6 @@
 package org.runestar.cs2.cg
 
+import org.runestar.cs2.Alias
 import org.runestar.cs2.ArrayType
 import org.runestar.cs2.ir.EventProperty
 import org.runestar.cs2.Loader
@@ -64,9 +65,9 @@ private class Writer(
         if (f.returnTypes.isNotEmpty()) {
             append('(')
             val returnTypes = f.returnTypes.iterator()
-            append(returnTypes.next().typeLiteral)
+            append(returnTypes.next().finalType.literal)
             for (returnType in returnTypes) {
-                append(", ").append(returnType.typeLiteral)
+                append(", ").append(returnType.finalType.literal)
             }
             append(')')
         }
@@ -76,7 +77,7 @@ private class Writer(
     }
 
     private fun appendArg(arg: Element.Variable) {
-        append(arg.type.typeLiteral).append(' ').appendVar(arg)
+        append(arg.typing.finalType.literal).append(' ').appendVar(arg)
     }
 
     private fun appendConstruct(construct: Construct) {
@@ -139,8 +140,8 @@ private class Writer(
 
     private fun appendSwitch(construct: Construct.Switch) {
         nextLine()
-        val type = construct.expression.types.single()
-        append("switch_").append(type.typeLiteral).append(" (").appendExpr(construct.expression).append(") {")
+        val type = construct.expression.typings.single().finalType
+        append("switch_").append(type.literal).append(" (").appendExpr(construct.expression).append(") {")
         for ((ns, body) in construct.cases) {
             indent {
                 nextLine()
@@ -194,8 +195,8 @@ private class Writer(
         if (defs.isNotEmpty()) {
             if (defs.size == 1) {
                 val def = defs.single()
-                if (def.source.local && definedLocalVariables.add(def)) {
-                    append("def_").append(def.type.typeLiteral).append(' ')
+                if (def.varId.source.local && definedLocalVariables.add(def)) {
+                    append("def_").append(def.typing.finalType.literal).append(' ')
                 }
                 appendVar(def)
             } else {
@@ -219,26 +220,27 @@ private class Writer(
     }
 
     private fun appendVar(v: Element.Variable) = apply {
-        when (v.source) {
-            VarSource.LOCALINT, VarSource.LOCALSTRING, VarSource.ARRAY -> append('$').append(v.type.nameLiteral).append(v.id)
-            VarSource.VARP -> append("%var").append(v.id)
-            VarSource.VARBIT -> append("%varbit").append(v.id)
-            VarSource.VARCINT, VarSource.VARCSTRING -> append("%varc").append(v.type.erase().nameLiteral).append(v.id)
+        when (v.varId.source) {
+            VarSource.LOCALINT, VarSource.LOCALSTRING, VarSource.ARRAY -> append('$').append(v.typing.finalType.identifier).append(v.varId.id)
+            VarSource.VARP -> append("%var").append(v.varId.id)
+            VarSource.VARBIT -> append("%varbit").append(v.varId.id)
+            VarSource.VARCINT -> append("%varcint").append(v.varId.id)
+            VarSource.VARCSTRING -> append("%varcstring").append(v.varId.id)
             else -> error(v)
         }
     }
 
     private fun appendConst(expr: Element.Constant) {
-        if (expr.type == Primitive.STRING) {
+        if (expr.typing.type == Primitive.STRING) {
             append('"').append(expr.value as String).append('"')
         } else {
-            appendConstantInt(expr.value as Int, expr.type)
+            appendConstantInt(expr.value as Int, expr.typing.finalType)
         }
     }
 
     private fun appendConstantInt(n: Int, type: Type) {
         if (type is ArrayType) {
-            append(type.nameLiteral).append(n)
+            append(type.identifier).append(n)
             return
         }
         if (n == -1 && type != Primitive.INT) {
@@ -246,7 +248,7 @@ private class Writer(
             return
         }
         when (type) {
-            Primitive.TYPE -> append(Type.of(n).nameLiteral)
+            Alias.TYPE -> append(Type.of(n.toByte()).identifier)
             Primitive.COMPONENT -> append(n ushr 16).append(':').append(n and 0xFFFF)
             Primitive.BOOLEAN -> when (n) {
                 0 -> append(false)
@@ -265,7 +267,7 @@ private class Writer(
             }
             Primitive.GRAPHIC -> appendQuoteNamedInt(Loader.GRAPHIC_NAMES, n)
             Primitive.FONTMETRICS -> appendNamedInt(Loader.GRAPHIC_NAMES, n)
-            Primitive.COLOUR -> {
+            Alias.COLOUR -> {
                 if (n shr 24 != 0) error(n)
                 when (n) {
                     0xFF0000 -> append("^red")
@@ -286,10 +288,10 @@ private class Writer(
                     else -> append(n)
                 }
             }
-            Primitive.KEY -> append("^key_").append(Loader.KEY_NAMES.loadNotNull(n))
+            Alias.KEY -> append("^key_").append(Loader.KEY_NAMES.loadNotNull(n))
             Primitive.STAT -> appendNamedInt(Loader.STAT_NAMES, n)
             Primitive.OBJ, Primitive.NAMEDOBJ -> appendSuffixNamedInt(Loader.OBJ_NAMES, n)
-            Primitive.IFTYPE -> {
+            Alias.IFTYPE -> {
                 val s = when (n) {
                     3 -> "rectangle"
                     4 -> "text"
@@ -300,7 +302,7 @@ private class Writer(
                 }
                 append("^iftype_").append(s)
             }
-            Primitive.SETSIZE -> {
+            Alias.SETSIZE -> {
                 val s = when (n) {
                     0 -> "abs"
                     1 -> "minus"
@@ -309,7 +311,7 @@ private class Writer(
                 }
                 append("^setsize_").append(s)
             }
-            Primitive.SETPOSH -> {
+            Alias.SETPOSH -> {
                 val s = when (n) {
                     0 -> "abs_left"
                     1 -> "abs_centre"
@@ -321,7 +323,7 @@ private class Writer(
                 }
                 append("^setpos_").append(s)
             }
-            Primitive.SETPOSV -> {
+            Alias.SETPOSV -> {
                 val s = when (n) {
                     0 -> "abs_top"
                     1 -> "abs_centre"
@@ -333,7 +335,7 @@ private class Writer(
                 }
                 append("^setpos_").append(s)
             }
-            Primitive.SETTEXTALIGNH -> {
+            Alias.SETTEXTALIGNH -> {
                 val s = when (n) {
                     0 -> "left"
                     1 -> "centre"
@@ -342,7 +344,7 @@ private class Writer(
                 }
                 append("^settextalign_").append(s)
             }
-            Primitive.SETTEXTALIGNV -> {
+            Alias.SETTEXTALIGNV -> {
                 val s = when (n) {
                     0 -> "top"
                     1 -> "centre"
@@ -351,12 +353,12 @@ private class Writer(
                 }
                 append("^settextalign_").append(s)
             }
-            Primitive.VAR -> append("var").append(n)
+            Alias.VAR -> append("var").append(n)
             Primitive.INV -> appendNamedInt(Loader.INV_NAMES, n)
             Primitive.MAPAREA -> appendNamedInt(Loader.MAPAREA_NAMES, n)
-            Primitive.CHATTYPE -> append("^chattype_").append(Loader.CHATTYPE_NAMES.loadNotNull(n))
-            Primitive.PARAM -> appendNamedInt(Loader.PARAM_NAMES, n)
-            Primitive.BIT -> {
+            Alias.CHATTYPE -> append("^chattype_").append(Loader.CHATTYPE_NAMES.loadNotNull(n))
+            Alias.PARAM -> appendNamedInt(Loader.PARAM_NAMES, n)
+            Alias.BIT -> {
                 val s = when (n) {
                     0 -> "^false"
                     1 -> "^true"
@@ -364,7 +366,7 @@ private class Writer(
                 }
                 append(s)
             }
-            Primitive.WINDOWMODE -> {
+            Alias.WINDOWMODE -> {
                 val s = when (n) {
                     1 -> "fixed"
                     2 -> "resizable"
@@ -404,8 +406,8 @@ private class Writer(
         when (opcode) {
             DEFINE_ARRAY -> {
                 val array = args[0] as Element.Variable
-                val elemType = (array.type as ArrayType).elementType
-                append("def_").append(elemType.typeLiteral).append(' ').appendVar(array).append('(').appendExpr(args[1]).append(')')
+                val elemType = (array.typing.type as ArrayType).elementType
+                append("def_").append(elemType.literal).append(' ').appendVar(array).append('(').appendExpr(args[1]).append(')')
                 return
             }
             PUSH_ARRAY_INT -> {

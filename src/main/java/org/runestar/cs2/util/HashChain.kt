@@ -89,18 +89,18 @@ internal class HashChain<E : Any> : Chain<E> {
             val to: E?
     ) : MutableIterator<E> {
 
-        var curr: E? = from
+        var curr: Link? = from?.let { map.getValue(it) }
 
         override fun hasNext(): Boolean = curr != null
 
         override fun next(): E {
             val last = curr!!
-            curr = if (last == to) null else next(last)
-            return last
+            curr = if (last.e == to) null else last.next
+            return last.e
         }
 
         override fun remove() {
-            remove(previous(curr!!)!!)
+            remove(curr!!.previous!!.e)
         }
     }
 }

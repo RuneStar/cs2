@@ -12,3 +12,5 @@ enum class VarSource(val global: Boolean, val local: Boolean) {
     VARCSTRING(true, false),
     ;
 }
+
+data class VarId(val source: VarSource, val id: Int)

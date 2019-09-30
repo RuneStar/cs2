@@ -3,6 +3,7 @@ package org.runestar.cs2.ir
 import org.runestar.cs2.Loader
 import org.runestar.cs2.Primitive
 import org.runestar.cs2.Script
+import org.runestar.cs2.StackType
 import org.runestar.cs2.Type
 import org.runestar.cs2.loadNotNull
 import org.runestar.cs2.util.Chain
@@ -15,14 +16,15 @@ internal class Interpreter(
         val paramTypes: Loader<Primitive>
 ) {
 
+    private val globalTypingFactory = TypingFactory()
+
     fun interpret(id: Int): Function {
-        val script = scripts.loadNotNull(id)
-        return makeFunction(id, script, interpretInstructions(script))
+        val state = State(scripts, paramTypes, id, scripts.loadNotNull(id), globalTypingFactory.Local())
+        return makeFunction(state, interpretInstructions(state))
     }
 
-    private fun interpretInstructions(script: Script): Array<Instruction> {
-        val state = State(scripts, paramTypes, script)
-        return Array(script.opcodes.size) {
+    private fun interpretInstructions(state: State): Array<Instruction> {
+        return Array(state.script.opcodes.size) {
             val insn = Op.translate(state)
             state.pc++
             if (insn !is Instruction.Assignment) {
@@ -32,11 +34,24 @@ internal class Interpreter(
         }
     }
 
-    private fun makeFunction(id: Int, script: Script, instructions: Array<Instruction>): Function {
-        val args = ArrayList<Element.Variable>(script.intArgumentCount + script.stringArgumentCount)
-        repeat(script.intArgumentCount) { args.add(Element.Variable(VarSource.LOCALINT, it, Primitive.INT)) }
-        repeat(script.stringArgumentCount) { args.add(Element.Variable(VarSource.LOCALSTRING, it, Primitive.STRING)) }
-        return Function(id, args, addLabels(instructions), script.returnTypes)
+    private fun makeFunction(state: State, instructions: Array<Instruction>): Function {
+        val args = ArrayList<Element.Variable>(state.script.intArgumentCount + state.script.stringArgumentCount)
+        repeat(state.script.intArgumentCount) {
+            val vid = VarId(VarSource.LOCALINT, it)
+            val t = state.typingFactory.variable(vid)
+            t.stackType = StackType.INT
+            t.isParameter = true
+            args.add(Element.Variable(vid, t))
+        }
+        repeat(state.script.stringArgumentCount) {
+            val vid = VarId(VarSource.LOCALSTRING, it)
+            val t = state.typingFactory.variable(vid)
+            t.stackType = StackType.STRING
+            t.isParameter = true
+            args.add(Element.Variable(vid, t))
+        }
+        val returnTypes = state.typingFactory.returned(state.scriptId, state.script.returnTypes.size)
+        return Function(state.scriptId, args, addLabels(instructions), returnTypes)
     }
 
     private fun addLabels(instructions: Array<Instruction>): Chain<Instruction> {
@@ -61,12 +76,14 @@ internal class Interpreter(
     internal class State(
             val scripts: Loader<Script>,
             val paramTypes: Loader<Primitive>,
-            private val script: Script
+            val scriptId: Int,
+            val script: Script,
+            val typingFactory: TypingFactory.Local
     ) {
 
         var pc: Int = 0
 
-        val stack: ListStack<StackValue> = ListStack()
+        val stack: ListStack<StackValue> = ListStack(ArrayList())
 
         private var stackIdCounter: Int = 0
 
@@ -76,7 +93,14 @@ internal class Interpreter(
 
         val stringOperand: String get() = script.operands[pc] as String
 
-        fun operand(type: Type): Element.Constant = Element.Constant(if (type == Primitive.STRING) stringOperand else intOperand, type)
+        fun operandValue(stackType: StackType): Any = when (stackType) {
+            StackType.INT -> intOperand
+            StackType.STRING -> stringOperand
+        }
+
+        fun operand(stackType: StackType) = Element.Constant(operandValue(stackType), Typing())
+
+        fun operand(type: Type.Stackable) = Element.Constant(operandValue(type.stackType), Typing.to(type))
 
         val switch: Map<Int, Int> get() = script.switches[intOperand]
 
@@ -84,20 +108,49 @@ internal class Interpreter(
 
         fun popValue(): Any? = stack.pop().value
 
-        fun pop(type: Type): Element.Variable = stack.pop().toExpression(type)
+        fun pop(stackType: StackType, type: Type.Stackable? = null): Element.Variable {
+            if (type != null) check(stackType == type.stackType)
+            val p = stack.pop()
+            check(p.stackType == stackType)
+            p.typing.to(type)
+            return p.toExpression()
+        }
+
+        fun pop(type: Type.Stackable): Element.Variable = pop(type.stackType, type)
 
         fun popAll(): List<Element.Variable> = stack.popAll().map { it.toExpression() }
 
         fun pop(count: Int): List<Element.Variable> = stack.pop(count).map { it.toExpression() }
 
-        fun pop(types: List<Type>): List<Element.Variable> = stack.pop(types.size).mapIndexed { i, x -> x.toExpression(types[i])}
+        fun pop(types: List<Type.Stackable>): List<Element.Variable> = stack.pop(types.size).mapIndexed { i, sv ->
+            sv.typing.to(types[i])
+            sv.toExpression()
+        }
 
-        fun push(type: Type, value: Any? = null): Element.Variable {
-            val v = StackValue(value, type, ++stackIdCounter)
+        fun push(stackType: StackType, type: Type.Stackable? = null, value: Any? = null): Element.Variable {
+            if (type != null) check(stackType == type.stackType)
+            val v = StackValue(stackIdCounter++, value, stackType, Typing.from(type))
             stack.push(v)
             return v.toExpression()
         }
 
-        fun push(types: List<Type>): List<Element.Variable> = types.map { push(it) }
+        fun push(stackType: StackType, value: Any? = null): Element.Variable = push(stackType, null, value)
+
+        fun push(type: Type.Stackable, value: Any? = null): Element.Variable = push(type.stackType, type, value)
+
+        fun push(types: List<Type.Stackable>): List<Element.Variable> = types.map { push(it) }
+
+        @JvmName("push2")
+        fun push(stackTypes: List<StackType>): List<Element.Variable> = stackTypes.map { push(it) }
+
+        fun variable(varSource: VarSource, id: Int): Element.Variable {
+            val varId = VarId(varSource, id)
+            return Element.Variable(varId, typingFactory.variable(varId))
+        }
     }
+}
+
+internal class StackValue(val id: Int, val value: Any?, val stackType: StackType, val typing: Typing) {
+
+    fun toExpression() = Element.Variable(VarId(VarSource.STACK, id), typing).also { typing.stackType = stackType }
 }

@@ -1,19 +1,20 @@
 package org.runestar.cs2.dfa
 
-import org.runestar.cs2.ArrayType
 import org.runestar.cs2.Opcodes
-import org.runestar.cs2.Primitive
+import org.runestar.cs2.StackType
 import org.runestar.cs2.ir.Element
 import org.runestar.cs2.ir.Expression
 import org.runestar.cs2.ir.Function
 import org.runestar.cs2.ir.Instruction
+import org.runestar.cs2.ir.Typing
+import org.runestar.cs2.ir.VarId
 import org.runestar.cs2.ir.VarSource
 import org.runestar.cs2.ir.list
 
 object FindArrayArgs : Phase.Individual() {
 
     override fun transform(f: Function) {
-        if (f.arguments.firstOrNull()?.type != Primitive.INT) return
+        if (f.arguments.none { it.typing.stackType == StackType.INT }) return
         for (insn in f.instructions) {
             if (insn !is Instruction.Assignment) continue
             val e = insn.expression
@@ -21,12 +22,12 @@ object FindArrayArgs : Phase.Individual() {
             val args = e.arguments.list<Element>()
             when (e.id) {
                 Opcodes.DEFINE_ARRAY -> {
-                    if ((args[0] as Element.Variable).id == 0) return
+                    if ((args[0] as Element.Variable).varId.id == 0) return
                 }
                 Opcodes.PUSH_ARRAY_INT -> {
-                    if ((args[0] as Element.Variable).id == 0) {
+                    if ((args[0] as Element.Variable).varId.id == 0) {
                         val newArgs = f.arguments.toMutableList()
-                        newArgs[0] = Element.Variable(VarSource.ARRAY, 0, ArrayType.INT)
+                        newArgs[0] = Element.Variable(VarId(VarSource.ARRAY, 0), args[0].typing)
                         f.arguments = newArgs
                         return
                     }

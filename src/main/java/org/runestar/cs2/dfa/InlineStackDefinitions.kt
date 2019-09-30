@@ -15,7 +15,7 @@ internal object InlineStackDefinitions : Phase.Individual() {
         for (insn in f.instructions) {
             if (insn !is Instruction.Assignment) continue
             val defs = insn.definitions.list<Element.Variable>()
-            if (defs.any { it.source != VarSource.STACK }) continue
+            if (defs.any { it.varId.source != VarSource.STACK }) continue
             if (defs.isEmpty()) continue
             var a: Instruction? = f.instructions.next(insn)!!
             while (a is Instruction.Evaluation) {

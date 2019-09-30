@@ -22,9 +22,9 @@ interface Phase {
 
         val DEFAULT = Composite(
                 RemoveDeadCode,
-                FindArrayArgs,
                 DeleteNops,
-                PropagateTypes,
+                FindArrayArgs,
+                InferTypes,
                 CombineSameLineOperations,
                 InlineStackDefinitions,
                 AddShortCircuitOperators

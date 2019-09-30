@@ -1,27 +1,28 @@
 package org.runestar.cs2
 
 import org.runestar.cs2.Opcodes.*
+import org.runestar.cs2.util.CP1252
 import org.runestar.cs2.util.toUnsignedInt
 import java.nio.ByteBuffer
 
-data class Script(
+class Script(
         val localIntCount: Int,
         val localStringCount: Int,
         val intArgumentCount: Int,
         val stringArgumentCount: Int,
-        val operands: Array<Any>,
+        val operands: Array<*>,
         val opcodes: ShortArray,
         val switches: Array<Map<Int, Int>>
 ) {
 
-    val returnTypes: List<Type> = run {
-        val ts = ArrayList<Type>()
+    val returnTypes: List<StackType> = run {
+        val ts = ArrayList<StackType>()
         var i = opcodes.size - 2
         out@
         while (i >= 0) {
             when (opcodes[i--].toInt()) {
-                PUSH_CONSTANT_INT -> ts.add(Primitive.INT)
-                PUSH_CONSTANT_STRING -> ts.add(Primitive.STRING)
+                PUSH_CONSTANT_INT -> ts.add(StackType.INT)
+                PUSH_CONSTANT_STRING -> ts.add(StackType.STRING)
                 else -> break@out
             }
         }
@@ -80,18 +81,23 @@ data class Script(
             )
         }
 
-        val CHARSET = charset("windows-1252")
-
         private fun ByteBuffer.readString(): String {
-            val origPos = position()
-            var length = 0
-            while (get() != 0.toByte()) length++
-            if (length == 0) return ""
-            val byteArray = ByteArray(length)
-            position(origPos)
-            get(byteArray)
-            position(position() + 1)
-            return String(byteArray, CHARSET)
+            val start = position()
+            while (get() != 0.toByte());
+            val len = position() - 1 - start
+            if (len == 0) return ""
+            val array: ByteArray
+            var offset = 0
+            if (hasArray()) {
+                array = array()
+                offset = arrayOffset() + start
+            } else {
+                array = ByteArray(len)
+                position(start)
+                get(array)
+                position(position() + 1)
+            }
+            return String(array, offset, len, CP1252)
         }
     }
 }

@@ -1,36 +1,26 @@
 package org.runestar.cs2.ir
 
 import org.runestar.cs2.Opcodes
-import org.runestar.cs2.Type
 import org.runestar.cs2.names
 
 interface Expression {
 
-    var types: List<Type>
+    val typings: List<Typing>
 
     class Compound(val expressions: List<Expression>) : Expression {
 
-        override var types: List<Type>
-            get() = expressions.flatMap { it.types }
-            set(value) {
-                var i = 0
-                for (e in expressions) {
-                    val ts = e.types
-                    e.types = value.subList(i, i + ts.size)
-                    i += ts.size
-                }
-            }
+        override val typings: List<Typing> get() = expressions.flatMap { it.typings }
 
         override fun toString(): String = expressions.joinToString(", ")
     }
 
     open class Operation(
-            override var types: List<Type>,
+            override var typings: List<Typing>,
             val id: Int,
             var arguments: Expression
     ) : Expression {
 
-        override fun toString(): String = "${names[id]}($arguments)($types)"
+        override fun toString(): String = "${names[id]}($arguments)$typings"
 
         interface Scripted {
 
@@ -40,14 +30,14 @@ interface Expression {
         }
 
         class Invoke(
-                types: List<Type>,
+                types: List<Typing>,
                 override val scriptId: Int,
                 arguments: Expression
         ) : Operation(types, Opcodes.GOSUB_WITH_PARAMS, arguments), Scripted {
 
             override val scriptArguments: Expression get() = arguments
 
-            override fun toString(): String = "~$scriptId($arguments)($types)"
+            override fun toString(): String = "~$scriptId($arguments)$typings"
         }
 
         class AddHook(

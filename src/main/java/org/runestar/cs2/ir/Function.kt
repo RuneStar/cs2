@@ -1,13 +1,12 @@
 package org.runestar.cs2.ir
 
-import org.runestar.cs2.Type
 import org.runestar.cs2.util.Chain
 
 class Function(
         val id: Int,
         var arguments: List<Element.Variable>,
         var instructions: Chain<Instruction>,
-        var returnTypes: List<Type>
+        var returnTypes: List<Typing>
 ) {
 
     override fun toString(): String {

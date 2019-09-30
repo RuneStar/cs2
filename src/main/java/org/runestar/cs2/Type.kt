@@ -1,57 +1,71 @@
 package org.runestar.cs2
 
-import java.lang.AssertionError
+import org.runestar.cs2.util.CP1252
+import org.runestar.cs2.util.toByte
+
+enum class StackType {
+    INT, STRING
+}
+
+class IncompatibleTypesException(val types: Collection<*>) : Exception("Incompatible types: $types") {
+    constructor(vararg types: Any) : this(types.asList())
+}
 
 interface Type {
 
-    val nameLiteral: String
+    val identifier: String
 
-    val typeLiteral: String
-
-    fun erase(): Type
+    val literal: String
 
     companion object {
 
-        private val map = Primitive.values().filter { it.desc != null }.associateBy { it.desc }
+        private val primitives = Primitive.values().associateBy { it.desc }
 
-        fun of(desc: Char): Primitive = map.getValue(desc)
+        fun of(desc: Byte): Primitive = primitives.getValue(desc)
 
-        fun of(desc: Int): Primitive = of(desc.toChar())
+        fun of(desc: Char): Primitive = of(desc.toByte(CP1252))
 
-        fun merge(a: Type, b: Type): Type {
-            if (a == b) return a
-            if (a.javaClass != b.javaClass) {
-                if (a == Primitive.INT && b is ArrayType) return b
-                if (b == Primitive.INT && a is ArrayType) return a
-                incompatibleTypes(a, b)
+        fun ofAuto(desc: Byte): Primitive = if (desc == 0.toByte()) Primitive.INT else of(desc)
+
+        fun union(types: Set<Type>): Type? {
+            val size = types.size
+            when (size) {
+                0 -> return null
+                1 -> return types.single()
             }
-            return when (a) {
-                is Primitive -> merge(a, b as Primitive)
-                is ArrayType -> ArrayType(merge(a.elementType, (b as ArrayType).elementType))
-                else -> throw AssertionError()
+            // if (types.all { it is ArrayType }) return ArrayType(union(ListSet(types.mapTo(ArrayList(size)) { (it as ArrayType).elementType }))!!)
+            if (size == 2) {
+                if (Primitive.NAMEDOBJ in types && Primitive.OBJ in types) return Primitive.OBJ
+                else if (Primitive.GRAPHIC in types && Primitive.FONTMETRICS in types) return Primitive.FONTMETRICS
+                else if (Primitive.INT in types) types.firstOrNull { it is Alias }?.let { return it }
             }
+            if (types.all { it == Primitive.INT || it is Alias }) return Primitive.INT
+            throw IncompatibleTypesException(types)
         }
 
-        private fun merge(a: Primitive, b: Primitive): Primitive {
-            if (a == b) return a
-            if (a.erase() != b.erase()) incompatibleTypes(a, b)
-            if (a == Primitive.INT) return b
-            if (b == Primitive.INT) return a
-            if ((a == Primitive.OBJ || a == Primitive.NAMEDOBJ) && (b == Primitive.OBJ || b == Primitive.NAMEDOBJ)) return Primitive.OBJ
-            if ((a == Primitive.FONTMETRICS || a == Primitive.GRAPHIC) && (b == Primitive.FONTMETRICS || b == Primitive.GRAPHIC)) return Primitive.FONTMETRICS
-            incompatibleTypes(a, b)
+        fun intersection(types: Set<Type>): Type? {
+            val size = types.size
+            when (size) {
+                0 -> return null
+                1 -> return types.single()
+            }
+            // if (types.all { it is ArrayType }) return ArrayType(intersection(ListSet(types.mapTo(ArrayList(size)) { (it as ArrayType).elementType }))!!)
+            if (size == 2) {
+                if (Primitive.NAMEDOBJ in types && Primitive.OBJ in types) return Primitive.NAMEDOBJ
+                else if (Primitive.GRAPHIC in types && Primitive.FONTMETRICS in types) return Primitive.GRAPHIC
+                else if (Primitive.INT in types) types.firstOrNull { it is Alias }?.let { return it }
+            }
+            if (types.all { it == Primitive.INT || it is Alias }) return Primitive.INT
+            throw IncompatibleTypesException(types)
         }
+    }
 
-        fun merge(a: List<Type>, b: List<Type>): List<Type> {
-            if (a.size != b.size) incompatibleTypes(a, b)
-            return List(a.size) { merge(a[it], b[it]) }
-        }
-
-        private fun <T> incompatibleTypes(a: T, b: T): Nothing = throw IllegalArgumentException("Incompatible types: $a & $b")
+    interface Stackable : Type {
+        val stackType: StackType
     }
 }
 
-enum class Primitive(val desc: Char? = null) : Type {
+enum class Primitive(desc: Char) : Type.Stackable {
 
     INT('i'),
     STRING('s'),
@@ -73,10 +87,23 @@ enum class Primitive(val desc: Char? = null) : Type {
     CHAR('z'),
     STRUCT('J'),
     SYNTH('P'),
-
     MAPELEMENT('µ'),
     NPC('n'),
     SEQ('A'),
+    ;
+
+    val desc = desc.toByte(CP1252)
+
+    override val stackType get() = if (this == STRING) StackType.STRING else StackType.INT
+
+    override val identifier = name.toLowerCase()
+
+    override val literal get() = identifier
+
+    override fun toString() = identifier
+}
+
+enum class Alias : Type.Stackable {
 
     TYPE,
     COLOUR,
@@ -94,30 +121,24 @@ enum class Primitive(val desc: Char? = null) : Type {
     KEY,
     ;
 
-    override val nameLiteral: String = name.toLowerCase()
+    override val stackType get() = StackType.INT
 
-    override val typeLiteral: String get() = if (desc == null) INT.nameLiteral else nameLiteral
+    override val identifier = name.toLowerCase()
 
-    override fun erase(): Primitive = if (this == STRING) STRING else INT
+    override val literal get() = Primitive.INT.literal
 
-    override fun toString() = nameLiteral
+    override fun toString() = identifier
 }
 
-data class ArrayType(val elementType: Primitive) : Type {
+data class ArrayType(val elementType: Type.Stackable) : Type {
 
     init {
-        require(elementType != Primitive.STRING)
+        require(elementType.stackType == StackType.INT)
     }
 
-    override val nameLiteral get() = elementType.nameLiteral + "array"
+    override val identifier get() = elementType.identifier + "array"
 
-    override val typeLiteral get() = elementType.typeLiteral + "array"
+    override val literal get() = elementType.literal + "array"
 
-    override fun erase(): ArrayType = INT
-
-    override fun toString() = nameLiteral
-
-    companion object {
-        val INT = ArrayType(Primitive.INT)
-    }
+    override fun toString() = identifier
 }

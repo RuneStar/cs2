@@ -16,7 +16,7 @@ internal object DeleteNops : Phase.Individual() {
             val defs = insn.definitions.list<Element.Variable>()
             if (defs.isNotEmpty()) continue
             val e = insn.expression.list<Expression>().singleOrNull() ?: continue
-            if (e !is Element.Variable || e.source != VarSource.STACK) continue
+            if (e !is Element.Variable || e.varId.source != VarSource.STACK) continue
             itr.remove()
         }
     }
