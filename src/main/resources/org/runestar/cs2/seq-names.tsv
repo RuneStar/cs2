@@ -984,7 +984,6 @@
 4484	cerberus_ready
 4485	cerberus_ready
 4488	cerberus_walk_f
-4505	summoned_soul_ready
 4517	soul_devourer
 4519	key_master_ready
 4524	spawn_ready
@@ -2087,3 +2086,15 @@
 8509	the_jormungand_ready
 8512	the_jormungand_ready
 8518	the_jormungand_ready
+8526	summoned_soul_ready
+8527	summoned_soul_walk_f
+8534	santa_walk_f
+8535	santa_walk_b
+8536	santa_walk_r
+8537	santa_walk_l
+8538	santa_ready
+8541	anti_santa_walk_f
+8542	anti_santa_walk_b
+8543	anti_santa_walk_r
+8544	anti_santa_walk_l
+8545	anti_santa_ready
