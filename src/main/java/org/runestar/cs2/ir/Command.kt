@@ -6,12 +6,13 @@ import org.runestar.cs2.Opcodes
 import org.runestar.cs2.Primitive
 import org.runestar.cs2.Primitive.*
 import org.runestar.cs2.Alias.*
+import org.runestar.cs2.Loader
 import org.runestar.cs2.StackType
 import org.runestar.cs2.Type
 import org.runestar.cs2.loadNotNull
 import org.runestar.cs2.namesReverse
 
-internal interface Op {
+interface Command {
 
     val id: Int
 
@@ -19,30 +20,29 @@ internal interface Op {
 
     companion object {
 
-        private val map: Map<Int, Op> by lazy {
-            ArrayList<Op>().run {
-                add(Switch)
-                add(Branch)
-                add(GetEnum)
-                add(Invoke)
-                add(Return)
-                add(JoinString)
-                add(DefineArray)
-                add(GetArrayInt)
-                add(SetArrayInt)
-                addAll(BranchCompare.values().asList())
-                addAll(Assign.values().asList())
-                addAll(Basic.values().asList())
-                addAll(SetOn.values().asList())
-                addAll(Param.values().asList())
-                associateBy { it.id }
-            }
+        val COMMANDS: List<Command> get() = ArrayList<Command>().apply {
+            add(Switch)
+            add(Branch)
+            add(GetEnum)
+            add(Invoke)
+            add(Return)
+            add(JoinString)
+            add(DefineArray)
+            add(GetArrayInt)
+            add(SetArrayInt)
+            addAll(BranchCompare.values().asList())
+            addAll(Assign.values().asList())
+            addAll(Basic.values().asList())
+            addAll(SetOn.values().asList())
+            addAll(Param.values().asList())
         }
 
-        fun translate(state: Interpreter.State): Instruction = map.getValue(state.opcode).translate(state)
+        fun loader(commands: Iterable<Command>): Loader<Command> = Loader.Mapping(commands.associateBy { it.id })
+
+        val LOADER: Loader<Command> = loader(COMMANDS)
     }
 
-    private object Switch : Op {
+    object Switch : Command {
 
         override val id = Opcodes.SWITCH
 
@@ -51,7 +51,7 @@ internal interface Op {
         }
     }
 
-    private object Branch : Op {
+    object Branch : Command {
 
         override val id = Opcodes.BRANCH
 
@@ -60,7 +60,7 @@ internal interface Op {
         }
     }
 
-    private object Invoke : Op {
+    object Invoke : Command {
 
         override val id = Opcodes.GOSUB_WITH_PARAMS
 
@@ -74,7 +74,7 @@ internal interface Op {
         }
     }
 
-    private object Return : Op {
+    object Return : Command {
 
         override val id = Opcodes.RETURN
 
@@ -83,7 +83,7 @@ internal interface Op {
         }
     }
 
-    private object GetEnum : Op {
+    object GetEnum : Command {
 
         override val id = Opcodes.ENUM
 
@@ -101,7 +101,7 @@ internal interface Op {
         }
     }
 
-    private enum class BranchCompare : Op {
+    enum class BranchCompare : Command {
 
         BRANCH_NOT,
         BRANCH_EQUALS,
@@ -120,7 +120,7 @@ internal interface Op {
         }
     }
 
-    private object DefineArray : Op {
+    object DefineArray : Command {
 
         override val id = Opcodes.DEFINE_ARRAY
 
@@ -136,7 +136,7 @@ internal interface Op {
         }
     }
 
-    private object GetArrayInt : Op {
+    object GetArrayInt : Command {
 
         override val id = Opcodes.PUSH_ARRAY_INT
 
@@ -150,7 +150,7 @@ internal interface Op {
         }
     }
 
-    private object SetArrayInt : Op {
+    object SetArrayInt : Command {
 
         override val id = Opcodes.POP_ARRAY_INT
 
@@ -165,7 +165,7 @@ internal interface Op {
         }
     }
 
-    private enum class Assign : Op {
+    enum class Assign : Command {
 
         PUSH_CONSTANT_INT,
         PUSH_CONSTANT_STRING,
@@ -207,11 +207,11 @@ internal interface Op {
         }
     }
 
-    private enum class Basic(
+    enum class Basic(
             val args: List<Type.Stackable>,
             val defs: List<Type.Stackable>,
             val o: Type.Stackable? = null
-    ) : Op {
+    ) : Command {
         PUSH_VARC_STRING_OLD(listOf(), listOf(STRING), INT),
         POP_VARC_STRING_OLD(listOf(STRING), listOf(), INT),
         CC_CREATE(listOf(COMPONENT, IFTYPE, INT), listOf(), BOOLEAN),
@@ -735,7 +735,7 @@ internal interface Op {
         }
     }
 
-    private object JoinString : Op {
+    object JoinString : Command {
 
         override val id = Opcodes.JOIN_STRING
 
@@ -745,7 +745,7 @@ internal interface Op {
         }
     }
 
-    private enum class SetOn : Op {
+    enum class SetOn : Command {
 
         CC_SETONCLICK,
         CC_SETONHOLD,
@@ -840,7 +840,7 @@ internal interface Op {
         }
     }
 
-    enum class Param(val type: Primitive) : Op {
+    enum class Param(val type: Primitive) : Command {
 
         NC_PARAM(NPC),
         LC_PARAM(LOC),

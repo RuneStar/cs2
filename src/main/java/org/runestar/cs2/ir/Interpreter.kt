@@ -11,21 +11,22 @@ import org.runestar.cs2.util.HashChain
 import org.runestar.cs2.util.ListStack
 import org.runestar.cs2.util.toUnsignedInt
 
-internal class Interpreter(
+class Interpreter(
         val scripts: Loader<Script>,
+        val commands: Loader<Command>,
         val paramTypes: Loader<Primitive>
 ) {
 
     private val globalTypingFactory = TypingFactory()
 
-    fun interpret(id: Int): Function {
-        val state = State(scripts, paramTypes, id, scripts.loadNotNull(id), globalTypingFactory.Local())
+    fun interpret(scriptId: Int): Function {
+        val state = State(scripts, paramTypes, scriptId, scripts.loadNotNull(scriptId), globalTypingFactory.Local())
         return makeFunction(state, interpretInstructions(state))
     }
 
     private fun interpretInstructions(state: State): Array<Instruction> {
         return Array(state.script.opcodes.size) {
-            val insn = Op.translate(state)
+            val insn = translate(state)
             state.pc++
             if (insn !is Instruction.Assignment) {
                 check(state.stack.isEmpty())
@@ -33,6 +34,8 @@ internal class Interpreter(
             insn
         }
     }
+
+    private fun translate(state: State) = commands.loadNotNull(state.opcode).translate(state)
 
     private fun makeFunction(state: State, instructions: Array<Instruction>): Function {
         val args = ArrayList<Element.Variable>(state.script.intArgumentCount + state.script.stringArgumentCount)
@@ -73,7 +76,7 @@ internal class Interpreter(
         return chain
     }
 
-    internal class State(
+    class State(
             val scripts: Loader<Script>,
             val paramTypes: Loader<Primitive>,
             val scriptId: Int,
@@ -150,7 +153,7 @@ internal class Interpreter(
     }
 }
 
-internal class StackValue(val id: Int, val value: Any?, val stackType: StackType, val typing: Typing) {
+class StackValue(val id: Int, val value: Any?, val stackType: StackType, val typing: Typing) {
 
     fun toExpression() = Element.Variable(VarId(VarSource.STACK, id), typing).also { typing.stackType = stackType }
 }
