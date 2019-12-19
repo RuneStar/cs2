@@ -48,7 +48,7 @@ interface Expression {
 
             override val scriptArguments: Expression get() {
                 val args = arguments.list<Expression>()
-                val triggerCount = (args[args.size - 2] as Element.Constant).value as Int
+                val triggerCount = (args[args.size - 2] as Element.Constant).value.int
                 return Expression(args.subList(0, args.size - triggerCount - 2))
             }
         }

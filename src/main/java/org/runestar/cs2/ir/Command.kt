@@ -9,6 +9,7 @@ import org.runestar.cs2.Alias.*
 import org.runestar.cs2.Loader
 import org.runestar.cs2.StackType
 import org.runestar.cs2.Type
+import org.runestar.cs2.Value
 import org.runestar.cs2.loadNotNull
 import org.runestar.cs2.namesReverse
 
@@ -56,7 +57,7 @@ interface Command {
         override val id = Opcodes.BRANCH
 
         override fun translate(state: Interpreter.State): Instruction {
-            return Instruction.Goto(Instruction.Label(state.pc + state.intOperand + 1))
+            return Instruction.Goto(Instruction.Label(state.pc + state.operand.int + 1))
         }
     }
 
@@ -65,7 +66,7 @@ interface Command {
         override val id = Opcodes.GOSUB_WITH_PARAMS
 
         override fun translate(state: Interpreter.State): Instruction {
-            val invokeId = state.intOperand
+            val invokeId = state.operand.int
             val invoked = state.scripts.loadNotNull(invokeId)
             val args = state.pop(invoked.intArgumentCount + invoked.stringArgumentCount)
             val defs = state.push(invoked.returnTypes)
@@ -90,9 +91,9 @@ interface Command {
         override fun translate(state: Interpreter.State): Instruction {
             val key = state.pop(StackType.INT)
             val enumId = state.pop(ENUM)
-            val valueType = Type.of((state.peekValue() as Int).toByte())
+            val valueType = Type.of((checkNotNull(state.stack.peek().value).int).toByte())
             val valueTypeVar = state.pop(Alias.TYPE)
-            val keyType = Type.of((state.peekValue() as Int).toByte())
+            val keyType = Type.of((checkNotNull(state.stack.peek().value).int).toByte())
             val keyTypeVar = state.pop(Alias.TYPE)
             val args = Expression(keyTypeVar, valueTypeVar, enumId, key)
             key.typing.to(keyType)
@@ -116,7 +117,7 @@ interface Command {
             val r = state.pop(StackType.INT)
             val l = state.pop(StackType.INT)
             val expr = Expression.Operation(emptyList(), id, Expression(l, r))
-            return Instruction.Branch(expr, Instruction.Label(state.pc + state.intOperand + 1))
+            return Instruction.Branch(expr, Instruction.Label(state.pc + state.operand.int + 1))
         }
     }
 
@@ -126,12 +127,8 @@ interface Command {
 
         override fun translate(state: Interpreter.State): Instruction {
             val length = state.pop(INT)
-            val arrayId = state.intOperand shr 16
-            val arrayType = ArrayType(Type.of(state.intOperand.toByte()))
-            val varId = VarId(VarSource.ARRAY, arrayId)
-            val typing = state.typingFactory.variable(varId)
-            typing.to(arrayType)
-            val array = Element.Variable(varId, typing)
+            val array = state.variable(VarSource.ARRAY, state.operand.int shr 16)
+            array.typing.to(ArrayType(Type.of(state.operand.int.toByte())))
             return Instruction.Assignment(Expression(), Expression.Operation(emptyList(), id, Expression(array, length)))
         }
     }
@@ -141,11 +138,8 @@ interface Command {
         override val id = Opcodes.PUSH_ARRAY_INT
 
         override fun translate(state: Interpreter.State): Instruction {
-            val arrayId = state.intOperand
-            val varId = VarId(VarSource.ARRAY, arrayId)
             val arrayIndex = state.pop(INT)
-            val typing = state.typingFactory.variable(varId)
-            val array = Element.Variable(varId, typing)
+            val array = state.variable(VarSource.ARRAY, state.operand.int)
             return Instruction.Assignment(state.push(StackType.INT), Expression.Operation(listOf(Typing()), id, Expression(array, arrayIndex)))
         }
     }
@@ -155,13 +149,9 @@ interface Command {
         override val id = Opcodes.POP_ARRAY_INT
 
         override fun translate(state: Interpreter.State): Instruction {
-            val arrayId = state.intOperand
             val value = state.pop(StackType.INT)
-            val varId = VarId(VarSource.ARRAY, arrayId)
-            val arrayIndex = state.pop(INT)
-            val typing = state.typingFactory.variable(varId)
-            val array = Element.Variable(varId, typing)
-            return Instruction.Assignment(Expression(), Expression.Operation(emptyList(), id, Expression(array, arrayIndex, value)))
+            val array = state.variable(VarSource.ARRAY, state.operand.int)
+            return Instruction.Assignment(Expression(), Expression.Operation(emptyList(), id, Expression(array, state.pop(INT), value)))
         }
     }
 
@@ -188,22 +178,22 @@ interface Command {
         override val id: Int = namesReverse.getValue(name)
 
         override fun translate(state: Interpreter.State): Instruction = when (this) {
-            PUSH_CONSTANT_INT -> Instruction.Assignment(state.push(StackType.INT, state.intOperand), state.operand(StackType.INT))
-            PUSH_CONSTANT_STRING -> Instruction.Assignment(state.push(STRING, state.stringOperand), state.operand(STRING))
-            PUSH_VAR -> Instruction.Assignment(state.push(StackType.INT), state.variable(VarSource.VARP, state.intOperand))
-            POP_VAR -> Instruction.Assignment(state.variable(VarSource.VARP, state.intOperand), state.pop(StackType.INT))
-            PUSH_VARBIT -> Instruction.Assignment(state.push(StackType.INT), state.variable(VarSource.VARBIT, state.intOperand))
-            POP_VARBIT -> Instruction.Assignment(state.variable(VarSource.VARBIT, state.intOperand), state.pop(StackType.INT))
-            PUSH_INT_LOCAL -> Instruction.Assignment(state.push(StackType.INT), state.variable(VarSource.LOCALINT, state.intOperand))
-            POP_INT_LOCAL -> Instruction.Assignment(state.variable(VarSource.LOCALINT, state.intOperand), state.pop(StackType.INT))
-            PUSH_STRING_LOCAL -> Instruction.Assignment(state.push(STRING), state.variable(VarSource.LOCALSTRING, state.intOperand))
-            POP_STRING_LOCAL -> Instruction.Assignment(state.variable(VarSource.LOCALSTRING, state.intOperand), state.pop(STRING))
+            PUSH_CONSTANT_INT -> Instruction.Assignment(state.push(StackType.INT, state.operand), state.operand.asConstant())
+            PUSH_CONSTANT_STRING -> Instruction.Assignment(state.push(STRING, state.operand), state.operand.asConstant())
+            PUSH_VAR -> Instruction.Assignment(state.push(StackType.INT), state.variable(VarSource.VARP, state.operand.int))
+            POP_VAR -> Instruction.Assignment(state.variable(VarSource.VARP, state.operand.int), state.pop(StackType.INT))
+            PUSH_VARBIT -> Instruction.Assignment(state.push(StackType.INT), state.variable(VarSource.VARBIT, state.operand.int))
+            POP_VARBIT -> Instruction.Assignment(state.variable(VarSource.VARBIT, state.operand.int), state.pop(StackType.INT))
+            PUSH_INT_LOCAL -> Instruction.Assignment(state.push(StackType.INT), state.variable(VarSource.LOCALINT, state.operand.int))
+            POP_INT_LOCAL -> Instruction.Assignment(state.variable(VarSource.LOCALINT, state.operand.int), state.pop(StackType.INT))
+            PUSH_STRING_LOCAL -> Instruction.Assignment(state.push(STRING), state.variable(VarSource.LOCALSTRING, state.operand.int))
+            POP_STRING_LOCAL -> Instruction.Assignment(state.variable(VarSource.LOCALSTRING, state.operand.int), state.pop(STRING))
             POP_INT_DISCARD -> Instruction.Assignment(Expression(), state.pop(StackType.INT))
             POP_STRING_DISCARD -> Instruction.Assignment(Expression(), state.pop(STRING))
-            PUSH_VARC_INT -> Instruction.Assignment(state.push(StackType.INT), state.variable(VarSource.VARCINT, state.intOperand))
-            POP_VARC_INT -> Instruction.Assignment(state.variable(VarSource.VARCINT, state.intOperand), state.pop(StackType.INT))
-            PUSH_VARC_STRING -> Instruction.Assignment(state.push(STRING), state.variable(VarSource.VARCSTRING, state.intOperand))
-            POP_VARC_STRING -> Instruction.Assignment(state.variable(VarSource.VARCSTRING, state.intOperand), state.pop(STRING))
+            PUSH_VARC_INT -> Instruction.Assignment(state.push(StackType.INT), state.variable(VarSource.VARCINT, state.operand.int))
+            POP_VARC_INT -> Instruction.Assignment(state.variable(VarSource.VARCINT, state.operand.int), state.pop(StackType.INT))
+            PUSH_VARC_STRING -> Instruction.Assignment(state.push(STRING), state.variable(VarSource.VARCSTRING, state.operand.int))
+            POP_VARC_STRING -> Instruction.Assignment(state.variable(VarSource.VARCSTRING, state.operand.int), state.pop(STRING))
         }
     }
 
@@ -729,7 +719,7 @@ interface Command {
 
         override fun translate(state: Interpreter.State): Instruction {
             var opArgs: List<Element> = state.pop(args)
-            if (o != null) opArgs = opArgs.plus(state.operand(o))
+            if (o != null) opArgs = opArgs.plus(state.operand.asConstant(o))
             val opDefs = state.push(defs)
             return Instruction.Assignment(Expression(opDefs), Expression.Operation(defs.map { Typing.to(it) }, id, Expression(opArgs)))
         }
@@ -740,7 +730,7 @@ interface Command {
         override val id = Opcodes.JOIN_STRING
 
         override fun translate(state: Interpreter.State): Instruction {
-            val args = state.pop(state.intOperand)
+            val args = state.pop(state.operand.int)
             return Instruction.Assignment(state.push(STRING), Expression.Operation(listOf(Typing.to(STRING)), id, Expression(args)))
         }
     }
@@ -809,9 +799,9 @@ interface Command {
             if (id >= 2000) {
                 args.add(state.pop(COMPONENT))
             } else {
-                args.add(state.operand(BOOLEAN))
+                args.add(state.operand.asConstant(BOOLEAN))
             }
-            var s = state.popValue() as String
+            var s = checkNotNull(state.stack.pop().value).string
             if (s.isNotEmpty() && s.last() == 'Y') {
                 val triggerType: Type.Stackable = when (id) {
                     Opcodes.IF_SETONSTATTRANSMIT, Opcodes.CC_SETONSTATTRANSMIT -> STAT
@@ -819,22 +809,22 @@ interface Command {
                     Opcodes.IF_SETONVARTRANSMIT, Opcodes.CC_SETONVARTRANSMIT -> VAR
                     else -> error(this)
                 }
-                val n = state.popValue() as Int
-                args.add(Element.Constant(n, Typing.to(INT)))
-                repeat(n) {
+                val n = checkNotNull(state.stack.pop().value)
+                args.add(n.asConstant(INT))
+                repeat(n.int) {
                     args.add(state.pop(triggerType))
                 }
                 s = s.dropLast(1)
             } else {
-                args.add(Element.Constant(0, Typing.to(INT)))
+                args.add(Value(0).asConstant(INT))
             }
             for (i in s.lastIndex downTo 0) {
-                val ep = state.peekValue()?.let { EventProperty.of(it) }
+                val ep = state.stack.peek().value?.let { EventProperty.of(it) }
                 val t = Type.of(s[i])
-                val pop = state.pop(t.stackType, t)
+                val pop = state.pop(t)
                 args.add(ep ?: pop)
             }
-            val scriptId = state.popValue() as Int
+            val scriptId = checkNotNull(state.stack.pop().value).int
             args.reverse()
             return Instruction.Assignment(Expression(), Expression.Operation.AddHook(id, scriptId, Expression(args)))
         }
@@ -851,11 +841,11 @@ interface Command {
         override val id = namesReverse.getValue(name)
 
         override fun translate(state: Interpreter.State): Instruction {
-            val paramId = state.peekValue() as Int
+            val paramId = checkNotNull(state.stack.peek().value).int
             val param = state.pop(PARAM)
             val recv = state.pop(type)
             val paramType = state.paramTypes.loadNotNull(paramId)
-            return Instruction.Assignment(state.push(paramType.stackType, paramType), Expression.Operation(listOf(Typing.to(paramType)), id, Expression(recv, param)))
+            return Instruction.Assignment(state.push(paramType), Expression.Operation(listOf(Typing.to(paramType)), id, Expression(recv, param)))
         }
     }
 }

@@ -6,6 +6,7 @@ import org.runestar.cs2.ir.EventProperty
 import org.runestar.cs2.Loader
 import org.runestar.cs2.Opcodes.*
 import org.runestar.cs2.Primitive
+import org.runestar.cs2.StackType
 import org.runestar.cs2.Trigger
 import org.runestar.cs2.Type
 import org.runestar.cs2.cfa.Construct
@@ -231,10 +232,9 @@ private class Writer(
     }
 
     private fun appendConst(expr: Element.Constant) {
-        if (expr.typing.type == Primitive.STRING) {
-            append('"').append(expr.value as String).append('"')
-        } else {
-            appendConstantInt(expr.value as Int, expr.typing.finalType)
+        when (expr.value.type) {
+            StackType.STRING -> append('"').append(expr.value.string).append('"')
+            StackType.INT -> appendConstantInt(expr.value.int, expr.typing.finalType)
         }
     }
 
@@ -421,8 +421,8 @@ private class Writer(
             JOIN_STRING -> {
                 append('"')
                 for (a in args) {
-                    if (a is Element.Constant && a.value is String) {
-                        append(a.value)
+                    if (a is Element.Constant && a.value.type == StackType.STRING) {
+                        append(a.value.string)
                     } else {
                         append('<').appendExpr(a).append('>')
                     }
@@ -446,7 +446,7 @@ private class Writer(
         } else {
             var args2: List<Expression> = args
             if (expr.id in DOT_OPCODES) {
-                if ((args2.last() as Element.Constant).value == 1) {
+                if ((args2.last() as Element.Constant).value.int == 1) {
                     append('.')
                 }
                 args2 = args2.dropLast(1)
@@ -471,7 +471,7 @@ private class Writer(
         val args = operation.arguments.list<Expression>().toMutableList()
         val component = args.removeAt(args.lastIndex)
 
-        if (operation.id < 2000 && (component as Element.Constant).value == 1) {
+        if (operation.id < 2000 && (component as Element.Constant).value.int == 1) {
             append('.')
         }
         append(names.getValue(operation.id)).append('(')
@@ -487,7 +487,7 @@ private class Writer(
                 require(scriptName.trigger == Trigger.clientscript) { "$scriptName must be a ${Trigger.clientscript}" }
                 append(scriptName.name)
             }
-            val triggerCount = (args.removeAt(args.lastIndex) as Element.Constant).value as Int
+            val triggerCount = (args.removeAt(args.lastIndex) as Element.Constant).value.int
             val triggers = args.takeLast(triggerCount)
             repeat(triggerCount) { args.removeAt(args.lastIndex) }
 

@@ -3,19 +3,20 @@ package org.runestar.cs2.ir
 import org.runestar.cs2.Alias
 import org.runestar.cs2.Primitive
 import org.runestar.cs2.Type
+import org.runestar.cs2.Value
 
-enum class EventProperty(val magic: Any, type: Type.Stackable) : Element {
+enum class EventProperty(val magic: Value, type: Type.Stackable) : Element {
 
-    opbase("event_opbase", Primitive.STRING),
-    mousex(Integer.MIN_VALUE + 1, Primitive.INT),
-    mousey(Integer.MIN_VALUE + 2, Primitive.INT),
-    com(Integer.MIN_VALUE + 3, Primitive.COMPONENT),
-    opindex(Integer.MIN_VALUE + 4, Primitive.INT),
-    comid(Integer.MIN_VALUE + 5, Primitive.INT),
-    dragtarget(Integer.MIN_VALUE + 6, Primitive.COMPONENT),
-    dragtargetid(Integer.MIN_VALUE + 7, Primitive.INT),
-    keypressed(Integer.MIN_VALUE + 8, Alias.KEY),
-    keytyped(Integer.MIN_VALUE + 9, Primitive.CHAR),
+    opbase(Value("event_opbase"), Primitive.STRING),
+    mousex(Value(Integer.MIN_VALUE + 1), Primitive.INT),
+    mousey(Value(Integer.MIN_VALUE + 2), Primitive.INT),
+    com(Value(Integer.MIN_VALUE + 3), Primitive.COMPONENT),
+    opindex(Value(Integer.MIN_VALUE + 4), Primitive.INT),
+    comid(Value(Integer.MIN_VALUE + 5), Primitive.INT),
+    dragtarget(Value(Integer.MIN_VALUE + 6), Primitive.COMPONENT),
+    dragtargetid(Value(Integer.MIN_VALUE + 7), Primitive.INT),
+    keypressed(Value(Integer.MIN_VALUE + 8), Alias.KEY),
+    keytyped(Value(Integer.MIN_VALUE + 9), Primitive.CHAR),
     ;
 
     override val typing = Typing.to(type)
@@ -28,6 +29,6 @@ enum class EventProperty(val magic: Any, type: Type.Stackable) : Element {
 
         private val map = values().associateBy { it.magic }
 
-        fun of(magic: Any): EventProperty? = map[magic]
+        fun of(magic: Value): EventProperty? = map[magic]
     }
 }

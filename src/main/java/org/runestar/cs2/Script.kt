@@ -10,7 +10,7 @@ class Script(
         val localStringCount: Int,
         val intArgumentCount: Int,
         val stringArgumentCount: Int,
-        val operands: Array<*>,
+        val operands: Array<Value>,
         val opcodes: ShortArray,
         val switches: Array<Map<Int, Int>>
 ) {
@@ -57,14 +57,14 @@ class Script(
             buffer.position(start)
 
             val opcodes = ShortArray(instructionCount)
-            val operands = Array<Any>(instructionCount) {
+            val operands = Array<Value>(instructionCount) {
                 val opcodeShort = buffer.short
                 opcodes[it] = opcodeShort
                 val opcode = opcodeShort.toUnsignedInt()
                 when {
-                    opcode >= 100 || opcode == RETURN || opcode == POP_INT_DISCARD || opcode == POP_STRING_DISCARD -> buffer.get().toUnsignedInt()
-                    opcode == PUSH_CONSTANT_STRING -> buffer.readString()
-                    else -> buffer.int
+                    opcode >= 100 || opcode == RETURN || opcode == POP_INT_DISCARD || opcode == POP_STRING_DISCARD -> Value(buffer.get().toUnsignedInt())
+                    opcode == PUSH_CONSTANT_STRING -> Value(buffer.readString())
+                    else -> Value(buffer.int)
                 }
             }
 
