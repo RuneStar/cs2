@@ -9,7 +9,7 @@
 11	fairy
 12	fairy_queen
 13	fairy_shop_keeper
-14	banker
+14	fairy_nuff
 16	zul_gutusolly
 17	hudo
 18	gnome_soldier
@@ -2231,13 +2231,13 @@
 3698	spotlight
 3704	climbing_boots
 3705	spiked_boots
-3706	master_farmer
+3706	alrik
 3707	archaeologist
 3708	climbing_boots
 3709	spiked_boots
 3710	soldier
 3711	gamer
-3713	master_farmer
+3713	alrik
 3714	spiked_boots
 3717	cave_exit
 3719	crate
@@ -4355,7 +4355,7 @@
 7362	yew_seed_5
 7363	pig
 7364	piglet
-7365	gee
+7365	mercenary
 7366	gardening_boots
 7367	gardening_trowel
 7368	watering_can
@@ -7038,7 +7038,7 @@
 11757	wyson_the_gardener
 11758	commander_connad
 11759	gunthor_the_brave
-11760	cuffs
+11760	estate_agent
 11761	abidor_crank
 11762	commander_connad
 11763	commander_connad
@@ -7714,7 +7714,7 @@
 12745	wily_hellcat
 12747	tok_xil
 12749	jon
-12750	keepa_kettilon
+12750	worried_baker
 12751	chief_servant
 12752	butler
 12753	culinaromancer
@@ -9028,7 +9028,7 @@
 14781	ladder
 14789	entomologist
 14790	entomologist
-14791	keepa_kettilon
+14791	worried_baker
 14792	cook
 14793	cook
 14794	gillie_groats
@@ -10198,7 +10198,7 @@
 17001	hazelmere
 17002	sacrifice
 17004	tool_leprechaun
-17005	a_meiyerditch_child
+17005	beverly
 17006	schoolboy
 17007	glouphrie_the_untrusted
 17008	perrdur
@@ -10220,7 +10220,7 @@
 17024	hazelmere
 17025	glough
 17027	schoolboy
-17028	a_meiyerditch_child
+17028	bill
 17031	burkor
 17032	meegle
 17033	king_healthorg
@@ -10869,7 +10869,7 @@
 18119	vyrewatch_top
 18120	sarius_guile
 18121	a_meiyerditch_child
-18122	a_meiyerditch_child
+18122	beverly
 18123	schoolboy
 18124	barge_foreman
 18125	bob
@@ -10887,7 +10887,7 @@
 18137	meiyerditch_citizen
 18138	citizen_trousers
 18139	poor_looking_woman
-18165	a_meiyerditch_child
+18165	beverly
 18166	a_meiyerditch_child
 18167	stray_dog
 18168	stray_dog
@@ -10900,8 +10900,8 @@
 18175	washing_line
 18180	broken_barrel
 18181	a_fallen_barrel
-18182	a_meiyerditch_child
-18183	a_meiyerditch_child
+18182	beverly
+18183	beverly
 18184	ezekial_lovecraft
 18185	tramp
 18186	mayor_hobb
@@ -11033,14 +11033,14 @@
 18482	kenniths_ball
 18483	bottle
 18484	bottle
-18485	kennith
-18486	kennith
+18485	georgie
+18486	georgie
 18487	holgart
-18488	kennith
+18488	georgie
 18489	fisherman
 18490	holgart
-18491	kennith
-18492	kennith
+18491	georgie
+18492	georgie
 18493	holgart
 18494	torch
 18497	holgart
