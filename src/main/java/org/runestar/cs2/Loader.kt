@@ -61,6 +61,22 @@ interface Loader<T : Any> {
         val NPC_NAMES = readNames("npc-names.tsv")
 
         val SEQ_NAMES = readNames("seq-names.tsv")
+
+        val BOOLEAN_NAMES = readNames("boolean-names.tsv")
+
+        val WINDOWMODE_NAMES = readNames("windowmode-names.tsv")
+
+        val IFTYPE_NAMES = readNames("iftype-names.tsv")
+
+        val SETSIZE_NAMES = readNames("setsize-names.tsv")
+
+        val SETPOSH_NAMES = readNames("setposh-names.tsv")
+
+        val SETPOSV_NAMES = readNames("setposv-names.tsv")
+
+        val SETTEXTALIGNH_NAMES = readNames("settextalignh-names.tsv")
+
+        val SETTEXTALIGNV_NAMES = readNames("settextalignv-names.tsv")
     }
 }
 

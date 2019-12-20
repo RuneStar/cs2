@@ -250,11 +250,7 @@ private class Writer(
         when (type) {
             Alias.TYPE -> append(Type.of(n.toByte()).identifier)
             Primitive.COMPONENT -> append(n ushr 16).append(':').append(n and 0xFFFF)
-            Primitive.BOOLEAN -> when (n) {
-                0 -> append(false)
-                1 -> append(true)
-                else -> error(n)
-            }
+            Primitive.BOOLEAN -> append(Loader.BOOLEAN_NAMES.loadNotNull(n))
             Primitive.COORD ->  {
                 val plane = n ushr 28
                 val x = (n ushr 14) and 0x3FFF
@@ -291,89 +287,19 @@ private class Writer(
             Alias.KEY -> append("^key_").append(Loader.KEY_NAMES.loadNotNull(n))
             Primitive.STAT -> appendNamedInt(Loader.STAT_NAMES, n)
             Primitive.OBJ, Primitive.NAMEDOBJ -> appendSuffixNamedInt(Loader.OBJ_NAMES, n)
-            Alias.IFTYPE -> {
-                val s = when (n) {
-                    3 -> "rectangle"
-                    4 -> "text"
-                    5 -> "graphic"
-                    6 -> "model"
-                    9 -> "line"
-                    else -> error(n)
-                }
-                append("^iftype_").append(s)
-            }
-            Alias.SETSIZE -> {
-                val s = when (n) {
-                    0 -> "abs"
-                    1 -> "minus"
-                    2 -> "2"
-                    else -> error(n)
-                }
-                append("^setsize_").append(s)
-            }
-            Alias.SETPOSH -> {
-                val s = when (n) {
-                    0 -> "abs_left"
-                    1 -> "abs_centre"
-                    2 -> "abs_right"
-                    3 -> "3"
-                    4 -> "4"
-                    5 -> "5"
-                    else -> error(n)
-                }
-                append("^setpos_").append(s)
-            }
-            Alias.SETPOSV -> {
-                val s = when (n) {
-                    0 -> "abs_top"
-                    1 -> "abs_centre"
-                    2 -> "abs_bottom"
-                    3 -> "3"
-                    4 -> "4"
-                    5 -> "5"
-                    else -> error(n)
-                }
-                append("^setpos_").append(s)
-            }
-            Alias.SETTEXTALIGNH -> {
-                val s = when (n) {
-                    0 -> "left"
-                    1 -> "centre"
-                    2 -> "right"
-                    else -> error(n)
-                }
-                append("^settextalign_").append(s)
-            }
-            Alias.SETTEXTALIGNV -> {
-                val s = when (n) {
-                    0 -> "top"
-                    1 -> "centre"
-                    2 -> "bottom"
-                    else -> error(n)
-                }
-                append("^settextalign_").append(s)
-            }
+            Alias.IFTYPE -> append("^iftype_").append(Loader.IFTYPE_NAMES.loadNotNull(n))
+            Alias.SETSIZE -> append("^setsize_").append(Loader.SETSIZE_NAMES.loadNotNull(n))
+            Alias.SETPOSH -> append("^setpos_").append(Loader.SETPOSH_NAMES.loadNotNull(n))
+            Alias.SETPOSV -> append("^setpos_").append(Loader.SETPOSV_NAMES.loadNotNull(n))
+            Alias.SETTEXTALIGNH -> append("^settextalign_").append(Loader.SETTEXTALIGNH_NAMES.loadNotNull(n))
+            Alias.SETTEXTALIGNV -> append("^settextalign_").append(Loader.SETTEXTALIGNV_NAMES.loadNotNull(n))
             Alias.VAR -> append("var").append(n)
             Primitive.INV -> appendNamedInt(Loader.INV_NAMES, n)
             Primitive.MAPAREA -> appendNamedInt(Loader.MAPAREA_NAMES, n)
             Alias.CHATTYPE -> append("^chattype_").append(Loader.CHATTYPE_NAMES.loadNotNull(n))
             Alias.PARAM -> appendNamedInt(Loader.PARAM_NAMES, n)
-            Alias.BIT -> {
-                val s = when (n) {
-                    0 -> "^false"
-                    1 -> "^true"
-                    else -> error(n)
-                }
-                append(s)
-            }
-            Alias.WINDOWMODE -> {
-                val s = when (n) {
-                    1 -> "fixed"
-                    2 -> "resizable"
-                    else -> error(n)
-                }
-                append("^windowmode_").append(s)
-            }
+            Alias.BIT -> append('^').append(Loader.BOOLEAN_NAMES.loadNotNull(n))
+            Alias.WINDOWMODE -> append("^windowmode_").append(Loader.WINDOWMODE_NAMES.loadNotNull(n))
             Primitive.LOC -> appendSuffixNamedInt(Loader.LOC_NAMES, n)
             Primitive.MODEL -> appendSuffixNamedInt(Loader.MODEL_NAMES, n)
             Primitive.STRUCT -> appendSuffixNamedInt(Loader.STRUCT_NAMES, n)
