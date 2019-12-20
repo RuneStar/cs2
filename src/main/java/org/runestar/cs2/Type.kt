@@ -119,6 +119,7 @@ enum class Alias : Type.Stackable {
     BIT,
     WINDOWMODE,
     KEY,
+    CLIENTTYPE,
     ;
 
     override val stackType get() = StackType.INT

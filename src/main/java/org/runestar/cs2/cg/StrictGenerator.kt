@@ -300,6 +300,7 @@ private class Writer(
             Alias.PARAM -> appendNamedInt(Loader.PARAM_NAMES, n)
             Alias.BIT -> append('^').append(Loader.BOOLEAN_NAMES.loadNotNull(n))
             Alias.WINDOWMODE -> append("^windowmode_").append(Loader.WINDOWMODE_NAMES.loadNotNull(n))
+            Alias.CLIENTTYPE -> append("^clienttype_").append(Loader.CLIENTTYPE_NAMES.loadNotNull(n))
             Primitive.LOC -> appendSuffixNamedInt(Loader.LOC_NAMES, n)
             Primitive.MODEL -> appendSuffixNamedInt(Loader.MODEL_NAMES, n)
             Primitive.STRUCT -> appendSuffixNamedInt(Loader.STRUCT_NAMES, n)

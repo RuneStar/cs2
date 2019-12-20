@@ -656,7 +656,7 @@ interface Command {
         SETFOLLOWEROPSLOWPRIORITY(listOf(BOOLEAN), listOf()),
 
         ON_MOBILE(listOf(), listOf(BOOLEAN)),
-        CLIENTTYPE(listOf(), listOf(INT)),
+        CLIENTTYPE(listOf(), listOf(Alias.CLIENTTYPE)),
         _6520(listOf(), listOf()),
         MOBILE_KEYBOARDHIDE(listOf(), listOf()),
         _6522(listOf(STRING, INT), listOf()),

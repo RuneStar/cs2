@@ -77,6 +77,8 @@ interface Loader<T : Any> {
         val SETTEXTALIGNH_NAMES = readNames("settextalignh-names.tsv")
 
         val SETTEXTALIGNV_NAMES = readNames("settextalignv-names.tsv")
+
+        val CLIENTTYPE_NAMES = readNames("clienttype-names.tsv")
     }
 }
 
