@@ -249,7 +249,7 @@ private class Writer(
         }
         when (type) {
             Alias.TYPE -> append(Type.of(n.toByte()).identifier)
-            Primitive.COMPONENT -> append(n ushr 16).append(':').append(n and 0xFFFF)
+            Primitive.COMPONENT -> appendComponent(n)
             Primitive.BOOLEAN -> append(Loader.BOOLEAN_NAMES.loadNotNull(n))
             Primitive.COORD ->  {
                 val plane = n ushr 28
@@ -327,6 +327,13 @@ private class Writer(
         if (name == null) append(n) else append(name)
     }
 
+    private fun appendComponent(id: Int) {
+        val ifid = id shr 16
+        val comid = id and 0xFFFF
+        appendNamedInt(Loader.INTERFACE_NAMES, ifid)
+        append(':').append(comid)
+    }
+    
     private fun appendOperation(expr: Expression.Operation) {
         val args = expr.arguments.list<Expression>()
         val opcode = expr.id
