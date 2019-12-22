@@ -58,6 +58,7 @@
 197	magictraining_shop
 198	magictraining_tele
 209	mazetimer
+218	magic_spellbook
 220	messagescroll
 221	messagescroll2
 223	peng_emote
@@ -84,6 +85,7 @@
 297	sandwich_tray
 298	seer_combolock
 299	ship_journey
+313	smokeoverlay
 315	soulbane_angerbar
 319	cws_warning_25
 320	stats
@@ -99,6 +101,7 @@
 334	tradeconfirm
 335	trademain
 336	tradeside
+345	poll_results
 346	trail_map01
 347	trail_map02
 348	trail_map03
@@ -123,6 +126,7 @@
 369	tribal_door
 373	tzhaar_fightpit
 374	tzhaar_fightpit_orb
+378	welcome_screen
 386	wom_telescope
 387	wornitems
 393	poh_hangman
@@ -188,6 +192,7 @@
 546	dragon_slayer_qip_elvarg_fly
 547	dragon_slayer_qip_map
 548	toplevel
+553	snapshot_main
 559	pattern_cards
 560	cws_warning_9
 562	cws_warning_2
@@ -216,3 +221,4 @@
 584	confirm_destroy
 585	kr_pyramid_escape
 588	kr_picklock
+590	poh_jewellery_box
