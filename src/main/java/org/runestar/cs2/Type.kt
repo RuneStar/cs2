@@ -90,6 +90,7 @@ enum class Primitive(desc: Char) : Type.Stackable {
     MAPELEMENT('µ'),
     NPC('n'),
     SEQ('A'),
+    INTERFACE('a'),
     ;
 
     val desc = desc.toByte(CP1252)

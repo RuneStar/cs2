@@ -383,7 +383,7 @@ interface Command {
         IF_GETINVOBJECT(listOf(COMPONENT), listOf(OBJ)),
         IF_GETINVCOUNT(listOf(COMPONENT), listOf(INT)),
         IF_HASSUB(listOf(COMPONENT), listOf(BOOLEAN)),
-        IF_GETTOP(listOf(), listOf(INT)),
+        IF_GETTOP(listOf(), listOf(INTERFACE)),
 
         IF_GETTARGETMASK(listOf(COMPONENT), listOf(INT)),
         IF_GETOP(listOf(INT, COMPONENT), listOf(STRING)),

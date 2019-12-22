@@ -249,6 +249,7 @@ private class Writer(
         }
         when (type) {
             Alias.TYPE -> append(Type.of(n.toByte()).identifier)
+            Primitive.INTERFACE -> appendNamedInt(Loader.INTERFACE_NAMES, n)
             Primitive.COMPONENT -> appendComponent(n)
             Primitive.BOOLEAN -> append(Loader.BOOLEAN_NAMES.loadNotNull(n))
             Primitive.COORD ->  {
