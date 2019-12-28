@@ -307,6 +307,7 @@ private class Writer(
             Primitive.STRUCT -> appendSuffixNamedInt(Loader.STRUCT_NAMES, n)
             Primitive.NPC -> appendSuffixNamedInt(Loader.NPC_NAMES, n)
             Primitive.SEQ -> appendSuffixNamedInt(Loader.SEQ_NAMES, n)
+            Primitive.SYNTH -> appendNamedInt(Loader.SYNTH_NAMES, n)
             Primitive.AREA, Primitive.MAPELEMENT, Primitive.CHAR -> error(n)
             else -> append(n)
         }
