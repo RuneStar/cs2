@@ -578,7 +578,7 @@
 2746	light_door
 2749	tree
 2769	skippy_walk_f
-2770	skippy_ready
+2770	sleepwalker_ready
 2774	lizard_ready
 2775	lizard_walk_f
 2798	karamthulhu_walk_f
@@ -1637,8 +1637,8 @@
 6803	jubster_ready
 6804	jubster_walk_f
 6807	jubbly_bird_ready
-6808	entrana_firebird_walk_f
-6809	entrana_firebird_ready
+6808	phoenix_walk_f
+6809	phoenix_ready
 6813	duck_ready
 6815	seagull_ready
 6817	duck_walk_f
@@ -1732,7 +1732,6 @@
 7156	poll_booth
 7166	kreearra_jr_ready
 7167	kreearra_jr_walk_f
-7175	anti_santa
 7177	beaver_ready
 7178	beaver_walk_f
 7180	rock_golem_ready
@@ -2088,13 +2087,4 @@
 8518	the_jormungand_ready
 8526	summoned_soul_ready
 8527	summoned_soul_walk_f
-8534	santa_walk_f
-8535	santa_walk_b
-8536	santa_walk_r
-8537	santa_walk_l
-8538	santa_ready
-8541	anti_santa_walk_f
-8542	anti_santa_walk_b
-8543	anti_santa_walk_r
-8544	anti_santa_walk_l
-8545	anti_santa_ready
+8534	sleepwalker_walk_f
