@@ -1560,6 +1560,8 @@
 1633	hitmark,12
 1634	hitmark,13
 1635	ring_34
+1636	orb_filler,12
+1637	orb_filler,13
 1638	options_slider,10
 1639	options_slider,11
 1648	leafytree_tiled
@@ -2097,8 +2099,7 @@
 2205	worldmap_icon,3
 2206	worldmap_icon_large,2
 2207	worldmap_icon_large,3
-2208	armour_100,0
-2209	armour_100,1
+2208	orb_filler,14
 2210	mapfunction,119
 2211	mapfunction,120
 2212	mapfunction,121

@@ -2279,7 +2279,6 @@
 2968	[proc,adventurepath_return_path_tasks_done]
 2969	[proc,adventurepath_return_task_focus]
 2970	[proc,adventurepath_set_task_focus]
-2971	[proc,adventurepath_return_task_recommended]
 2974	[proc,create_v2_stone_button_filled_free]
 2975	[clientscript,v2_stone_button_filled_free]
 2976	[proc,v2_stone_button_filled_free]
