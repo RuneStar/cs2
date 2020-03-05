@@ -555,7 +555,7 @@
 2671	love_cats_ready
 2672	love_cats_walk_f
 2673	love_cats_ready
-2686	pool_of_dreams
+2686	pool_of_nightmares
 2688	dragonkin_ready
 2689	dragonkin_walk_f
 2691	gnome_ready
@@ -1736,7 +1736,6 @@
 7156	poll_booth
 7166	kreearra_jr_ready
 7167	kreearra_jr_walk_f
-7175	light
 7177	beaver_ready
 7178	beaver_walk_f
 7180	rock_golem_ready
@@ -1819,7 +1818,6 @@
 7503	mystical_barrier
 7526	guardian_ready
 7542	reshi_ready
-7543	party_balloons
 7545	screaming_banshee_ready
 7564	tzkal_zuk_ready
 7567	ancestral_glyph_ready
@@ -2105,10 +2103,10 @@
 8579	the_nightmare_ready
 8582	the_nightmare_ready
 8589	totem_ready
-8592	the_nightmare_walk_f
+8592	phosanis_nightmare_walk_f
 8593	little_nightmare_ready
-8603	the_nightmare_ready
-8613	the_nightmare_ready
+8603	phosanis_nightmare_ready
+8613	phosanis_nightmare_ready
 8616	nightmare_blossom
 8618	nightmare_blossom
 8620	nightmare_blossom
@@ -2118,4 +2116,3 @@
 8629	spore
 8631	spore
 8634	little_nightmare_walk_f
-8637	light

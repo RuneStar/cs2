@@ -11482,7 +11482,7 @@
 11736	absorption_2
 11737	absorption_1
 11738	herb_box
-11739	opened_herb_box
+11739	open_herb_box
 11740	scroll_of_redirection
 11741	rimmington_teleport
 11742	taverley_teleport
@@ -11657,7 +11657,7 @@
 11914	box_of_chocolate_strawberries
 11915	cert_box_of_chocolate_strawberries
 11916	slice_of_birthday_cake
-11917	cert_slice_of_birthday_cake
+11917	slice_of_birthday_cake
 11918	birthday_present
 11919	cow_mask
 11920	dragon_pickaxe
@@ -15884,7 +15884,7 @@
 16153	placeholder_overload_4
 16154	placeholder_absorption_4
 16155	placeholder_herb_box
-16156	placeholder_opened_herb_box
+16156	placeholder_open_herb_box
 16157	placeholder_scroll_of_redirection
 16158	placeholder_rimmington_teleport
 16159	placeholder_taverley_teleport
@@ -24068,8 +24068,8 @@
 24477	placeholder_twisted_relichunter_t3_armour_set
 24478	open_herb_sack
 24479	spice_rack
-24480	opened_coal_bag
-24481	opened_gem_bag
+24480	open_coal_bag
+24481	open_gem_bag
 24482	open_seed_box
 24483	phoenix
 24484	phoenix
@@ -24109,10 +24109,12 @@
 24519	placeholder_eldritch_orb
 24520	victors_cape_1000
 24521	placeholder_victors_cape_1000
-24522	cat_ears
-24523	loose_cat_hair
-24524	gertrudes_comb
+24522	dummy_priest_gown
+24523	dummy_priest_gown
+24524	dummy_priest_gown
 24525	cat_ears
 24526	placeholder_cat_ears
 24527	hell_cat_ears
 24528	lamp_of_the_gatherer
+24529	harmony
+24530	placeholder_harmony
