@@ -308,7 +308,7 @@ public final class Opcodes {
             GETHIDEUSERNAME = 3142,
             SETREMEMBERUSERNAME = 3143,
             GETREMEMBERUSERNAME = 3144,
-            _3145 = 3145,
+            SHOW_IOS_REVIEW = 3145,
             SOUND_SYNTH = 3200,
             SOUND_SONG = 3201,
             SOUND_JINGLE = 3202,

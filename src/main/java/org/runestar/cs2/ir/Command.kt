@@ -436,7 +436,7 @@ interface Command {
         GETHIDEUSERNAME(listOf(), listOf(BOOLEAN)),
         SETREMEMBERUSERNAME(listOf(BOOLEAN), listOf()),
         GETREMEMBERUSERNAME(listOf(), listOf(BOOLEAN)),
-        _3145(listOf(), listOf()),
+        SHOW_IOS_REVIEW(listOf(), listOf()),
 
         SOUND_SYNTH(listOf(SYNTH, INT, INT), listOf()),
         SOUND_SONG(listOf(INT), listOf()),
