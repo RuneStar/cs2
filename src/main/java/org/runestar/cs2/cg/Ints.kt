@@ -12,11 +12,7 @@ import org.runestar.cs2.orElse
 
 private val VALUE = Loader { it.toString() }
 
-private val ID = Loader { if (it >= 0) it.toString() else null }
-
 private val NULL = Loader { if (it == -1) "null" else null }
-
-private val ID_OR_NULL = ID.orElse(NULL)
 
 private fun Loader<String>.quote() = map { '"' + it + '"' }
 
@@ -29,7 +25,7 @@ private val COORDS = Loader {
     "${plane}_${x / 64}_${z / 64}_${x and 0x3F}_${z and 0x3F}"
 }
 
-private val COLOUR_CONSTANTS = mapOf(
+private val COLOUR_CONSTANTS = Loader.Mapping(mapOf(
         0xFF0000 to "^red",
         0x00FF00 to "^green",
         0x0000FF to "^blue",
@@ -38,42 +34,46 @@ private val COLOUR_CONSTANTS = mapOf(
         0x00FFFF to "^cyan",
         0xFFFFFF to "^white",
         0x000000 to "^black"
-)
+))
 
 private val COLOURS = Loader {
     check((it shr 24) == 0)
     "0x" + it.toString(16).padStart(6, '0')
 }
 
-private val INT_CONSTANTS = mapOf(
+private val INT_CONSTANTS = Loader.Mapping(mapOf(
         Int.MAX_VALUE to "^max_32bit_int",
         Int.MIN_VALUE to "^min_32bit_int"
-)
+))
 
-private val COMPONENT_INTERFACES = Loader.INTERFACE_NAMES.orElse(ID)
+private val INTERFACES = unique(INTERFACE, Loader.INTERFACE_NAMES)
 
-private val COMPONENTS = Loader { COMPONENT_INTERFACES.loadNotNull(it shr 16) + ':' + (it and 0xFFFF) }
+private val COMPONENTS = Loader { INTERFACES.loadNotNull(it shr 16) + ':' + (it and 0xFFFF) }
 
 private fun cst(prefix: String, loader: Loader<String>) = loader.prefix('^' + prefix + '_').orElse(NULL)
 
-private fun unique(loader: Loader<String>) = loader.orElse(ID_OR_NULL)
+private fun Loader<String>.idSuffix() = mapIndexed { id, n -> n + '_' + id }
+
+private fun unique(type: Type, loader: Loader<String>) = loader.orElse(unknown(type))
 
 private fun uniqueExhaustive(loader: Loader<String>) = loader.orElse(NULL)
 
-private fun nonUnique(loader: Loader<String>) = loader.mapIndexed { id, s -> s + '_' + id }.orElse(ID_OR_NULL)
+private fun unknown(type: Type) = NULL.orElse(Loader(type.identifier).idSuffix())
+
+private fun nonUnique(type: Type, loader: Loader<String>) = NULL.orElse(loader.orElse(Loader(type.identifier)).idSuffix())
 
 private val TYPES = HashMap<Type.Stackable, Loader<String>>().apply {
-    this[INT] = Loader.Mapping(INT_CONSTANTS).orElse(VALUE)
+    this[INT] = INT_CONSTANTS.orElse(VALUE)
     this[COORD] = NULL.orElse(COORDS)
-    this[COLOUR] = NULL.orElse(Loader.Mapping(COLOUR_CONSTANTS)).orElse(COLOURS)
+    this[COLOUR] = NULL.orElse(COLOUR_CONSTANTS).orElse(COLOURS)
     this[COMPONENT] = NULL.orElse(COMPONENTS)
     this[TYPE] = Loader { Type.of(it.toByte()).identifier }
     this[BIT] = Loader.BOOLEAN_NAMES.prefix("^").orElse(NULL)
-    this[VAR] = ID.prefix("var")
-    this[GRAPHIC] = Loader.GRAPHIC_NAMES.quote().orElse(ID_OR_NULL)
+    this[VAR] = VALUE.prefix("var")
+    this[GRAPHIC] = NULL.orElse(Loader.GRAPHIC_NAMES.orElse(Loader(GRAPHIC.identifier).idSuffix()).quote())
 
-    this[ENUM] = ID_OR_NULL
-    this[CATEGORY] = ID_OR_NULL
+    this[ENUM] = unknown(ENUM)
+    this[CATEGORY] = unknown(CATEGORY)
 
     this[CHAR] = NULL
     this[AREA] = NULL
@@ -81,20 +81,20 @@ private val TYPES = HashMap<Type.Stackable, Loader<String>>().apply {
 
     this[BOOLEAN] = uniqueExhaustive(Loader.BOOLEAN_NAMES)
     this[STAT] = uniqueExhaustive(Loader.STAT_NAMES)
+    this[MAPAREA] = uniqueExhaustive(Loader.MAPAREA_NAMES)
 
-    this[FONTMETRICS] = unique(Loader.GRAPHIC_NAMES)
-    this[INV] = unique(Loader.INV_NAMES)
-    this[MAPAREA] = unique(Loader.MAPAREA_NAMES)
-    this[SYNTH] = unique(Loader.SYNTH_NAMES)
-    this[PARAM] = unique(Loader.PARAM_NAMES)
-    this[INTERFACE] = unique(Loader.INTERFACE_NAMES)
+    this[FONTMETRICS] = unique(FONTMETRICS, Loader.GRAPHIC_NAMES)
+    this[INV] = unique(INV, Loader.INV_NAMES)
+    this[SYNTH] = unique(SYNTH, Loader.SYNTH_NAMES)
+    this[PARAM] = unique(PARAM, Loader.PARAM_NAMES)
+    this[INTERFACE] = INTERFACES
 
-    this[OBJ] = nonUnique(Loader.OBJ_NAMES)
-    this[LOC] = nonUnique(Loader.LOC_NAMES)
-    this[MODEL] = nonUnique(Loader.MODEL_NAMES)
-    this[STRUCT] = nonUnique(Loader.STRUCT_NAMES)
-    this[NPC] = nonUnique(Loader.NPC_NAMES)
-    this[SEQ] = nonUnique(Loader.SEQ_NAMES)
+    this[OBJ] = nonUnique(OBJ, Loader.OBJ_NAMES)
+    this[LOC] = nonUnique(LOC, Loader.LOC_NAMES)
+    this[MODEL] = nonUnique(MODEL, Loader.MODEL_NAMES)
+    this[STRUCT] = nonUnique(STRUCT, Loader.STRUCT_NAMES)
+    this[NPC] = nonUnique(NPC, Loader.NPC_NAMES)
+    this[SEQ] = nonUnique(SEQ, Loader.SEQ_NAMES)
     this[NAMEDOBJ] = getValue(OBJ)
 
     this[KEY] = cst("key", Loader.KEY_NAMES)
