@@ -100,3 +100,9 @@ fun <T : Any> Loader<T>.withIds(ids: Set<Int>): Loader.Keyed<T> = object : Loade
 }
 
 fun <T : Any> Loader<T>.loadNotNull(id: Int): T = checkNotNull(load(id)) { "Value for id $id was null" }
+
+fun <T : Any> Loader<T>.orElse(other: Loader<T>): Loader<T> = Loader { load(it) ?: other.load(it) }
+
+fun <T : Any, E : Any> Loader<T>.map(transform: (T) -> E): Loader<E> = Loader { load(it)?.let(transform) }
+
+fun <T : Any, E : Any> Loader<T>.mapIndexed(transform: (Int, T) -> E): Loader<E> = Loader { id -> load(id)?.let { transform(id, it) } }

@@ -1,14 +1,11 @@
 package org.runestar.cs2.cg
 
-import org.runestar.cs2.Alias
 import org.runestar.cs2.ArrayType
 import org.runestar.cs2.ir.EventProperty
 import org.runestar.cs2.Loader
 import org.runestar.cs2.Opcodes.*
-import org.runestar.cs2.Primitive
 import org.runestar.cs2.StackType
 import org.runestar.cs2.Trigger
-import org.runestar.cs2.Type
 import org.runestar.cs2.cfa.Construct
 import org.runestar.cs2.ir.Element
 import org.runestar.cs2.ir.Expression
@@ -16,7 +13,6 @@ import org.runestar.cs2.ir.Function
 import org.runestar.cs2.ir.Instruction
 import org.runestar.cs2.ir.VarSource
 import org.runestar.cs2.ir.list
-import org.runestar.cs2.loadNotNull
 import org.runestar.cs2.names
 
 fun StrictGenerator(writer: (scriptName: String, script: String) -> Unit) = object : StrictGenerator() {
@@ -147,9 +143,9 @@ private class Writer(
             indent {
                 nextLine()
                 val cases = ns.iterator()
-                append("case ").appendConstantInt(cases.next(), type)
+                append("case ").append(intValueToString(cases.next(), type))
                 for (case in cases) {
-                    append(", ").appendConstantInt(case, type)
+                    append(", ").append(intValueToString(case, type))
                 }
                 append(" :")
                 indent {
@@ -234,106 +230,8 @@ private class Writer(
     private fun appendConst(expr: Element.Constant) {
         when (expr.value.type) {
             StackType.STRING -> append('"').append(expr.value.string).append('"')
-            StackType.INT -> appendConstantInt(expr.value.int, expr.typing.finalType)
+            StackType.INT -> append(intValueToString(expr.value.int, expr.typing.finalType))
         }
-    }
-
-    private fun appendConstantInt(n: Int, type: Type) {
-        if (type is ArrayType) {
-            append(type.identifier).append(n)
-            return
-        }
-        if (n == -1 && type != Primitive.INT) {
-            append(null)
-            return
-        }
-        when (type) {
-            Alias.TYPE -> append(Type.of(n.toByte()).identifier)
-            Primitive.INTERFACE -> appendNamedInt(Loader.INTERFACE_NAMES, n)
-            Primitive.COMPONENT -> appendComponent(n)
-            Primitive.BOOLEAN -> append(Loader.BOOLEAN_NAMES.loadNotNull(n))
-            Primitive.COORD ->  {
-                val plane = n ushr 28
-                val x = (n ushr 14) and 0x3FFF
-                val z = n and 0x3FFF
-                append(plane).append('_')
-                append((x / 64)).append('_')
-                append((z / 64)).append('_')
-                append((x and 0x3F)).append('_')
-                append((z and 0x3F))
-            }
-            Primitive.GRAPHIC -> appendQuoteNamedInt(Loader.GRAPHIC_NAMES, n)
-            Primitive.FONTMETRICS -> appendNamedInt(Loader.GRAPHIC_NAMES, n)
-            Alias.COLOUR -> {
-                if (n shr 24 != 0) error(n)
-                when (n) {
-                    0xFF0000 -> append("^red")
-                    0x00FF00 -> append("^green")
-                    0x0000FF -> append("^blue")
-                    0xFFFF00 -> append("^yellow")
-                    0xFF00FF -> append("^magenta")
-                    0x00FFFF -> append("^cyan")
-                    0xFFFFFF -> append("^white")
-                    0x000000 -> append("^black")
-                    else -> append("0x").append(n.toString(16).padStart(6, '0'))
-                }
-            }
-            Primitive.INT -> {
-                when (n) {
-                    Int.MAX_VALUE -> append("^max_32bit_int")
-                    Int.MIN_VALUE -> append("^min_32bit_int")
-                    else -> append(n)
-                }
-            }
-            Alias.KEY -> append("^key_").append(Loader.KEY_NAMES.loadNotNull(n))
-            Primitive.STAT -> appendNamedInt(Loader.STAT_NAMES, n)
-            Primitive.OBJ, Primitive.NAMEDOBJ -> appendSuffixNamedInt(Loader.OBJ_NAMES, n)
-            Alias.IFTYPE -> append("^iftype_").append(Loader.IFTYPE_NAMES.loadNotNull(n))
-            Alias.SETSIZE -> append("^setsize_").append(Loader.SETSIZE_NAMES.loadNotNull(n))
-            Alias.SETPOSH -> append("^setpos_").append(Loader.SETPOSH_NAMES.loadNotNull(n))
-            Alias.SETPOSV -> append("^setpos_").append(Loader.SETPOSV_NAMES.loadNotNull(n))
-            Alias.SETTEXTALIGNH -> append("^settextalign_").append(Loader.SETTEXTALIGNH_NAMES.loadNotNull(n))
-            Alias.SETTEXTALIGNV -> append("^settextalign_").append(Loader.SETTEXTALIGNV_NAMES.loadNotNull(n))
-            Alias.VAR -> append("var").append(n)
-            Primitive.INV -> appendNamedInt(Loader.INV_NAMES, n)
-            Primitive.MAPAREA -> appendNamedInt(Loader.MAPAREA_NAMES, n)
-            Alias.CHATTYPE -> append("^chattype_").append(Loader.CHATTYPE_NAMES.loadNotNull(n))
-            Alias.PARAM -> appendNamedInt(Loader.PARAM_NAMES, n)
-            Alias.BIT -> append('^').append(Loader.BOOLEAN_NAMES.loadNotNull(n))
-            Alias.WINDOWMODE -> append("^windowmode_").append(Loader.WINDOWMODE_NAMES.loadNotNull(n))
-            Alias.CLIENTTYPE -> append("^clienttype_").append(Loader.CLIENTTYPE_NAMES.loadNotNull(n))
-            Primitive.LOC -> appendSuffixNamedInt(Loader.LOC_NAMES, n)
-            Primitive.MODEL -> appendSuffixNamedInt(Loader.MODEL_NAMES, n)
-            Primitive.STRUCT -> appendSuffixNamedInt(Loader.STRUCT_NAMES, n)
-            Primitive.NPC -> appendSuffixNamedInt(Loader.NPC_NAMES, n)
-            Primitive.SEQ -> appendSuffixNamedInt(Loader.SEQ_NAMES, n)
-            Primitive.SYNTH -> appendNamedInt(Loader.SYNTH_NAMES, n)
-            Primitive.AREA, Primitive.MAPELEMENT, Primitive.CHAR -> error(n)
-            else -> append(n)
-        }
-    }
-
-    private fun appendSuffixNamedInt(nameLoader: Loader<String>, n: Int) {
-        val name = nameLoader.load(n)
-        if (name != null) append(name).append('_')
-        append(n)
-    }
-
-    private fun appendQuoteNamedInt(nameLoader: Loader<String>, n: Int) {
-        val name = nameLoader.load(n)
-        if (name == null) append(n) else append('"').append(name).append('"')
-    }
-
-    private fun appendNamedInt(nameLoader: Loader<String>, n: Int) {
-        val name = nameLoader.load(n)
-        if (name == null) append(n) else append(name)
-    }
-
-    private fun appendComponent(id: Int) {
-        val ifid = id shr 16
-        val comid = id and 0xFFFF
-        appendNamedInt(Loader.INTERFACE_NAMES, ifid)
-        append(':').append(comid)
     }
     
     private fun appendOperation(expr: Expression.Operation) {
