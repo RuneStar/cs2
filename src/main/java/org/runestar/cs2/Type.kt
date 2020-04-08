@@ -1,6 +1,7 @@
 package org.runestar.cs2
 
 import org.runestar.cs2.util.CP1252
+import org.runestar.cs2.util.ListSet
 import org.runestar.cs2.util.toByte
 
 enum class StackType {
@@ -33,7 +34,7 @@ interface Type {
                 0 -> return null
                 1 -> return types.single()
             }
-            // if (types.all { it is ArrayType }) return ArrayType(union(ListSet(types.mapTo(ArrayList(size)) { (it as ArrayType).elementType }))!!)
+            if (types.all { it is ArrayType }) return ArrayType(union(ListSet(types.mapTo(ArrayList(size)) { (it as ArrayType).elementType })) as Stackable)
             if (size == 2) {
                 if (Primitive.NAMEDOBJ in types && Primitive.OBJ in types) return Primitive.OBJ
                 else if (Primitive.GRAPHIC in types && Primitive.FONTMETRICS in types) return Primitive.FONTMETRICS
@@ -49,7 +50,7 @@ interface Type {
                 0 -> return null
                 1 -> return types.single()
             }
-            // if (types.all { it is ArrayType }) return ArrayType(intersection(ListSet(types.mapTo(ArrayList(size)) { (it as ArrayType).elementType }))!!)
+            if (types.all { it is ArrayType }) return ArrayType(intersection(ListSet(types.mapTo(ArrayList(size)) { (it as ArrayType).elementType })) as Stackable)
             if (size == 2) {
                 if (Primitive.NAMEDOBJ in types && Primitive.OBJ in types) return Primitive.NAMEDOBJ
                 else if (Primitive.GRAPHIC in types && Primitive.FONTMETRICS in types) return Primitive.GRAPHIC
