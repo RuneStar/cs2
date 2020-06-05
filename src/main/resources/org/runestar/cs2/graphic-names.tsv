@@ -2118,8 +2118,6 @@
 2218	close_buttons,9
 2219	achievement_diary_icons,4
 2220	adventurepath_placeholder
-2225	combat_path_banner
-2226	combat_path_icon
 2228	getting_started_with_attack
 2229	getting_a_grip_on_it
 2230	weapons_master
@@ -2366,8 +2364,6 @@
 2493	ap_border,6
 2494	ap_border,7
 2495	no_path
-2496	gatherer_path_banner
-2497	gatherer_path_icon
 2498	getting_started_with_fishing
 2499	getting_started_with_mining
 2500	getting_started_with_woodcutting
@@ -2386,6 +2382,7 @@
 2513	mod_icons_interface,27
 2514	mod_icons_interface,28
 2515	mod_icons_interface,29
+2520	worldmap_marker,3
 2521	menu_buttons,2
 2522	menu_buttons,3
 2523	map_resize
@@ -2400,3 +2397,5 @@
 2532	question_button,0
 2533	question_button,1
 2534	scroll_icon
+2547	worldmap_marker,4
+2548	worldmap_marker,5
