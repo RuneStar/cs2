@@ -98,14 +98,14 @@ private class Writer(
         nextLine()
         val branches = construct.branches.iterator()
         val if0 = branches.next()
-        append("if ").appendExpr(if0.condition).append(" {")
+        append("if (").appendExpr(if0.condition).append(") {")
         indent {
             appendConstruct(if0.body)
         }
         nextLine()
         append('}')
         for (ifn in branches) {
-            append(" else if ").appendExpr(ifn.condition).append(" {")
+            append(" else if (").appendExpr(ifn.condition).append(") {")
             indent {
                 appendConstruct(ifn.body)
             }
@@ -126,7 +126,7 @@ private class Writer(
 
     private fun appendWhile(construct: Construct.While) {
         nextLine()
-        append("while ").appendExpr(construct.condition).append(" {")
+        append("while (").appendExpr(construct.condition).append(") {")
         indent {
             appendConstruct(construct.body)
         }
@@ -204,14 +204,14 @@ private class Writer(
         appendExpr(insn.expression)
     }
 
-    private fun appendExpr(expr: Expression): Writer = apply {
+    private fun appendExpr(expr: Expression, prec: Int = 0): Writer = apply {
         when (expr) {
             is EventProperty -> append(expr.literal)
             is Element.Variable -> appendVar(expr)
             is Element.Constant -> appendConst(expr)
             is Expression.Operation.AddHook -> appendHook(expr)
             is Expression.Operation.Invoke -> appendInvoke(expr)
-            is Expression.Operation -> appendOperation(expr)
+            is Expression.Operation -> appendOperation(expr, prec)
             is Expression.Compound -> appendExprs(expr.expressions)
         }
     }
@@ -234,7 +234,7 @@ private class Writer(
         }
     }
     
-    private fun appendOperation(expr: Expression.Operation) {
+    private fun appendOperation(expr: Expression.Operation, prec: Int) {
         val args = expr.arguments.list<Expression>()
         val opcode = expr.id
         when (opcode) {
@@ -267,16 +267,22 @@ private class Writer(
         }
         val branchInfix = BRANCH_INFIX_MAP[expr.id]
         val calcInfix = CALC_INFIX_MAP[expr.id]
+        val parenthesis = prec > expr.precedence
         if (branchInfix != null) {
-            append('(').appendExpr(args[0]).append(' ').append(branchInfix).append(' ').appendExpr(args[1]).append(')')
+            if (parenthesis) append('(')
+            appendExpr(args[0], expr.precedence).append(' ').append(branchInfix).append(' ').appendExpr(args[1], expr.precedence)
+            if (parenthesis) append(')')
         }  else if (calcInfix != null) {
             val wasCalc = inCalc
             if (!inCalc) {
-                append("calc")
+                append("calc(")
                 inCalc = true
             }
-            append('(').appendExpr(args[0]).append(' ').append(calcInfix).append(' ').appendExpr(args[1]).append(')')
+            if (parenthesis) append('(')
+            appendExpr(args[0], expr.precedence).append(' ').append(calcInfix).append(' ').appendExpr(args[1], expr.precedence)
+            if (parenthesis) append(')')
             inCalc = wasCalc
+            if (!inCalc) append(')')
         } else {
             var args2: List<Expression> = args
             if (expr.id in DOT_OPCODES) {
