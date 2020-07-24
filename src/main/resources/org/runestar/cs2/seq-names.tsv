@@ -115,7 +115,7 @@
 501	party_balloon
 502	zapper
 503	altar
-504	cactus
+504	tree
 505	daeyalt_essence
 523	shining_pool
 524	furnace
@@ -1165,6 +1165,8 @@
 5235	pit
 5237	broken_snare
 5239	rabbit_snare
+5250	warrior_of_murahs_walk_f
+5254	warrior_of_murahs_ready
 5262	orange_salamander_walk_f
 5263	orange_salamander_ready
 5267	young_tree
@@ -1709,6 +1711,8 @@
 6987	big_hole
 7000	ice_storm
 7001	snowfall
+7002	colossal_hydra_ready
+7006	colossal_hydra_walk_f
 7013	knight_ready
 7016	general_graardor_walk_f
 7017	general_graardor_ready
