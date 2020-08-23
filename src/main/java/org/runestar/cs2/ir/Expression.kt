@@ -7,8 +7,6 @@ interface Expression {
 
     val typings: List<Typing>
 
-    val precedence get() = 0
-
     class Compound(val expressions: List<Expression>) : Expression {
 
         override val typings: List<Typing> get() = expressions.flatMap { it.typings }
@@ -54,22 +52,6 @@ interface Expression {
                 return Expression(args.subList(0, args.size - triggerCount - 2))
             }
         }
-
-        override val precedence
-            get() = when (id) {
-                // Calc ops
-                Opcodes.MULTIPLY, Opcodes.DIV, Opcodes.MOD -> 8
-                Opcodes.ADD, Opcodes.SUB -> 7
-                // Branch ops
-                Opcodes.BRANCH_GREATER_THAN, Opcodes.BRANCH_GREATER_THAN_OR_EQUALS,
-                Opcodes.BRANCH_LESS_THAN, Opcodes.BRANCH_LESS_THAN_OR_EQUALS -> 6
-                Opcodes.BRANCH_EQUALS, Opcodes.BRANCH_NOT -> 5
-                Opcodes.AND -> 4
-                Opcodes.OR -> 3
-                Opcodes.SS_AND -> 2
-                Opcodes.SS_OR -> 1
-                else -> super.precedence
-            }
     }
 }
 
