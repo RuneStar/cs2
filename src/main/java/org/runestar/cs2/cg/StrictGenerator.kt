@@ -204,14 +204,14 @@ private class Writer(
         appendExpr(insn.expression)
     }
 
-    private fun appendExpr(expr: Expression, prec: Int = 0): Writer = apply {
+    private fun appendExpr(expr: Expression): Writer = apply {
         when (expr) {
             is EventProperty -> append(expr.literal)
             is Element.Variable -> appendVar(expr)
             is Element.Constant -> appendConst(expr)
             is Expression.Operation.AddHook -> appendHook(expr)
             is Expression.Operation.Invoke -> appendInvoke(expr)
-            is Expression.Operation -> appendOperation(expr, prec)
+            is Expression.Operation -> appendOperation(expr)
             is Expression.Compound -> appendExprs(expr.expressions)
         }
     }
@@ -233,8 +233,8 @@ private class Writer(
             StackType.INT -> append(intValueToString(expr.value.int, expr.typing.finalType))
         }
     }
-    
-    private fun appendOperation(expr: Expression.Operation, prec: Int) {
+
+    private fun appendOperation(expr: Expression.Operation) {
         val args = expr.arguments.list<Expression>()
         val opcode = expr.id
         when (opcode) {
@@ -267,20 +267,15 @@ private class Writer(
         }
         val branchInfix = BRANCH_INFIX_MAP[expr.id]
         val calcInfix = CALC_INFIX_MAP[expr.id]
-        val parenthesis = prec > expr.precedence
         if (branchInfix != null) {
-            if (parenthesis) append('(')
-            appendExpr(args[0], expr.precedence).append(' ').append(branchInfix).append(' ').appendExpr(args[1], expr.precedence)
-            if (parenthesis) append(')')
-        }  else if (calcInfix != null) {
+            appendBinaryOperation(args[0], expr, args[1], branchInfix)
+        } else if (calcInfix != null) {
             val wasCalc = inCalc
             if (!inCalc) {
                 append("calc(")
                 inCalc = true
             }
-            if (parenthesis) append('(')
-            appendExpr(args[0], expr.precedence).append(' ').append(calcInfix).append(' ').appendExpr(args[1], expr.precedence)
-            if (parenthesis) append(')')
+            appendBinaryOperation(args[0], expr, args[1], calcInfix)
             inCalc = wasCalc
             if (!inCalc) append(')')
         } else {
@@ -296,6 +291,23 @@ private class Writer(
                 append('(').appendExprs(args2).append(')')
             }
         }
+    }
+
+    private fun appendBinaryOperation(lhs: Expression, op: Expression.Operation, rhs: Expression, opText: String) {
+        appendExpressionPrec(lhs, op, false)
+        append(' ')
+        append(opText)
+        append(' ')
+        appendExpressionPrec(rhs, op, true)
+    }
+    
+    private fun appendExpressionPrec(expr: Expression, op: Expression.Operation, assoc: Boolean) {
+        val opPrec = PRECEDENCE_MAP[op.id] ?: error("Missing precedence for binary operation: ${op.id}")
+        val exprPrec = if (expr is Expression.Operation) PRECEDENCE_MAP[expr.id] ?: 0 else 0
+        val parenthesis = exprPrec > opPrec || (assoc && opPrec == exprPrec)
+        if (parenthesis) append('(')
+        appendExpr(expr)
+        if (parenthesis) append(')')
     }
 
     private fun appendExprs(exprs: List<Expression>) = apply {
@@ -383,13 +395,13 @@ private class Writer(
     private companion object {
 
         val CALC_INFIX_MAP = mapOf(
-                ADD to '+',
-                SUB to '-',
-                MULTIPLY to '*',
-                DIV to '/',
-                MOD to '%',
-                AND to '&',
-                OR to '|'
+                ADD to "+",
+                SUB to "-",
+                MULTIPLY to "*",
+                DIV to "/",
+                MOD to "%",
+                AND to "&",
+                OR to "|"
         )
 
         val BRANCH_INFIX_MAP = mapOf(
@@ -401,6 +413,26 @@ private class Writer(
                 BRANCH_NOT to "!",
                 SS_OR to "|",
                 SS_AND to "&"
+        )
+
+        val PRECEDENCE_MAP = mapOf(
+                // Calc ops
+                MULTIPLY to 1,
+                DIV to 1,
+                MOD to 1,
+                ADD to 2,
+                SUB to 2,
+                // Branch ops
+                BRANCH_GREATER_THAN to 3,
+                BRANCH_GREATER_THAN_OR_EQUALS to 3,
+                BRANCH_LESS_THAN to 3,
+                BRANCH_LESS_THAN_OR_EQUALS to 3,
+                BRANCH_EQUALS to 4,
+                BRANCH_NOT to 4,
+                AND to 5,
+                OR to 6,
+                SS_AND to 7,
+                SS_OR to 8
         )
 
         val DOT_OPCODES = setOf(
