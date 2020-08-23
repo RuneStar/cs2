@@ -18,12 +18,11 @@ class Script(
     val returnTypes: List<StackType> = run {
         val ts = ArrayList<StackType>()
         var i = opcodes.size - 2
-        out@
         while (i >= 0) {
             when (opcodes[i--].toInt()) {
                 PUSH_CONSTANT_INT -> ts.add(StackType.INT)
                 PUSH_CONSTANT_STRING -> ts.add(StackType.STRING)
-                else -> break@out
+                else -> break
             }
         }
         ts.reverse()

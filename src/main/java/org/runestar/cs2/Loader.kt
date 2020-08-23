@@ -1,6 +1,6 @@
 package org.runestar.cs2
 
-interface Loader<T : Any> {
+fun interface Loader<T : Any> {
 
     fun load(id: Int): T?
 
@@ -84,10 +84,6 @@ interface Loader<T : Any> {
 
         val SYNTH_NAMES = readNames("synth-names.tsv")
     }
-}
-
-fun <T : Any> Loader(load: (id: Int) -> T?) = object : Loader<T> {
-    override fun load(id: Int): T? = load(id)
 }
 
 fun <T : Any> Loader<T>.caching(): Loader<T> = object : Loader<T> {
