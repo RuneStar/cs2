@@ -71,7 +71,7 @@
 308	general_bentnoze_walk_f
 311	general_bentnoze_ready
 314	evil_bob_walk_f
-317	evil_bob_ready
+317	cat
 332	spirit_tree
 333	spirit_tree
 336	soulless_walk_f
@@ -379,7 +379,7 @@
 1799	wall_beast_ready
 1824	abigaila_ready
 1828	smoke_devil_walk_f
-1829	smoke_devil_ready
+1829	smoke_devil
 1838	arzinian_avatar_of_strength_ready
 1839	arzinian_avatar_of_strength_walk_f
 1845	cannonball
@@ -599,7 +599,7 @@
 2825	half_zombie_ready
 2826	other_half_zombie_ready
 2849	dagannoth_supreme_walk_f
-2850	dagannoth_supreme_ready
+2850	dagannoth_supreme_jr
 2857	rock_lobster_walk_f
 2858	rock_lobster_ready
 2863	spinolyp_walk_f
@@ -719,7 +719,7 @@
 3304	canoe_station
 3305	a_sinking_canoe
 3306	aged_log
-3309	giant_mole_ready
+3309	baby_mole
 3313	giant_mole_walk_f
 3322	zygomite_walk_f
 3323	zygomite_walk_f
@@ -774,7 +774,7 @@
 3499	agrith_na_na_walk_f
 3504	dessourt_ready
 3506	dessourt_walk_f
-3511	clock
+3511	grandfather_clock
 3523	kikazaru_ready
 3524	iwazaru_ready
 3525	mizaru_ready
@@ -1268,8 +1268,7 @@
 5600	bars
 5601	passageway
 5603	armour
-5606	odovacar_walk_f
-5607	odovacar_ready
+5607	pitfall
 5615	mutant_tarn_walk_f
 5616	mutant_tarn_ready
 5622	terror_dog_walk_f
@@ -1474,7 +1473,7 @@
 6220	kalphite_soldier_walk_f
 6221	kalphite_larva_walk_f
 6222	kalphite_guardian_walk_f
-6236	kalphite_queen_ready
+6236	kalphite_princess
 6238	kalphite_queen_walk_f
 6239	kalphite_queen_ready
 6247	crypt_spider_ready
@@ -1627,7 +1626,7 @@
 6735	pyre_boat
 6736	pyre_boat
 6737	whirlpool
-6764	chompy_bird_ready
+6764	chompy_chick
 6765	chompy_bird_walk_f
 6768	chompy_bird_ready
 6771	gull_ready
@@ -1767,9 +1766,9 @@
 7304	pool_of_restoration
 7306	rift_guardian_walk_f
 7307	rift_guardian_ready
-7309	giant_squirrel_ready
+7309	dark_squirrel
 7310	giant_squirrel_walk_f
-7312	tangleroot_ready
+7312	tangleroot
 7313	tangleroot_walk_f
 7315	rocky_ready
 7316	rocky_walk_f
@@ -1790,7 +1789,7 @@
 7395	olmlet_walk_f
 7396	olmlet_ready
 7407	rocks_ready
-7411	vasa_nistirio_walk_f
+7411	vasa_minirio
 7413	vasa_nistirio_ready
 7416	vasa_nistirio_ready
 7417	muttadile_ready
@@ -2154,3 +2153,9 @@
 8749	muncher
 8750	deaths_domain
 8752	desk
+8763	eniola_walk_f
+8764	eniola_ready
+8765	general_graardor_jr
+8766	smolcano
+8767	sourhog_ready
+8768	sourhog_walk_f
