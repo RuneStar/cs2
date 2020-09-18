@@ -1,21 +1,22 @@
 package org.runestar.cs2.dfa
 
 import org.runestar.cs2.ir.Function
+import org.runestar.cs2.ir.FunctionSet
 
 interface Phase {
 
-    fun transform(fs: Map<Int, Function>)
+    fun transform(fs: FunctionSet)
 
     abstract class Individual : Phase {
 
-        final override fun transform(fs: Map<Int, Function>) = fs.values.forEach { transform(it) }
+        final override fun transform(fs: FunctionSet) = fs.functions.values.forEach { transform(it, fs) }
 
-        abstract fun transform(f: Function)
+        abstract fun transform(f: Function, fs: FunctionSet)
     }
 
     class Composite(private vararg val ps: Phase) : Phase {
 
-        override fun transform(fs: Map<Int, Function>) = ps.forEach { it.transform(fs) }
+        override fun transform(fs: FunctionSet) = ps.forEach { it.transform(fs) }
     }
 
     companion object {
@@ -23,11 +24,13 @@ interface Phase {
         val DEFAULT = Composite(
                 RemoveDeadCode,
                 DeleteNops,
+                ReorderArgs,
                 FindArrayArgs,
-                InferTypes,
                 CombineSameLineOperations,
                 InlineStackDefinitions,
-                AddShortCircuitOperators
+                CalcTypes,
+                CalcIdentifiers,
+                AddShortCircuitOperators,
         )
     }
 }

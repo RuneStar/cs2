@@ -1,4 +1,4 @@
-package org.runestar.cs2
+package org.runestar.cs2.bin
 
 enum class Trigger(val id: Int) {
 
@@ -16,8 +16,8 @@ enum class Trigger(val id: Int) {
 
     companion object {
 
-        private val map = values().associateBy { it.id }
+        private val VALUES = values().associateBy { it.id }
 
-        fun of(id: Int): Trigger = map.getValue(id)
+        fun of(id: Int): Trigger = VALUES.getValue(id)
     }
 }

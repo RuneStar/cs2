@@ -1,15 +1,16 @@
 package org.runestar.cs2.dfa
 
-import org.runestar.cs2.Opcodes
+import org.runestar.cs2.bin.*
 import org.runestar.cs2.ir.Expression
 import org.runestar.cs2.ir.Function
+import org.runestar.cs2.ir.FunctionSet
 import org.runestar.cs2.ir.Instruction
 import org.runestar.cs2.util.Chain
 
-internal object AddShortCircuitOperators : Phase.Individual() {
+object AddShortCircuitOperators : Phase.Individual() {
 
-    override fun transform(f: Function) {
-        while (ors(f) || ands(f)) {}
+    override fun transform(f: Function, fs: FunctionSet) {
+        while (ors(f) || ands(f));
     }
 
     private fun ors(f: Function): Boolean {
@@ -19,7 +20,7 @@ internal object AddShortCircuitOperators : Phase.Individual() {
             val if2 = f.instructions.next(if1) as? Instruction.Branch ?: continue
             if (if1.pass == if2.pass) {
                 itr.remove()
-                if2.expression = Expression.Operation(emptyList(), Opcodes.SS_OR, Expression(if1.expression, if2.expression))
+                if2.expression = Expression.Operation(emptyList(), SS_OR, Expression(if1.expression, if2.expression))
                 return true
             }
         }
@@ -43,7 +44,7 @@ internal object AddShortCircuitOperators : Phase.Individual() {
                         f.instructions.remove(if2)
 
                         if1.pass = if2.pass
-                        if1.expression = Expression.Operation(emptyList(), Opcodes.SS_AND, Expression(if1.expression, if2.expression))
+                        if1.expression = Expression.Operation(emptyList(), SS_AND, Expression(if1.expression, if2.expression))
                         return true
                     }
                 }
@@ -55,7 +56,7 @@ internal object AddShortCircuitOperators : Phase.Individual() {
                         f.instructions.remove(if2)
 
                         if1.pass = if2.pass
-                        if1.expression = Expression.Operation(emptyList(), Opcodes.SS_AND, Expression(if1.expression, if2.expression))
+                        if1.expression = Expression.Operation(emptyList(), SS_AND, Expression(if1.expression, if2.expression))
                         return true
                     }
                 }

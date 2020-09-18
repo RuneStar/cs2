@@ -6,9 +6,9 @@ import org.runestar.cs2.util.DirectedGraph
 import org.runestar.cs2.util.LinkedGraph
 import org.runestar.cs2.util.PartitionedChain
 
-internal typealias BasicBlock = PartitionedChain<Instruction>.Block
+typealias BasicBlock = PartitionedChain<Instruction>.Block
 
-internal fun partitionBlocks(f: Function): PartitionedChain<Instruction> {
+fun partitionBlocks(f: Function): PartitionedChain<Instruction> {
     val blockHeads = ArrayList<Instruction>()
     blockHeads.add(f.instructions.first)
     for (insn in f.instructions) {
@@ -20,7 +20,7 @@ internal fun partitionBlocks(f: Function): PartitionedChain<Instruction> {
     return PartitionedChain(f.instructions, blockHeads)
 }
 
-internal fun graphBlocks(blockList: PartitionedChain<Instruction>): DirectedGraph<BasicBlock> {
+fun graphBlocks(blockList: PartitionedChain<Instruction>): DirectedGraph<BasicBlock> {
     val graph = LinkedGraph<BasicBlock>()
     for (block in blockList) {
         when (val tail = block.tail) {

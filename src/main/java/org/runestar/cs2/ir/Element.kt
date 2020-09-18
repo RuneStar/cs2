@@ -1,31 +1,43 @@
 package org.runestar.cs2.ir
 
-import org.runestar.cs2.Type
-import org.runestar.cs2.Value
+import org.runestar.cs2.bin.StackType
+import org.runestar.cs2.bin.Value
+import org.runestar.cs2.ir.Variable as Var
 
 interface Element : Expression {
 
-    val typing: Typing
+    val stackType: StackType
 
-    override val typings: List<Typing> get() = listOf(typing)
+    override val stackTypes: List<StackType> get() = listOf(stackType)
 
-    class Constant(val value: Value, override val typing: Typing) : Element {
+    class Constant(val value: Value) : Element {
 
-        override fun toString() = "$value$typing"
+        override val stackType get() = value.stackType
+
+        override fun toString() = value.toString()
     }
 
-    class Variable(val varId: VarId, override val typing: Typing, val value: Value? = null) : Element {
+    interface Variable : Element {
+
+        val variable: Var
+
+        override val stackType get() = variable.stackType
+    }
+
+    class Access(
+            override val variable: Var,
+            val value: Value? = null,
+    ) : Variable {
 
         init {
-            if (value != null) check(value.type == typing.stackType)
+            if (value != null) require(variable.stackType == value.stackType)
         }
 
-        override fun hashCode() = varId.hashCode()
+        override fun toString() = "$$variable"
+    }
 
-        override fun equals(other: Any?) = other is Variable && varId == other.varId
+    class Pointer(override val variable: Var) : Variable {
 
-        override fun toString() = "${varId.source}_${varId.id}$typing"
+        override fun toString() = variable.toString()
     }
 }
-
-fun Value.asConstant(type: Type.Stackable? = null) = Element.Constant(this, Typing.to(type))

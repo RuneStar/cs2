@@ -1,14 +1,38 @@
 package org.runestar.cs2.cg
 
-import org.runestar.cs2.Alias.*
-import org.runestar.cs2.ArrayType
-import org.runestar.cs2.Loader
-import org.runestar.cs2.Primitive.*
-import org.runestar.cs2.Type
-import org.runestar.cs2.loadNotNull
-import org.runestar.cs2.map
-import org.runestar.cs2.mapIndexed
-import org.runestar.cs2.orElse
+import org.runestar.cs2.BOOLEAN_NAMES
+import org.runestar.cs2.CHATFILTER_NAMES
+import org.runestar.cs2.CHATTYPE_NAMES
+import org.runestar.cs2.CLIENTTYPE_NAMES
+import org.runestar.cs2.FONTMETRICS_NAMES
+import org.runestar.cs2.GRAPHIC_NAMES
+import org.runestar.cs2.IFTYPE_NAMES
+import org.runestar.cs2.INTERFACE_NAMES
+import org.runestar.cs2.INV_NAMES
+import org.runestar.cs2.KEY_NAMES
+import org.runestar.cs2.LOC_NAMES
+import org.runestar.cs2.MAPAREA_NAMES
+import org.runestar.cs2.MODEL_NAMES
+import org.runestar.cs2.NPC_NAMES
+import org.runestar.cs2.OBJ_NAMES
+import org.runestar.cs2.PARAM_NAMES
+import org.runestar.cs2.SEQ_NAMES
+import org.runestar.cs2.SETPOSH_NAMES
+import org.runestar.cs2.SETPOSV_NAMES
+import org.runestar.cs2.SETSIZE_NAMES
+import org.runestar.cs2.SETTEXTALIGNH_NAMES
+import org.runestar.cs2.SETTEXTALIGNV_NAMES
+import org.runestar.cs2.STAT_NAMES
+import org.runestar.cs2.STRUCT_NAMES
+import org.runestar.cs2.SYNTH_NAMES
+import org.runestar.cs2.util.Loader
+import org.runestar.cs2.bin.Type
+import org.runestar.cs2.WINDOWMODE_NAMES
+import org.runestar.cs2.ir.*
+import org.runestar.cs2.util.loadNotNull
+import org.runestar.cs2.util.map
+import org.runestar.cs2.util.mapIndexed
+import org.runestar.cs2.util.orElse
 
 private val VALUE = Loader { it.toString() }
 
@@ -25,7 +49,7 @@ private val COORDS = Loader {
     "${plane}_${x / 64}_${z / 64}_${x and 0x3F}_${z and 0x3F}"
 }
 
-private val COLOUR_CONSTANTS = Loader.Mapping(mapOf(
+private val COLOUR_CONSTANTS = Loader(mapOf(
         0xFF0000 to "^red",
         0x00FF00 to "^green",
         0x0000FF to "^blue",
@@ -38,15 +62,15 @@ private val COLOUR_CONSTANTS = Loader.Mapping(mapOf(
 
 private val COLOURS = Loader {
     check((it shr 24) == 0)
-    "0x" + it.toString(16).padStart(6, '0')
+    "0x%06x".format(it)
 }
 
-private val INT_CONSTANTS = Loader.Mapping(mapOf(
+private val INT_CONSTANTS = Loader(mapOf(
         Int.MAX_VALUE to "^max_32bit_int",
         Int.MIN_VALUE to "^min_32bit_int"
 ))
 
-private val INTERFACES = unique(INTERFACE, Loader.INTERFACE_NAMES)
+private val INTERFACES = unique(INTERFACE, INTERFACE_NAMES)
 
 private val COMPONENTS = Loader { INTERFACES.loadNotNull(it shr 16) + ':' + (it and 0xFFFF) }
 
@@ -54,23 +78,22 @@ private fun cst(prefix: String, loader: Loader<String>) = loader.prefix('^' + pr
 
 private fun Loader<String>.idSuffix() = mapIndexed { id, n -> n + '_' + id }
 
-private fun unique(type: Type, loader: Loader<String>) = loader.orElse(unknown(type))
+private fun unique(prototype: Prototype, loader: Loader<String>) = loader.orElse(unknown(prototype))
 
 private fun uniqueExhaustive(loader: Loader<String>) = loader.orElse(NULL)
 
-private fun unknown(type: Type) = NULL.orElse(Loader(type.identifier).idSuffix())
+private fun unknown(prototype: Prototype) = NULL.orElse(Loader(prototype.identifier).idSuffix())
 
-private fun nonUnique(type: Type, loader: Loader<String>) = NULL.orElse(loader.orElse(Loader(type.identifier)).idSuffix())
+private fun nonUnique(prototype: Prototype, loader: Loader<String>) = NULL.orElse(loader.orElse(Loader(prototype.identifier)).idSuffix())
 
-private val TYPES = HashMap<Type.Stackable, Loader<String>>().apply {
+private val PROTOTYPES = HashMap<Prototype, Loader<String>>().apply {
     this[INT] = INT_CONSTANTS.orElse(VALUE)
     this[COORD] = NULL.orElse(COORDS)
     this[COLOUR] = NULL.orElse(COLOUR_CONSTANTS).orElse(COLOURS)
     this[COMPONENT] = NULL.orElse(COMPONENTS)
-    this[TYPE] = Loader { Type.of(it.toByte()).identifier }
-    this[BIT] = Loader.BOOLEAN_NAMES.prefix("^").orElse(NULL)
-    this[VAR] = VALUE.prefix("var")
-    this[GRAPHIC] = NULL.orElse(Loader.GRAPHIC_NAMES.orElse(Loader(GRAPHIC.identifier).idSuffix()).quote())
+    this[TYPE] = Loader { Type.of(it.toByte()).literal }
+    this[BOOL] = BOOLEAN_NAMES.prefix("^").orElse(NULL)
+    this[GRAPHIC] = NULL.orElse(GRAPHIC_NAMES.orElse(Loader(GRAPHIC.identifier).idSuffix()).quote())
 
     this[ENUM] = unknown(ENUM)
     this[CATEGORY] = unknown(CATEGORY)
@@ -79,40 +102,37 @@ private val TYPES = HashMap<Type.Stackable, Loader<String>>().apply {
     this[AREA] = NULL
     this[MAPELEMENT] = NULL
 
-    this[BOOLEAN] = uniqueExhaustive(Loader.BOOLEAN_NAMES)
-    this[STAT] = uniqueExhaustive(Loader.STAT_NAMES)
-    this[MAPAREA] = uniqueExhaustive(Loader.MAPAREA_NAMES)
+    this[BOOLEAN] = uniqueExhaustive(BOOLEAN_NAMES)
+    this[STAT] = uniqueExhaustive(STAT_NAMES)
+    this[MAPAREA] = uniqueExhaustive(MAPAREA_NAMES)
+    this[FONTMETRICS] = uniqueExhaustive(FONTMETRICS_NAMES)
 
-    this[FONTMETRICS] = unique(FONTMETRICS, Loader.GRAPHIC_NAMES)
-    this[INV] = unique(INV, Loader.INV_NAMES)
-    this[SYNTH] = unique(SYNTH, Loader.SYNTH_NAMES)
-    this[PARAM] = unique(PARAM, Loader.PARAM_NAMES)
+    this[INV] = unique(INV, INV_NAMES)
+    this[SYNTH] = unique(SYNTH, SYNTH_NAMES)
+    this[PARAM] = unique(PARAM, PARAM_NAMES)
     this[INTERFACE] = INTERFACES
 
-    this[OBJ] = nonUnique(OBJ, Loader.OBJ_NAMES)
-    this[LOC] = nonUnique(LOC, Loader.LOC_NAMES)
-    this[MODEL] = nonUnique(MODEL, Loader.MODEL_NAMES)
-    this[STRUCT] = nonUnique(STRUCT, Loader.STRUCT_NAMES)
-    this[NPC] = nonUnique(NPC, Loader.NPC_NAMES)
-    this[SEQ] = nonUnique(SEQ, Loader.SEQ_NAMES)
+    this[OBJ] = nonUnique(OBJ, OBJ_NAMES)
+    this[LOC] = nonUnique(LOC, LOC_NAMES)
+    this[MODEL] = nonUnique(MODEL, MODEL_NAMES)
+    this[STRUCT] = nonUnique(STRUCT, STRUCT_NAMES)
+    this[NPC] = nonUnique(NPC, NPC_NAMES)
+    this[SEQ] = nonUnique(SEQ, SEQ_NAMES)
     this[NAMEDOBJ] = getValue(OBJ)
 
-    this[KEY] = cst("key", Loader.KEY_NAMES)
-    this[IFTYPE] = cst("iftype", Loader.IFTYPE_NAMES)
-    this[SETSIZE] = cst("setsize", Loader.SETSIZE_NAMES)
-    this[SETPOSH] = cst("setpos", Loader.SETPOSH_NAMES)
-    this[SETPOSV] = cst("setpos", Loader.SETPOSV_NAMES)
-    this[SETTEXTALIGNH] = cst("settextalign", Loader.SETTEXTALIGNH_NAMES)
-    this[SETTEXTALIGNV] = cst("settextalign", Loader.SETTEXTALIGNV_NAMES)
-    this[CHATTYPE] = cst("chattype", Loader.CHATTYPE_NAMES)
-    this[WINDOWMODE] = cst("windowmode", Loader.WINDOWMODE_NAMES)
-    this[CLIENTTYPE] = cst("clienttype", Loader.CLIENTTYPE_NAMES)
+    this[KEY] = cst(KEY.identifier, KEY_NAMES)
+    this[IFTYPE] = cst(IFTYPE.identifier, IFTYPE_NAMES)
+    this[SETSIZE] = cst(SETSIZE.identifier, SETSIZE_NAMES)
+    this[SETPOSH] = cst("setpos", SETPOSH_NAMES)
+    this[SETPOSV] = cst("setpos", SETPOSV_NAMES)
+    this[SETTEXTALIGNH] = cst("settextalign", SETTEXTALIGNH_NAMES)
+    this[SETTEXTALIGNV] = cst("settextalign", SETTEXTALIGNV_NAMES)
+    this[CHATTYPE] = cst(CHATTYPE.identifier, CHATTYPE_NAMES)
+    this[WINDOWMODE] = cst(WINDOWMODE.identifier, WINDOWMODE_NAMES)
+    this[CLIENTTYPE] = cst(CLIENTTYPE.identifier, CLIENTTYPE_NAMES)
+    this[CHATFILTER] = cst(CHATFILTER.identifier, CHATFILTER_NAMES)
 }
 
-fun intValueToString(n: Int, type: Type): String {
-    return if (type is ArrayType) {
-        type.identifier + n
-    } else {
-        TYPES.getValue(type as Type.Stackable).loadNotNull(n)
-    }
+fun intConstantToString(n: Int, prototype: Prototype): String {
+    return (PROTOTYPES[prototype] ?: PROTOTYPES.getValue(Prototype(prototype.type))).loadNotNull(n)
 }

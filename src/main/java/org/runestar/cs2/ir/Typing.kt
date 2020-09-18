@@ -1,112 +1,111 @@
 package org.runestar.cs2.ir
 
-import org.runestar.cs2.ArrayType
-import org.runestar.cs2.Primitive
-import org.runestar.cs2.StackType
-import org.runestar.cs2.Type
-import org.runestar.cs2.util.ListSet
+import org.runestar.cs2.bin.StackType
+import org.runestar.cs2.bin.Type
 
-class Typing {
+class Typing(val stackType: StackType) {
 
-    var stackType: StackType? = null
+    var _type: Type? = null
 
-    var isParameter = false
+    var _identifier: String? = null
 
-    private val from: MutableSet<Type> = ListSet(ArrayList(1))
+    var freezeType = false
 
-    private val to: MutableSet<Type> = ListSet(ArrayList(1))
+    var freezeIdentifier = false
 
-    var type: Type? = null
-        private set
+    val from = HashSet<Typing>()
 
-    val finalType: Type get() = type ?: if (stackType == StackType.STRING) Primitive.STRING else Primitive.INT
+    val to = HashSet<Typing>()
 
-    fun from(t: Type?) = add(t, from)
+    val compare = HashSet<Typing>()
+}
 
-    fun to(t: Type?) = add(t, to)
+val Typing.type get() = checkNotNull(_type)
 
-    private fun add(t: Type?, s: MutableSet<Type>): Boolean {
-        if (t == null) return false
-        if (t is Type.Stackable) stackType = t.stackType
-        val b = s.add(t)
-        if (b) type = calcType()
-        return b
+val Typing.literal get() = type.literal
+
+val Typing.identifier get() = checkNotNull(_identifier)
+
+val Typing.prototype get() = Prototype(type, identifier)
+
+val Typing._prototype: Prototype? get() {
+    val t = _type ?: return null
+    val i = _identifier ?: return null
+    return Prototype(t, i)
+}
+
+fun Typing.freeze(type: Type) {
+    freezeType = true
+    check(type.stackType == stackType)
+    _type = type
+}
+
+fun Typing.freeze(identifier: String) {
+    freezeIdentifier = true
+    _identifier = identifier
+}
+
+fun Typing.freeze(prototype: Prototype) {
+    freeze(prototype.type)
+    freeze(prototype.identifier)
+}
+
+fun Typing(prototype: Prototype) = Typing(prototype.stackType).apply { freeze(prototype) }
+
+fun assign(from: Typing, to: Typing) {
+    require(from != to)
+    from.to.add(to)
+    to.from.add(from)
+}
+
+fun assign(from: List<Typing>, to: List<Typing>) {
+    require(from.size == to.size)
+    for (i in from.indices) {
+        assign(from[i], to[i])
     }
+}
 
-    private fun calcType(): Type? {
-        val u = Type.union(from)
-        val i = Type.intersection(to)
-        return if (u == null) i
-        else if (i == null) u
-        else if (u == i) u
-        else Type.union(ListSet(mutableListOf(u, i)))
+fun compare(a: Typing, b: Typing) {
+    require(a != b)
+    a.compare.add(b)
+    b.compare.add(a)
+}
+
+fun remove(t: Typing) {
+    t.from.forEach { it.to.remove(t) }
+    t.to.forEach { it.from.remove(t) }
+    t.compare.forEach { it.compare.remove(t) }
+}
+
+fun replace(t: Typing, by: Typing) {
+    require(t != by)
+    check(t._type == null && t._identifier == null)
+    t.from.forEach {
+        it.to.remove(t)
+        if (by != it) {
+            it.to.add(by)
+            by.from.add(it)
+        }
     }
-
-    override fun toString() = "[$type:${from.joinToString("|")}:${to.joinToString("&")}]"
-
-    companion object {
-
-        fun from(t: Type?): Typing = Typing().also { it.from(t) }
-
-        fun to(t: Type?): Typing = Typing().also { it.to(t) }
-
-        fun compare(from: Typing, to: Typing): Boolean {
-            val ft = from.type
-            val tt = to.type
-            if (ft == tt) return false
-            return from.from(tt) or to.from(ft)
+    t.to.forEach {
+        it.from.remove(t)
+        if (by != it) {
+            it.from.add(by)
+            by.to.add(it)
         }
-
-        fun arrayGet(array: Typing, element: Typing): Boolean {
-            val at = array.type as ArrayType?
-            val et = element.type
-            var b = false
-            if (at != null) b = b or element.from(at.elementType)
-            if (et != null) b = b or array.to(ArrayType(et as Type.Stackable))
-            return b
-        }
-
-        fun arraySet(array: Typing, element: Typing): Boolean {
-            val at = array.type as ArrayType?
-            val et = element.type
-            var b = false
-            if (at != null) b = b or element.to(at.elementType)
-            if (et != null) b = b or array.from(ArrayType(et as Type.Stackable))
-            return b
-        }
-
-        fun returns(returns: Collection<List<Typing>>, signature: List<Typing>): Boolean {
-            var b = false
-            for (r in returns) {
-                for (i in signature.indices) {
-                    b = b or signature[i].from(r[i].type)
-                }
-            }
-            for (r in returns) {
-                for (i in signature.indices) {
-                    b = b or r[i].from(signature[i].type)
-                }
-            }
-            return b
+    }
+    t.compare.forEach {
+        it.compare.remove(t)
+        if (by != it) {
+            it.compare.add(by)
+            by.compare.add(it)
         }
     }
 }
 
-class TypingFactory {
-
-    private val globalVars = HashMap<VarId, Typing>()
-
-    private val returns = HashMap<Int, List<Typing>>()
-
-    inner class Local {
-
-        private val vars = HashMap<VarId, Typing>()
-
-        fun variable(varId: VarId): Typing {
-            val v = if (varId.source.global) globalVars else vars
-            return v.getOrPut(varId) { Typing() }
-        }
-
-        fun returned(scriptId: Int, size: Int): List<Typing> = returns.getOrPut(scriptId) { List(size) { Typing() } }
+fun replace(t: List<Typing>, by: List<Typing>) {
+    require(t.size == by.size)
+    for (i in t.indices) {
+        replace(t[i], by[i])
     }
 }

@@ -7,47 +7,51 @@ interface Instruction {
         var expression: Expression
     }
 
-    class Assignment(var definitions: Expression, override var expression: Expression) : Evaluation {
+    class Assignment(
+            var definitions: Expression,
+            override var expression: Expression,
+    ) : Evaluation {
 
-        override fun toString(): String {
-            val ds = definitions.list<Expression>()
-            return if (ds.isEmpty()) {
-                expression.toString()
-            } else {
-                "$definitions = $expression"
-            }
+        constructor(expression: Expression) : this(Expression(), expression)
+
+        init {
+            check(definitions.stackTypes.size == expression.stackTypes.size || definitions.stackTypes.isEmpty())
         }
+
+        override fun toString() = "$definitions = $expression"
     }
 
     class Return(override var expression: Expression) : Evaluation {
 
-        override fun toString() = "return($expression)"
+        override fun toString() = "return $expression"
     }
 
-    class Branch(override var expression: Expression, var pass: Label) : Evaluation {
+    class Branch(
+            override var expression: Expression,
+            var pass: Label,
+    ) : Evaluation {
 
         override fun toString() = "if $expression goto $pass"
     }
 
-    class Switch(override var expression: Expression, val cases: Map<Int, Label>) : Evaluation {
+    class Switch(
+            override var expression: Expression,
+            val cases: Map<Int, Label>,
+    ) : Evaluation {
 
-        override fun toString(): String {
-            val sb = StringBuilder()
-            sb.append("switch(").append(expression).append("):")
-            for (e in cases) {
-                sb.append("\n\t\t").append(e.key).append(": ").append(e.value)
-            }
-            return sb.toString()
+        override fun toString() = buildString {
+            append("switch ").append(expression).append(" ")
+            cases.entries.joinTo(this, ",") { "${it.key}:${it.value}" }
         }
     }
 
     data class Label(var id: Int) : Instruction {
 
-        override fun toString(): String = "@$id"
+        override fun toString() = "@$id"
     }
 
     class Goto(var label: Label) : Instruction {
 
-        override fun toString(): String = "goto $label"
+        override fun toString() = "goto $label"
     }
 }

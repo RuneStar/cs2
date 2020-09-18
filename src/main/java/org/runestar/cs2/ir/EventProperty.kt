@@ -1,25 +1,22 @@
 package org.runestar.cs2.ir
 
-import org.runestar.cs2.Alias
-import org.runestar.cs2.Primitive
-import org.runestar.cs2.Type
-import org.runestar.cs2.Value
+import org.runestar.cs2.bin.Value
 
-enum class EventProperty(val magic: Value, type: Type.Stackable) : Element {
+enum class EventProperty(val magic: Value, val prototype: Prototype) : Element {
 
-    opbase(Value("event_opbase"), Primitive.STRING),
-    mousex(Value(Integer.MIN_VALUE + 1), Primitive.INT),
-    mousey(Value(Integer.MIN_VALUE + 2), Primitive.INT),
-    com(Value(Integer.MIN_VALUE + 3), Primitive.COMPONENT),
-    opindex(Value(Integer.MIN_VALUE + 4), Primitive.INT),
-    comid(Value(Integer.MIN_VALUE + 5), Primitive.INT),
-    dragtarget(Value(Integer.MIN_VALUE + 6), Primitive.COMPONENT),
-    dragtargetid(Value(Integer.MIN_VALUE + 7), Primitive.INT),
-    keypressed(Value(Integer.MIN_VALUE + 8), Alias.KEY),
-    keytyped(Value(Integer.MIN_VALUE + 9), Primitive.CHAR),
+    opbase(Value("event_opbase"), OPBASE),
+    mousex(Value(Int.MIN_VALUE + 1), MOUSEX),
+    mousey(Value(Int.MIN_VALUE + 2), MOUSEY),
+    com(Value(Int.MIN_VALUE + 3), COMPONENT),
+    opindex(Value(Int.MIN_VALUE + 4), OPINDEX),
+    comsubid(Value(Int.MIN_VALUE + 5), COMSUBID),
+    drop(Value(Int.MIN_VALUE + 6), DROP),
+    dropsubid(Value(Int.MIN_VALUE + 7), DROPSUBID),
+    key(Value(Int.MIN_VALUE + 8), KEY),
+    keychar(Value(Int.MIN_VALUE + 9), KEYCHAR),
     ;
 
-    override val typing = Typing.to(type)
+    override val stackType get() = prototype.stackType
 
     val literal = "event_$name"
 
@@ -27,8 +24,8 @@ enum class EventProperty(val magic: Value, type: Type.Stackable) : Element {
 
     companion object {
 
-        private val map = values().associateBy { it.magic }
+        private val VALUES = values().associateBy { it.magic }
 
-        fun of(magic: Value): EventProperty? = map[magic]
+        fun of(magic: Value): EventProperty? = VALUES[magic]
     }
 }

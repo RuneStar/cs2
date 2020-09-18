@@ -1,104 +1,116 @@
 package org.runestar.cs2.ir
 
-import org.runestar.cs2.Alias
-import org.runestar.cs2.ArrayType
-import org.runestar.cs2.Opcodes
-import org.runestar.cs2.Primitive
-import org.runestar.cs2.Primitive.*
-import org.runestar.cs2.Alias.*
-import org.runestar.cs2.Loader
-import org.runestar.cs2.StackType
-import org.runestar.cs2.Type
-import org.runestar.cs2.Value
-import org.runestar.cs2.loadNotNull
-import org.runestar.cs2.namesReverse
+import org.runestar.cs2.bin.ClientScriptDesc
+import org.runestar.cs2.bin.StackType
+import org.runestar.cs2.bin.Type
+import org.runestar.cs2.bin.*
+import org.runestar.cs2.ir.COORD as _COORD
+import org.runestar.cs2.ir.CLIENTTYPE as _CLIENTTYPE
+import org.runestar.cs2.ir.ENUM as _ENUM
+import org.runestar.cs2.ir.MES as _MES
+import org.runestar.cs2.ir.STAT as _STAT
+import org.runestar.cs2.bin.string
+import org.runestar.cs2.util.Loader
+import org.runestar.cs2.util.loadNotNull
 
 interface Command {
 
     val id: Int
 
-    fun translate(state: Interpreter.State): Instruction
+    fun translate(state: InterpreterState): Instruction
 
     companion object {
 
         val COMMANDS: List<Command> get() = ArrayList<Command>().apply {
             add(Switch)
             add(Branch)
-            add(GetEnum)
-            add(Invoke)
+            add(Enum)
+            add(Proc)
             add(Return)
             add(JoinString)
             add(DefineArray)
-            add(GetArrayInt)
-            add(SetArrayInt)
+            add(PushArrayInt)
+            add(PopArrayInt)
             addAll(BranchCompare.values().asList())
+            addAll(Discard.values().asList())
             addAll(Assign.values().asList())
             addAll(Basic.values().asList())
-            addAll(SetOn.values().asList())
+            addAll(ClientScript.values().asList())
             addAll(Param.values().asList())
         }
 
-        fun loader(commands: Iterable<Command>): Loader<Command> = Loader.Mapping(commands.associateBy { it.id })
+        fun loader(commands: Iterable<Command>): Loader<Command> = Loader(commands.associateBy { it.id })
 
         val LOADER: Loader<Command> = loader(COMMANDS)
     }
 
     object Switch : Command {
 
-        override val id = Opcodes.SWITCH
+        override val id = SWITCH
 
-        override fun translate(state: Interpreter.State): Instruction {
+        override fun translate(state: InterpreterState): Instruction {
             return Instruction.Switch(state.pop(StackType.INT), state.switch.mapValues { Instruction.Label(it.value + 1 + state.pc) })
         }
     }
 
     object Branch : Command {
 
-        override val id = Opcodes.BRANCH
+        override val id = BRANCH
 
-        override fun translate(state: Interpreter.State): Instruction {
+        override fun translate(state: InterpreterState): Instruction {
             return Instruction.Goto(Instruction.Label(state.pc + state.operand.int + 1))
         }
     }
 
-    object Invoke : Command {
+    object Proc : Command {
 
-        override val id = Opcodes.GOSUB_WITH_PARAMS
+        override val id = GOSUB_WITH_PARAMS
 
-        override fun translate(state: Interpreter.State): Instruction {
+        override fun translate(state: InterpreterState): Instruction {
             val invokeId = state.operand.int
             val invoked = state.scripts.loadNotNull(invokeId)
-            val args = state.pop(invoked.intArgumentCount + invoked.stringArgumentCount)
-            val defs = state.push(invoked.returnTypes)
-            val returnTypes = state.typingFactory.returned(invokeId, invoked.returnTypes.size)
-            return Instruction.Assignment(Expression(defs), Expression.Operation.Invoke(returnTypes, invokeId, Expression(args)))
+            val args = Expression(state.pop(invoked.intArgumentCount + invoked.stringArgumentCount))
+            assign(state.typings.of(args), state.typings.args(invokeId, args.stackTypes))
+            val proc = Expression.Proc(invoked.returnTypes, invokeId, args)
+            val defs = Expression(state.push(invoked.returnTypes))
+            assign(state.typings.of(proc), state.typings.of(defs))
+            return Instruction.Assignment(defs, proc)
         }
     }
 
     object Return : Command {
 
-        override val id = Opcodes.RETURN
+        override val id = RETURN
 
-        override fun translate(state: Interpreter.State): Instruction {
-            return Instruction.Return(Expression(state.popAll()))
+        override fun translate(state: InterpreterState): Instruction {
+            val e = Expression(state.popAll())
+            assign(state.typings.of(e), state.typings.returns(state.scriptId, e.stackTypes))
+            return Instruction.Return(e)
         }
     }
 
-    object GetEnum : Command {
+    object Enum : Command {
 
-        override val id = Opcodes.ENUM
+        override val id = ENUM
 
-        override fun translate(state: Interpreter.State): Instruction {
+        override fun translate(state: InterpreterState): Instruction {
             val key = state.pop(StackType.INT)
-            val enumId = state.pop(ENUM)
-            val valueType = Type.of((checkNotNull(state.stack.peek().value).int).toByte())
-            val valueTypeVar = state.pop(Alias.TYPE)
-            val keyType = Type.of((checkNotNull(state.stack.peek().value).int).toByte())
-            val keyTypeVar = state.pop(Alias.TYPE)
+            val enumId = state.pop(StackType.INT)
+            assign(state.typings.of(enumId), state.typings.of(_ENUM))
+            val valueType = Type.of((checkNotNull(state.peekValue()).int).toByte())
+            val valueTypeVar = state.pop(StackType.INT)
+            assign(state.typings.of(valueTypeVar), state.typings.of(TYPE))
+            val keyType = Type.of((checkNotNull(state.peekValue()).int).toByte())
+            assign(state.typings.of(key), state.typings.of(Prototype(keyType)))
+            val keyTypeVar = state.pop(StackType.INT)
+            assign(state.typings.of(keyTypeVar), state.typings.of(TYPE))
             val args = Expression(keyTypeVar, valueTypeVar, enumId, key)
-            key.typing.to(keyType)
-            val value = state.push(valueType)
-            return Instruction.Assignment(value, Expression.Operation(listOf(Typing.to(valueType)), id, args))
+            val value = state.push(valueType.stackType)
+            val operation = Expression.Operation(listOf(valueType.stackType), id, args)
+            val operationTyping = state.typings.of(operation).single()
+            operationTyping.freeze(valueType)
+            assign(operationTyping, state.typings.of(value))
+            return Instruction.Assignment(value, operation)
         }
     }
 
@@ -111,47 +123,71 @@ interface Command {
         BRANCH_LESS_THAN_OR_EQUALS,
         BRANCH_GREATER_THAN_OR_EQUALS;
 
-        override val id = namesReverse.getValue(name)
+        override val id = opcodes.getValue(name)
 
-        override fun translate(state: Interpreter.State): Instruction {
-            val r = state.pop(StackType.INT)
-            val l = state.pop(StackType.INT)
-            val expr = Expression.Operation(emptyList(), id, Expression(l, r))
+        override fun translate(state: InterpreterState): Instruction {
+            val right = state.pop(StackType.INT)
+            val left = state.pop(StackType.INT)
+            compare(state.typings.of(left), state.typings.of(right))
+            val expr = Expression.Operation(emptyList(), id, Expression(left, right))
             return Instruction.Branch(expr, Instruction.Label(state.pc + state.operand.int + 1))
         }
     }
 
     object DefineArray : Command {
 
-        override val id = Opcodes.DEFINE_ARRAY
+        override val id = DEFINE_ARRAY
 
-        override fun translate(state: Interpreter.State): Instruction {
-            val length = state.pop(INT)
-            val array = state.variable(VarSource.ARRAY, state.operand.int shr 16)
-            array.typing.to(ArrayType(Type.of(state.operand.int.toByte())))
-            return Instruction.Assignment(Expression(), Expression.Operation(emptyList(), id, Expression(array, length)))
+        override fun translate(state: InterpreterState): Instruction {
+            val length = state.pop(StackType.INT)
+            val array = Element.Access(Variable.array(state.scriptId, state.operand.int shr 16))
+            val arrayType = Type.of(state.operand.int.toByte())
+            assign(state.typings.of(length), state.typings.of(LENGTH))
+            state.typings.of(array).freeze(arrayType)
+            return Instruction.Assignment(Expression.Operation(emptyList(), id, Expression(array, length)))
         }
     }
 
-    object GetArrayInt : Command {
+    object PushArrayInt : Command {
 
-        override val id = Opcodes.PUSH_ARRAY_INT
+        override val id = PUSH_ARRAY_INT
 
-        override fun translate(state: Interpreter.State): Instruction {
-            val arrayIndex = state.pop(INT)
-            val array = state.variable(VarSource.ARRAY, state.operand.int)
-            return Instruction.Assignment(state.push(StackType.INT), Expression.Operation(listOf(Typing()), id, Expression(array, arrayIndex)))
+        override fun translate(state: InterpreterState): Instruction {
+            val arrayIndex = state.pop(StackType.INT)
+            val array = Element.Access(Variable.array(state.scriptId, state.operand.int))
+            val operation = Expression.Operation(listOf(StackType.INT), id, Expression(array, arrayIndex))
+            val def = state.push(StackType.INT)
+            assign(state.typings.of(arrayIndex), state.typings.of(INDEX))
+            assign(state.typings.of(array), state.typings.of(operation).single())
+            assign(state.typings.of(operation).single(), state.typings.of(def))
+            return Instruction.Assignment(def, operation)
         }
     }
 
-    object SetArrayInt : Command {
+    object PopArrayInt : Command {
 
-        override val id = Opcodes.POP_ARRAY_INT
+        override val id = POP_ARRAY_INT
 
-        override fun translate(state: Interpreter.State): Instruction {
+        override fun translate(state: InterpreterState): Instruction {
             val value = state.pop(StackType.INT)
-            val array = state.variable(VarSource.ARRAY, state.operand.int)
-            return Instruction.Assignment(Expression(), Expression.Operation(emptyList(), id, Expression(array, state.pop(INT), value)))
+            val arrayIndex = state.pop(StackType.INT)
+            val array = Element.Access(Variable.array(state.scriptId, state.operand.int))
+            assign(state.typings.of(arrayIndex), state.typings.of(INDEX))
+            assign(state.typings.of(value), state.typings.of(array))
+            return Instruction.Assignment(Expression.Operation(emptyList(), id, Expression(array, arrayIndex, value)))
+        }
+    }
+
+    enum class Discard(val stackType: StackType) : Command {
+
+        POP_INT_DISCARD(StackType.INT),
+        POP_STRING_DISCARD(StackType.STRING),
+        ;
+
+        override val id = opcodes.getValue(name)
+
+        override fun translate(state: InterpreterState): Instruction {
+            return Instruction.Assignment(state.pop(stackType))
         }
     }
 
@@ -167,159 +203,157 @@ interface Command {
         POP_INT_LOCAL,
         PUSH_STRING_LOCAL,
         POP_STRING_LOCAL,
-        POP_INT_DISCARD,
-        POP_STRING_DISCARD,
         PUSH_VARC_INT,
         POP_VARC_INT,
         PUSH_VARC_STRING,
         POP_VARC_STRING,
         ;
 
-        override val id: Int = namesReverse.getValue(name)
+        override val id = opcodes.getValue(name)
 
-        override fun translate(state: Interpreter.State): Instruction = when (this) {
-            PUSH_CONSTANT_INT -> Instruction.Assignment(state.push(StackType.INT, state.operand), state.operand.asConstant())
-            PUSH_CONSTANT_STRING -> Instruction.Assignment(state.push(STRING, state.operand), state.operand.asConstant())
-            PUSH_VAR -> Instruction.Assignment(state.push(StackType.INT), state.variable(VarSource.VARP, state.operand.int))
-            POP_VAR -> Instruction.Assignment(state.variable(VarSource.VARP, state.operand.int), state.pop(StackType.INT))
-            PUSH_VARBIT -> Instruction.Assignment(state.push(StackType.INT), state.variable(VarSource.VARBIT, state.operand.int))
-            POP_VARBIT -> Instruction.Assignment(state.variable(VarSource.VARBIT, state.operand.int), state.pop(StackType.INT))
-            PUSH_INT_LOCAL -> Instruction.Assignment(state.push(StackType.INT), state.variable(VarSource.LOCALINT, state.operand.int))
-            POP_INT_LOCAL -> Instruction.Assignment(state.variable(VarSource.LOCALINT, state.operand.int), state.pop(StackType.INT))
-            PUSH_STRING_LOCAL -> Instruction.Assignment(state.push(STRING), state.variable(VarSource.LOCALSTRING, state.operand.int))
-            POP_STRING_LOCAL -> Instruction.Assignment(state.variable(VarSource.LOCALSTRING, state.operand.int), state.pop(STRING))
-            POP_INT_DISCARD -> Instruction.Assignment(Expression(), state.pop(StackType.INT))
-            POP_STRING_DISCARD -> Instruction.Assignment(Expression(), state.pop(STRING))
-            PUSH_VARC_INT -> Instruction.Assignment(state.push(StackType.INT), state.variable(VarSource.VARCINT, state.operand.int))
-            POP_VARC_INT -> Instruction.Assignment(state.variable(VarSource.VARCINT, state.operand.int), state.pop(StackType.INT))
-            PUSH_VARC_STRING -> Instruction.Assignment(state.push(STRING), state.variable(VarSource.VARCSTRING, state.operand.int))
-            POP_VARC_STRING -> Instruction.Assignment(state.variable(VarSource.VARCSTRING, state.operand.int), state.pop(STRING))
+        override fun translate(state: InterpreterState): Instruction {
+            val a = when (this) {
+                PUSH_CONSTANT_INT -> Instruction.Assignment(state.push(StackType.INT, state.operand), Element.Constant(state.operand))
+                PUSH_CONSTANT_STRING -> Instruction.Assignment(state.push(StackType.STRING, state.operand), Element.Constant(state.operand))
+                PUSH_VAR -> Instruction.Assignment(state.push(StackType.INT), Element.Access(Variable.varp(state.operand.int)))
+                POP_VAR -> Instruction.Assignment(Element.Access(Variable.varp(state.operand.int)), state.pop(StackType.INT))
+                PUSH_VARBIT -> Instruction.Assignment(state.push(StackType.INT), Element.Access(Variable.varbit(state.operand.int)))
+                POP_VARBIT -> Instruction.Assignment(Element.Access(Variable.varbit(state.operand.int)), state.pop(StackType.INT))
+                PUSH_INT_LOCAL -> Instruction.Assignment(state.push(StackType.INT), Element.Access(Variable.int(state.scriptId, state.operand.int)))
+                POP_INT_LOCAL -> Instruction.Assignment(Element.Access(Variable.int(state.scriptId, state.operand.int)), state.pop(StackType.INT))
+                PUSH_STRING_LOCAL -> Instruction.Assignment(state.push(StackType.STRING), Element.Access(Variable.string(state.scriptId, state.operand.int)))
+                POP_STRING_LOCAL -> Instruction.Assignment(Element.Access(Variable.string(state.scriptId, state.operand.int)), state.pop(StackType.STRING))
+                PUSH_VARC_INT -> Instruction.Assignment(state.push(StackType.INT), Element.Access(Variable.varcint(state.operand.int)))
+                POP_VARC_INT -> Instruction.Assignment(Element.Access(Variable.varcint(state.operand.int)), state.pop(StackType.INT))
+                PUSH_VARC_STRING -> Instruction.Assignment(state.push(StackType.STRING), Element.Access(Variable.varcstring(state.operand.int)))
+                POP_VARC_STRING -> Instruction.Assignment(Element.Access(Variable.varcstring(state.operand.int)), state.pop(StackType.STRING))
+            }
+            assign(state.typings.of(a.expression), state.typings.of(a.definitions))
+            return a
         }
     }
 
     enum class Basic(
-            val args: List<Type.Stackable>,
-            val defs: List<Type.Stackable>,
-            val o: Type.Stackable? = null
+            val args: List<Prototype>,
+            val defs: List<Prototype>,
+            val o: Boolean = false,
     ) : Command {
-        PUSH_VARC_STRING_OLD(listOf(), listOf(STRING), INT),
-        POP_VARC_STRING_OLD(listOf(STRING), listOf(), INT),
-        CC_CREATE(listOf(COMPONENT, IFTYPE, INT), listOf(), BOOLEAN),
-        CC_DELETE(listOf(), listOf(), BOOLEAN),
+        CC_CREATE(listOf(COMPONENT, IFTYPE, COMSUBID), listOf(), true),
+        CC_DELETE(listOf(), listOf(), true),
         CC_DELETEALL(listOf(COMPONENT), listOf()),
-        CC_FIND(listOf(COMPONENT, INT), listOf(BIT), BOOLEAN),
-        IF_FIND(listOf(COMPONENT), listOf(BOOLEAN), BOOLEAN),
+        CC_FIND(listOf(COMPONENT, COMSUBID), listOf(BOOL), true),
+        IF_FIND(listOf(COMPONENT), listOf(BOOLEAN), true),
 
-        CC_SETPOSITION(listOf(INT, INT, SETPOSH, SETPOSV), listOf(), BOOLEAN),
-        CC_SETSIZE(listOf(INT, INT, SETSIZE, SETSIZE), listOf(), BOOLEAN),
-        CC_SETHIDE(listOf(BOOLEAN), listOf(), BOOLEAN),
-        CC_SETNOCLICKTHROUGH(listOf(BOOLEAN), listOf(), BOOLEAN),
-        CC_SETNOSCROLLTHROUGH(listOf(BOOLEAN), listOf(), BOOLEAN),
+        CC_SETPOSITION(listOf(X, Y, SETPOSH, SETPOSV), listOf(), true),
+        CC_SETSIZE(listOf(WIDTH, HEIGHT, SETSIZE, SETSIZE), listOf(), true),
+        CC_SETHIDE(listOf(BOOLEAN), listOf(), true),
+        CC_SETNOCLICKTHROUGH(listOf(BOOLEAN), listOf(), true),
+        CC_SETNOSCROLLTHROUGH(listOf(BOOLEAN), listOf(), true),
 
-        CC_SETSCROLLPOS(listOf(INT, INT), listOf(), BOOLEAN),
-        CC_SETCOLOUR(listOf(COLOUR), listOf(), BOOLEAN),
-        CC_SETFILL(listOf(BOOLEAN), listOf(), BOOLEAN),
-        CC_SETTRANS(listOf(INT), listOf(), BOOLEAN),
-        CC_SETLINEWID(listOf(INT), listOf(), BOOLEAN),
-        CC_SETGRAPHIC(listOf(GRAPHIC), listOf(), BOOLEAN),
-        CC_SET2DANGLE(listOf(INT), listOf(), BOOLEAN),
-        CC_SETTILING(listOf(BOOLEAN), listOf(), BOOLEAN),
-        CC_SETMODEL(listOf(MODEL), listOf(), BOOLEAN),
-        CC_SETMODELANGLE(listOf(INT, INT, INT, INT, INT, INT), listOf(), BOOLEAN),
-        CC_SETMODELANIM(listOf(SEQ), listOf(), BOOLEAN),
-        CC_SETMODELORTHOG(listOf(BOOLEAN), listOf(), BOOLEAN),
-        CC_SETTEXT(listOf(STRING), listOf(), BOOLEAN),
-        CC_SETTEXTFONT(listOf(FONTMETRICS), listOf(), BOOLEAN),
-        CC_SETTEXTALIGN(listOf(SETTEXTALIGNH, SETTEXTALIGNV, INT), listOf(), BOOLEAN),
-        CC_SETTEXTSHADOW(listOf(BOOLEAN), listOf(), BOOLEAN),
-        CC_SETOUTLINE(listOf(INT), listOf(), BOOLEAN),
-        CC_SETGRAPHICSHADOW(listOf(COLOUR), listOf(), BOOLEAN),
-        CC_SETVFLIP(listOf(BOOLEAN), listOf(), BOOLEAN),
-        CC_SETHFLIP(listOf(BOOLEAN), listOf(), BOOLEAN),
-        CC_SETSCROLLSIZE(listOf(INT, INT), listOf(), BOOLEAN),
-        CC_RESUME_PAUSEBUTTON(listOf(), listOf(), BOOLEAN),
-        _1122(listOf(GRAPHIC), listOf(), BOOLEAN),
-        CC_SETFILLCOLOUR(listOf(COLOUR), listOf(), BOOLEAN),
-        _1124(listOf(INT), listOf(), BOOLEAN),
-        _1125(listOf(INT), listOf(), BOOLEAN),
-        CC_SETLINEDIRECTION(listOf(BOOLEAN), listOf(), BOOLEAN),
-        CC_SETMODELTRANSPARENT(listOf(BOOLEAN), listOf(), BOOLEAN),
+        CC_SETSCROLLPOS(listOf(X, Y), listOf(), true),
+        CC_SETCOLOUR(listOf(COLOUR), listOf(), true),
+        CC_SETFILL(listOf(BOOLEAN), listOf(), true),
+        CC_SETTRANS(listOf(TRANS), listOf(), true),
+        CC_SETLINEWID(listOf(INT), listOf(), true),
+        CC_SETGRAPHIC(listOf(GRAPHIC), listOf(), true),
+        CC_SET2DANGLE(listOf(ANGLE), listOf(), true),
+        CC_SETTILING(listOf(BOOLEAN), listOf(), true),
+        CC_SETMODEL(listOf(MODEL), listOf(), true),
+        CC_SETMODELANGLE(listOf(INT, INT, INT, INT, INT, INT), listOf(), true),
+        CC_SETMODELANIM(listOf(SEQ), listOf(), true),
+        CC_SETMODELORTHOG(listOf(BOOLEAN), listOf(), true),
+        CC_SETTEXT(listOf(TEXT), listOf(), true),
+        CC_SETTEXTFONT(listOf(FONTMETRICS), listOf(), true),
+        CC_SETTEXTALIGN(listOf(SETTEXTALIGNH, SETTEXTALIGNV, INT), listOf(), true),
+        CC_SETTEXTSHADOW(listOf(BOOLEAN), listOf(), true),
+        CC_SETOUTLINE(listOf(INT), listOf(), true),
+        CC_SETGRAPHICSHADOW(listOf(COLOUR), listOf(), true),
+        CC_SETVFLIP(listOf(BOOLEAN), listOf(), true),
+        CC_SETHFLIP(listOf(BOOLEAN), listOf(), true),
+        CC_SETSCROLLSIZE(listOf(WIDTH, HEIGHT), listOf(), true),
+        CC_RESUME_PAUSEBUTTON(listOf(), listOf(), true),
+        _1122(listOf(GRAPHIC), listOf(), true),
+        CC_SETFILLCOLOUR(listOf(COLOUR), listOf(), true),
+        _1124(listOf(INT), listOf(), true),
+        _1125(listOf(INT), listOf(), true),
+        CC_SETLINEDIRECTION(listOf(BOOLEAN), listOf(), true),
+        CC_SETMODELTRANSPARENT(listOf(BOOLEAN), listOf(), true),
 
-        CC_SETOBJECT(listOf(OBJ, INT), listOf(), BOOLEAN),
-        CC_SETNPCHEAD(listOf(NPC), listOf(), BOOLEAN),
-        CC_SETPLAYERHEAD_SELF(listOf(), listOf(), BOOLEAN),
-        CC_SETOBJECT_NONUM(listOf(OBJ, INT), listOf(), BOOLEAN),
-        CC_SETOBJECT_ALWAYS_NUM(listOf(OBJ, INT), listOf(), BOOLEAN),
+        CC_SETOBJECT(listOf(OBJ, NUM), listOf(), true),
+        CC_SETNPCHEAD(listOf(NPC), listOf(), true),
+        CC_SETPLAYERHEAD_SELF(listOf(), listOf(), true),
+        CC_SETOBJECT_NONUM(listOf(OBJ, NUM), listOf(), true),
+        CC_SETOBJECT_ALWAYS_NUM(listOf(OBJ, NUM), listOf(), true),
 
-        CC_SETOP(listOf(INT, STRING), listOf(), BOOLEAN),
-        CC_SETDRAGGABLE(listOf(COMPONENT, INT), listOf(), BOOLEAN),
-        CC_SETDRAGGABLEBEHAVIOR(listOf(INT), listOf(), BOOLEAN),
-        CC_SETDRAGDEADZONE(listOf(INT), listOf(), BOOLEAN),
-        CC_SETDRAGDEADTIME(listOf(INT), listOf(), BOOLEAN),
-        CC_SETOPBASE(listOf(STRING), listOf(), BOOLEAN),
-        CC_SETTARGETVERB(listOf(STRING), listOf(), BOOLEAN),
-        CC_CLEAROPS(listOf(), listOf(), BOOLEAN),
-        _1308(listOf(BOOLEAN), listOf(), BOOLEAN),
-        _1309(listOf(INT), listOf(), BOOLEAN),
-        CC_SETOPKEY(listOf(INT, INT, INT, INT, INT, INT, INT, INT, INT, INT, INT), listOf(), BOOLEAN),
-        CC_SETOPTKEY(listOf(INT, INT), listOf(), BOOLEAN),
-        CC_SETOPKEYRATE(listOf(INT, INT, INT), listOf(), BOOLEAN),
-        CC_SETOPTKEYRATE(listOf(INT, INT), listOf(), BOOLEAN),
-        CC_SETOPKEYIGNOREHELD(listOf(INT), listOf(), BOOLEAN),
-        CC_SETOPTKEYIGNOREHELD(listOf(), listOf(), BOOLEAN),
+        CC_SETOP(listOf(OPINDEX, OP), listOf(), true),
+        CC_SETDRAGGABLE(listOf(COMPONENT, INT), listOf(), true),
+        CC_SETDRAGGABLEBEHAVIOR(listOf(INT), listOf(), true),
+        CC_SETDRAGDEADZONE(listOf(INT), listOf(), true),
+        CC_SETDRAGDEADTIME(listOf(INT), listOf(), true),
+        CC_SETOPBASE(listOf(OPBASE), listOf(), true),
+        CC_SETTARGETVERB(listOf(STRING), listOf(), true),
+        CC_CLEAROPS(listOf(), listOf(), true),
+        _1308(listOf(BOOLEAN), listOf(), true),
+        _1309(listOf(INT), listOf(), true),
+        CC_SETOPKEY(listOf(INT, INT, INT, INT, INT, INT, INT, INT, INT, INT, INT), listOf(), true),
+        CC_SETOPTKEY(listOf(INT, INT), listOf(), true),
+        CC_SETOPKEYRATE(listOf(INT, INT, INT), listOf(), true),
+        CC_SETOPTKEYRATE(listOf(INT, INT), listOf(), true),
+        CC_SETOPKEYIGNOREHELD(listOf(INT), listOf(), true),
+        CC_SETOPTKEYIGNOREHELD(listOf(), listOf(), true),
 
-        CC_GETX(listOf(), listOf(INT), BOOLEAN),
-        CC_GETY(listOf(), listOf(INT), BOOLEAN),
-        CC_GETWIDTH(listOf(), listOf(INT), BOOLEAN),
-        CC_GETHEIGHT(listOf(), listOf(INT), BOOLEAN),
-        CC_GETHIDE(listOf(), listOf(BOOLEAN), BOOLEAN),
-        CC_GETLAYER(listOf(), listOf(COMPONENT), BOOLEAN),
+        CC_GETX(listOf(), listOf(X), true),
+        CC_GETY(listOf(), listOf(Y), true),
+        CC_GETWIDTH(listOf(), listOf(WIDTH), true),
+        CC_GETHEIGHT(listOf(), listOf(HEIGHT), true),
+        CC_GETHIDE(listOf(), listOf(BOOLEAN), true),
+        CC_GETLAYER(listOf(), listOf(LAYER), true),
 
-        CC_GETSCROLLX(listOf(), listOf(INT), BOOLEAN),
-        CC_GETSCROLLY(listOf(), listOf(INT), BOOLEAN),
-        CC_GETTEXT(listOf(), listOf(STRING), BOOLEAN),
-        CC_GETSCROLLWIDTH(listOf(), listOf(INT), BOOLEAN),
-        CC_GETSCROLLHEIGHT(listOf(), listOf(INT), BOOLEAN),
-        CC_GETMODELZOOM(listOf(), listOf(INT), BOOLEAN),
-        CC_GETMODELANGLE_X(listOf(), listOf(INT), BOOLEAN),
-        CC_GETMODELANGLE_Z(listOf(), listOf(INT), BOOLEAN),
-        CC_GETMODELANGLE_Y(listOf(), listOf(INT), BOOLEAN),
-        CC_GETTRANS(listOf(), listOf(INT), BOOLEAN),
-        _1610(listOf(), listOf(INT), BOOLEAN),
-        CC_GETCOLOUR(listOf(), listOf(COLOUR), BOOLEAN),
-        CC_GETFILLCOLOUR(listOf(), listOf(COLOUR), BOOLEAN),
-        _1613(listOf(), listOf(INT), BOOLEAN),
-        CC_GETMODELTRANSPARENT(listOf(), listOf(BOOLEAN), BOOLEAN),
+        CC_GETSCROLLX(listOf(), listOf(X), true),
+        CC_GETSCROLLY(listOf(), listOf(Y), true),
+        CC_GETTEXT(listOf(), listOf(TEXT), true),
+        CC_GETSCROLLWIDTH(listOf(), listOf(WIDTH), true),
+        CC_GETSCROLLHEIGHT(listOf(), listOf(HEIGHT), true),
+        CC_GETMODELZOOM(listOf(), listOf(INT), true),
+        CC_GETMODELANGLE_X(listOf(), listOf(INT), true),
+        CC_GETMODELANGLE_Z(listOf(), listOf(INT), true),
+        CC_GETMODELANGLE_Y(listOf(), listOf(INT), true),
+        CC_GETTRANS(listOf(), listOf(TRANS), true),
+        _1610(listOf(), listOf(INT), true),
+        CC_GETCOLOUR(listOf(), listOf(COLOUR), true),
+        CC_GETFILLCOLOUR(listOf(), listOf(COLOUR), true),
+        _1613(listOf(), listOf(INT), true),
+        CC_GETMODELTRANSPARENT(listOf(), listOf(BOOLEAN), true),
 
-        CC_GETINVOBJECT(listOf(), listOf(OBJ), BOOLEAN),
-        CC_GETINVCOUNT(listOf(), listOf(INT), BOOLEAN),
-        CC_GETID(listOf(), listOf(INT), BOOLEAN),
+        CC_GETINVOBJECT(listOf(), listOf(OBJ), true),
+        CC_GETINVCOUNT(listOf(), listOf(COUNT), true),
+        CC_GETID(listOf(), listOf(COMSUBID), true),
 
-        CC_GETTARGETMASK(listOf(), listOf(INT), BOOLEAN),
-        CC_GETOP(listOf(INT), listOf(STRING), BOOLEAN),
-        CC_GETOPBASE(listOf(), listOf(STRING), BOOLEAN),
+        CC_GETTARGETMASK(listOf(), listOf(INT), true),
+        CC_GETOP(listOf(INT), listOf(OP), true),
+        CC_GETOPBASE(listOf(), listOf(OPBASE), true),
 
         CC_CALLONRESIZE(listOf(BOOLEAN), listOf()),
 
-        IF_SETPOSITION(listOf(INT, INT, SETPOSH, SETPOSV, COMPONENT), listOf()),
-        IF_SETSIZE(listOf(INT, INT, SETSIZE, SETSIZE, COMPONENT), listOf()),
+        IF_SETPOSITION(listOf(X, Y, SETPOSH, SETPOSV, COMPONENT), listOf()),
+        IF_SETSIZE(listOf(WIDTH, HEIGHT, SETSIZE, SETSIZE, COMPONENT), listOf()),
         IF_SETHIDE(listOf(BOOLEAN, COMPONENT), listOf()),
         IF_SETNOCLICKTHROUGH(listOf(BOOLEAN, COMPONENT), listOf()),
         IF_SETNOSCROLLTHROUGH(listOf(BOOLEAN, COMPONENT), listOf()),
 
-        IF_SETSCROLLPOS(listOf(INT, INT, COMPONENT), listOf()),
+        IF_SETSCROLLPOS(listOf(X, Y, COMPONENT), listOf()),
         IF_SETCOLOUR(listOf(COLOUR, COMPONENT), listOf()),
         IF_SETFILL(listOf(BOOLEAN, COMPONENT), listOf()),
-        IF_SETTRANS(listOf(INT, COMPONENT), listOf()),
+        IF_SETTRANS(listOf(TRANS, COMPONENT), listOf()),
         IF_SETLINEWID(listOf(INT, COMPONENT), listOf()),
         IF_SETGRAPHIC(listOf(GRAPHIC, COMPONENT), listOf()),
-        IF_SET2DANGLE(listOf(INT, COMPONENT), listOf()),
+        IF_SET2DANGLE(listOf(ANGLE, COMPONENT), listOf()),
         IF_SETTILING(listOf(BOOLEAN, COMPONENT), listOf()),
         IF_SETMODEL(listOf(MODEL, COMPONENT), listOf()),
         IF_SETMODELANGLE(listOf(INT, INT, INT, INT, INT, INT, COMPONENT), listOf()),
         IF_SETMODELANIM(listOf(SEQ, COMPONENT), listOf()),
         IF_SETMODELORTHOG(listOf(BOOLEAN, COMPONENT), listOf()),
-        IF_SETTEXT(listOf(STRING, COMPONENT), listOf()),
+        IF_SETTEXT(listOf(TEXT, COMPONENT), listOf()),
         IF_SETTEXTFONT(listOf(FONTMETRICS, COMPONENT), listOf()),
         IF_SETTEXTALIGN(listOf(SETTEXTALIGNH, SETTEXTALIGNV, INT, COMPONENT), listOf()),
         IF_SETTEXTSHADOW(listOf(BOOLEAN, COMPONENT), listOf()),
@@ -327,7 +361,7 @@ interface Command {
         IF_SETGRAPHICSHADOW(listOf(COLOUR, COMPONENT), listOf()),
         IF_SETVFLIP(listOf(BOOLEAN, COMPONENT), listOf()),
         IF_SETHFLIP(listOf(BOOLEAN, COMPONENT), listOf()),
-        IF_SETSCROLLSIZE(listOf(INT, INT, COMPONENT), listOf()),
+        IF_SETSCROLLSIZE(listOf(WIDTH, HEIGHT, COMPONENT), listOf()),
         IF_RESUME_PAUSEBUTTON(listOf(COMPONENT), listOf()),
         _2122(listOf(GRAPHIC, COMPONENT), listOf()),
         IF_SETFILLCOLOUR(listOf(COLOUR, COMPONENT), listOf()),
@@ -336,18 +370,18 @@ interface Command {
         IF_SETLINEDIRECTION(listOf(BOOLEAN, COMPONENT), listOf()),
         IF_SETMODELTRANSPARENT(listOf(BOOLEAN, COMPONENT), listOf()),
 
-        IF_SETOBJECT(listOf(OBJ, INT, COMPONENT), listOf()),
+        IF_SETOBJECT(listOf(OBJ, NUM, COMPONENT), listOf()),
         IF_SETNPCHEAD(listOf(NPC, COMPONENT), listOf()),
         IF_SETPLAYERHEAD_SELF(listOf(COMPONENT), listOf()),
-        IF_SETOBJECT_NONUM(listOf(OBJ, INT, COMPONENT), listOf()),
-        IF_SETOBJECT_ALWAYS_NUM(listOf(OBJ, INT, COMPONENT), listOf()),
+        IF_SETOBJECT_NONUM(listOf(OBJ, NUM, COMPONENT), listOf()),
+        IF_SETOBJECT_ALWAYS_NUM(listOf(OBJ, NUM, COMPONENT), listOf()),
 
-        IF_SETOP(listOf(INT, STRING, COMPONENT), listOf()),
+        IF_SETOP(listOf(OPINDEX, OP, COMPONENT), listOf()),
         IF_SETDRAGGABLE(listOf(COMPONENT, INT, COMPONENT), listOf()),
         IF_SETDRAGGABLEBEHAVIOR(listOf(INT, COMPONENT), listOf()),
         IF_SETDRAGDEADZONE(listOf(INT, COMPONENT), listOf()),
         IF_SETDRAGDEADTIME(listOf(INT, COMPONENT), listOf()),
-        IF_SETOPBASE(listOf(STRING, COMPONENT), listOf()),
+        IF_SETOPBASE(listOf(OPBASE, COMPONENT), listOf()),
         IF_SETTARGETVERB(listOf(STRING, COMPONENT), listOf()),
         IF_CLEAROPS(listOf(COMPONENT), listOf()),
         _2308(listOf(BOOLEAN, COMPONENT), listOf()),
@@ -359,23 +393,23 @@ interface Command {
         IF_SETOPKEYIGNOREHELD(listOf(INT, COMPONENT), listOf()),
         IF_SETOPTKEYIGNOREHELD(listOf(COMPONENT), listOf()),
 
-        IF_GETX(listOf(COMPONENT), listOf(INT)),
-        IF_GETY(listOf(COMPONENT), listOf(INT)),
-        IF_GETWIDTH(listOf(COMPONENT), listOf(INT)),
-        IF_GETHEIGHT(listOf(COMPONENT), listOf(INT)),
+        IF_GETX(listOf(COMPONENT), listOf(X)),
+        IF_GETY(listOf(COMPONENT), listOf(Y)),
+        IF_GETWIDTH(listOf(COMPONENT), listOf(WIDTH)),
+        IF_GETHEIGHT(listOf(COMPONENT), listOf(HEIGHT)),
         IF_GETHIDE(listOf(COMPONENT), listOf(BOOLEAN)),
-        IF_GETLAYER(listOf(COMPONENT), listOf(COMPONENT)),
+        IF_GETLAYER(listOf(COMPONENT), listOf(LAYER)),
 
-        IF_GETSCROLLX(listOf(COMPONENT), listOf(INT)),
-        IF_GETSCROLLY(listOf(COMPONENT), listOf(INT)),
-        IF_GETTEXT(listOf(COMPONENT), listOf(STRING)),
-        IF_GETSCROLLWIDTH(listOf(COMPONENT), listOf(INT)),
-        IF_GETSCROLLHEIGHT(listOf(COMPONENT), listOf(INT)),
+        IF_GETSCROLLX(listOf(COMPONENT), listOf(X)),
+        IF_GETSCROLLY(listOf(COMPONENT), listOf(Y)),
+        IF_GETTEXT(listOf(COMPONENT), listOf(TEXT)),
+        IF_GETSCROLLWIDTH(listOf(COMPONENT), listOf(WIDTH)),
+        IF_GETSCROLLHEIGHT(listOf(COMPONENT), listOf(HEIGHT)),
         IF_GETMODELZOOM(listOf(COMPONENT), listOf(INT)),
         IF_GETMODELANGLE_X(listOf(COMPONENT), listOf(INT)),
         IF_GETMODELANGLE_Z(listOf(COMPONENT), listOf(INT)),
         IF_GETMODELANGLE_Y(listOf(COMPONENT), listOf(INT)),
-        IF_GETTRANS(listOf(COMPONENT), listOf(INT)),
+        IF_GETTRANS(listOf(COMPONENT), listOf(TRANS)),
         _2610(listOf(COMPONENT), listOf(INT)),
         IF_GETCOLOUR(listOf(COMPONENT), listOf(COLOUR)),
         IF_GETFILLCOLOUR(listOf(COMPONENT), listOf(COLOUR)),
@@ -383,17 +417,17 @@ interface Command {
         IF_GETMODELTRANSPARENT(listOf(COMPONENT), listOf(BOOLEAN)),
 
         IF_GETINVOBJECT(listOf(COMPONENT), listOf(OBJ)),
-        IF_GETINVCOUNT(listOf(COMPONENT), listOf(INT)),
+        IF_GETINVCOUNT(listOf(COMPONENT), listOf(COUNT)),
         IF_HASSUB(listOf(COMPONENT), listOf(BOOLEAN)),
         IF_GETTOP(listOf(), listOf(INTERFACE)),
 
         IF_GETTARGETMASK(listOf(COMPONENT), listOf(INT)),
-        IF_GETOP(listOf(INT, COMPONENT), listOf(STRING)),
-        IF_GETOPBASE(listOf(COMPONENT), listOf(STRING)),
+        IF_GETOP(listOf(INT, COMPONENT), listOf(OP)),
+        IF_GETOPBASE(listOf(COMPONENT), listOf(OPBASE)),
 
-        IF_CALLONRESIZE(listOf(COMPONENT), listOf(), BOOLEAN),
+        IF_CALLONRESIZE(listOf(COMPONENT), listOf(), true),
 
-        MES(listOf(STRING), listOf()),
+        MES(listOf(_MES), listOf()),
         ANIM(listOf(SEQ, INT), listOf()),
         IF_CLOSE(listOf(), listOf()),
         RESUME_COUNTDIALOG(listOf(STRING), listOf()),
@@ -401,11 +435,11 @@ interface Command {
         RESUME_STRINGDIALOG(listOf(STRING), listOf()),
         OPPLAYER(listOf(INT, STRING), listOf()),
         IF_DRAGPICKUP(listOf(COMPONENT, INT, INT), listOf()),
-        CC_DRAGPICKUP(listOf(INT, INT), listOf(), BOOLEAN),
+        CC_DRAGPICKUP(listOf(INT, INT), listOf(), true),
         MOUSECAM(listOf(BOOLEAN), listOf()),
         GETREMOVEROOFS(listOf(), listOf(BOOLEAN)),
         SETREMOVEROOFS(listOf(BOOLEAN), listOf()),
-        OPENURL(listOf(STRING, BOOLEAN), listOf()),
+        OPENURL(listOf(URL, BOOLEAN), listOf()),
         RESUME_OBJDIALOG(listOf(OBJ), listOf()),
         BUG_REPORT(listOf(INT, STRING, STRING), listOf()),
         SETSHIFTCLICKDROP(listOf(BOOLEAN), listOf()),
@@ -431,7 +465,7 @@ interface Command {
         _3137(listOf(BOOLEAN), listOf()),
         _3138(listOf(), listOf()),
         _3139(listOf(), listOf()),
-        _3140(listOf(), listOf(), BOOLEAN),
+        _3140(listOf(), listOf(), true),
         SETHIDEUSERNAME(listOf(BOOLEAN), listOf()),
         GETHIDEUSERNAME(listOf(), listOf(BOOLEAN)),
         SETREMEMBERUSERNAME(listOf(BOOLEAN), listOf()),
@@ -442,61 +476,61 @@ interface Command {
         SOUND_SONG(listOf(INT), listOf()),
         SOUND_JINGLE(listOf(INT, INT), listOf()),
 
-        CLIENTCLOCK(listOf(), listOf(INT)),
-        INV_GETOBJ(listOf(INV, INT), listOf(OBJ)),
-        INV_GETNUM(listOf(INV, INT), listOf(INT)),
-        INV_TOTAL(listOf(INV, OBJ), listOf(INT)),
-        INV_SIZE(listOf(INV), listOf(INT)),
-        STAT(listOf(Primitive.STAT), listOf(INT)),
-        STAT_BASE(listOf(Primitive.STAT), listOf(INT)),
-        STAT_XP(listOf(Primitive.STAT), listOf(INT)),
-        COORD(listOf(), listOf(Primitive.COORD)),
-        COORDX(listOf(Primitive.COORD), listOf(INT)),
-        COORDY(listOf(Primitive.COORD), listOf(INT)),
-        COORDZ(listOf(Primitive.COORD), listOf(INT)),
-        MAP_MEMBERS(listOf(), listOf(BIT)),
-        INVOTHER_GETOBJ(listOf(INV, INT), listOf(OBJ)),
-        INVOTHER_GETNUM(listOf(INV, INT), listOf(INT)),
-        INVOTHER_TOTAL(listOf(INV, OBJ), listOf(INT)),
+        CLIENTCLOCK(listOf(), listOf(CLOCK)),
+        INV_GETOBJ(listOf(INV, SLOT), listOf(OBJ)),
+        INV_GETNUM(listOf(INV, SLOT), listOf(NUM)),
+        INV_TOTAL(listOf(INV, OBJ), listOf(TOTAL)),
+        INV_SIZE(listOf(INV), listOf(SIZE)),
+        STAT(listOf(_STAT), listOf(LVL)),
+        STAT_BASE(listOf(_STAT), listOf(LVL)),
+        STAT_XP(listOf(_STAT), listOf(XP)),
+        COORD(listOf(), listOf(_COORD)),
+        COORDX(listOf(_COORD), listOf(X)),
+        COORDY(listOf(_COORD), listOf(Y)),
+        COORDZ(listOf(_COORD), listOf(Z)),
+        MAP_MEMBERS(listOf(), listOf(BOOL)),
+        INVOTHER_GETOBJ(listOf(INV, SLOT), listOf(OBJ)),
+        INVOTHER_GETNUM(listOf(INV, SLOT), listOf(NUM)),
+        INVOTHER_TOTAL(listOf(INV, OBJ), listOf(TOTAL)),
         STAFFMODLEVEL(listOf(), listOf(INT)),
         REBOOTTIMER(listOf(), listOf(INT)),
-        MAP_WORLD(listOf(), listOf(INT)),
+        MAP_WORLD(listOf(), listOf(WORLD)),
         RUNENERGY_VISIBLE(listOf(), listOf(INT)),
         RUNWEIGHT_VISIBLE(listOf(), listOf(INT)),
         PLAYERMOD(listOf(), listOf(BOOLEAN)),
-        WORLDFLAGS(listOf(), listOf(INT)),
-        MOVECOORD(listOf(Primitive.COORD, INT, INT, INT), listOf(Primitive.COORD)),
+        WORLDFLAGS(listOf(), listOf(FLAGS)),
+        MOVECOORD(listOf(_COORD, X, Y, Z), listOf(_COORD)),
 
-        ENUM_STRING(listOf(ENUM, INT), listOf(STRING)),
-        ENUM_GETOUTPUTCOUNT(listOf(ENUM), listOf(INT)),
+        ENUM_STRING(listOf(_ENUM, INT), listOf(STRING)),
+        ENUM_GETOUTPUTCOUNT(listOf(_ENUM), listOf(COUNT)),
 
-        FRIEND_COUNT(listOf(), listOf(INT)),
-        FRIEND_GETNAME(listOf(INT), listOf(STRING, STRING)),
-        FRIEND_GETWORLD(listOf(INT), listOf(INT)),
-        FRIEND_GETRANK(listOf(INT), listOf(INT)),
-        FRIEND_SETRANK(listOf(STRING, INT), listOf()),
-        FRIEND_ADD(listOf(STRING), listOf()),
-        FRIEND_DEL(listOf(STRING), listOf()),
-        IGNORE_ADD(listOf(STRING), listOf()),
-        IGNORE_DEL(listOf(STRING), listOf()),
-        FRIEND_TEST(listOf(STRING), listOf(BOOLEAN)),
+        FRIEND_COUNT(listOf(), listOf(COUNT)),
+        FRIEND_GETNAME(listOf(INDEX), listOf(USERNAME, USERNAME)),
+        FRIEND_GETWORLD(listOf(INDEX), listOf(WORLD)),
+        FRIEND_GETRANK(listOf(INDEX), listOf(RANK)),
+        FRIEND_SETRANK(listOf(USERNAME, RANK), listOf()),
+        FRIEND_ADD(listOf(USERNAME), listOf()),
+        FRIEND_DEL(listOf(USERNAME), listOf()),
+        IGNORE_ADD(listOf(USERNAME), listOf()),
+        IGNORE_DEL(listOf(USERNAME), listOf()),
+        FRIEND_TEST(listOf(USERNAME), listOf(BOOLEAN)),
         CLAN_GETCHATDISPLAYNAME(listOf(), listOf(STRING)),
-        CLAN_GETCHATCOUNT(listOf(), listOf(INT)),
-        CLAN_GETCHATUSERNAME(listOf(INT), listOf(STRING)),
-        CLAN_GETCHATUSERWORLD(listOf(INT), listOf(INT)),
-        CLAN_GETCHATUSERRANK(listOf(INT), listOf(INT)),
-        CLAN_GETCHATMINKICK(listOf(), listOf(INT)),
-        CLAN_KICKUSER(listOf(STRING), listOf()),
-        CLAN_GETCHATRANK(listOf(), listOf(INT)),
-        CLAN_JOINCHAT(listOf(STRING), listOf()),
+        CLAN_GETCHATCOUNT(listOf(), listOf(COUNT)),
+        CLAN_GETCHATUSERNAME(listOf(INDEX), listOf(USERNAME)),
+        CLAN_GETCHATUSERWORLD(listOf(INDEX), listOf(WORLD)),
+        CLAN_GETCHATUSERRANK(listOf(INDEX), listOf(RANK)),
+        CLAN_GETCHATMINKICK(listOf(), listOf(RANK)),
+        CLAN_KICKUSER(listOf(USERNAME), listOf()),
+        CLAN_GETCHATRANK(listOf(), listOf(RANK)),
+        CLAN_JOINCHAT(listOf(USERNAME), listOf()),
         CLAN_LEAVECHAT(listOf(), listOf()),
-        IGNORE_COUNT(listOf(), listOf(INT)),
-        IGNORE_GETNAME(listOf(INT), listOf(STRING, STRING)),
-        IGNORE_TEST(listOf(STRING), listOf(BOOLEAN)),
-        CLAN_ISSELF(listOf(INT), listOf(BOOLEAN)),
-        CLAN_GETCHATOWNERNAME(listOf(), listOf(STRING)),
-        CLAN_ISFRIEND(listOf(INT), listOf(BOOLEAN)),
-        CLAN_ISIGNORE(listOf(INT), listOf(BOOLEAN)),
+        IGNORE_COUNT(listOf(), listOf(COUNT)),
+        IGNORE_GETNAME(listOf(INDEX), listOf(USERNAME, USERNAME)),
+        IGNORE_TEST(listOf(USERNAME), listOf(BOOLEAN)),
+        CLAN_ISSELF(listOf(INDEX), listOf(BOOLEAN)),
+        CLAN_GETCHATOWNERNAME(listOf(), listOf(USERNAME)),
+        CLAN_ISFRIEND(listOf(INDEX), listOf(BOOLEAN)),
+        CLAN_ISIGNORE(listOf(INDEX), listOf(BOOLEAN)),
         _3628(listOf(), listOf()),
         _3629(listOf(BOOLEAN), listOf()),
         _3630(listOf(BOOLEAN), listOf()),
@@ -561,9 +595,9 @@ interface Command {
         RANDOMINC(listOf(INT), listOf(INT)),
         INTERPOLATE(listOf(INT, INT, INT, INT, INT), listOf(INT)),
         ADDPERCENT(listOf(INT, INT), listOf(INT)),
-        SETBIT(listOf(INT, INT), listOf(INT)),
-        CLEARBIT(listOf(INT, INT), listOf(INT)),
-        TESTBIT(listOf(INT, INT), listOf(BIT)),
+        SETBIT(listOf(FLAGS, INDEX), listOf(FLAGS)),
+        CLEARBIT(listOf(FLAGS, INDEX), listOf(FLAGS)),
+        TESTBIT(listOf(FLAGS, INDEX), listOf(BOOL)),
         MOD(listOf(INT, INT), listOf(INT)),
         POW(listOf(INT, INT), listOf(INT)),
         INVPOW(listOf(INT, INT), listOf(INT)),
@@ -578,8 +612,8 @@ interface Command {
         TEXT_GENDER(listOf(STRING, STRING), listOf(STRING)),
         TOSTRING(listOf(INT), listOf(STRING)),
         COMPARE(listOf(STRING, STRING), listOf(INT)),
-        PARAHEIGHT(listOf(STRING, INT, FONTMETRICS), listOf(INT)),
-        PARAWIDTH(listOf(STRING, INT, FONTMETRICS), listOf(INT)),
+        PARAHEIGHT(listOf(STRING, WIDTH, FONTMETRICS), listOf(HEIGHT)),
+        PARAWIDTH(listOf(STRING, WIDTH, FONTMETRICS), listOf(WIDTH)),
         TEXT_SWITCH(listOf(INT, STRING, STRING), listOf(STRING)),
         ESCAPE(listOf(STRING), listOf(STRING)),
         APPEND_CHAR(listOf(STRING, CHAR), listOf(STRING)),
@@ -587,39 +621,39 @@ interface Command {
         CHAR_ISALPHANUMERIC(listOf(CHAR), listOf(BOOLEAN)),
         CHAR_ISALPHA(listOf(CHAR), listOf(BOOLEAN)),
         CHAR_ISNUMERIC(listOf(CHAR), listOf(BOOLEAN)),
-        STRING_LENGTH(listOf(STRING), listOf(INT)),
-        SUBSTRING(listOf(STRING, INT, INT), listOf(STRING)),
+        STRING_LENGTH(listOf(STRING), listOf(LENGTH)),
+        SUBSTRING(listOf(STRING, INDEX, INDEX), listOf(STRING)),
         REMOVETAGS(listOf(STRING), listOf(STRING)),
-        STRING_INDEXOF_CHAR(listOf(STRING, CHAR), listOf(INT)),
-        STRING_INDEXOF_STRING(listOf(STRING, STRING, INT), listOf(INT)),
+        STRING_INDEXOF_CHAR(listOf(STRING, CHAR), listOf(INDEX)),
+        STRING_INDEXOF_STRING(listOf(STRING, STRING, INDEX), listOf(INDEX)),
 
         OC_NAME(listOf(OBJ), listOf(STRING)),
-        OC_OP(listOf(OBJ, INT), listOf(STRING)),
-        OC_IOP(listOf(OBJ, INT), listOf(STRING)),
+        OC_OP(listOf(OBJ, OPINDEX), listOf(OP)),
+        OC_IOP(listOf(OBJ, OPINDEX), listOf(OP)),
         OC_COST(listOf(OBJ), listOf(INT)),
         OC_STACKABLE(listOf(OBJ), listOf(BOOLEAN)),
         OC_CERT(listOf(OBJ), listOf(OBJ)),
         OC_UNCERT(listOf(OBJ), listOf(OBJ)),
-        OC_MEMBERS(listOf(OBJ), listOf(BIT)),
+        OC_MEMBERS(listOf(OBJ), listOf(BOOL)),
         OC_PLACEHOLDER(listOf(OBJ), listOf(OBJ)),
         OC_UNPLACEHOLDER(listOf(OBJ), listOf(OBJ)),
         OC_FIND(listOf(STRING, BOOLEAN), listOf(INT)),
         OC_FINDNEXT(listOf(), listOf(OBJ)),
         OC_FINDRESET(listOf(), listOf()),
 
-        CHAT_GETFILTER_PUBLIC(listOf(), listOf(INT)),
-        CHAT_SETFILTER(listOf(INT, INT, INT), listOf()),
+        CHAT_GETFILTER_PUBLIC(listOf(), listOf(CHATFILTER)),
+        CHAT_SETFILTER(listOf(CHATFILTER, CHATFILTER, CHATFILTER), listOf()),
         CHAT_SENDABUSEREPORT(listOf(STRING, INT, INT), listOf()),
-        CHAT_GETHISTORY_BYTYPEANDLINE(listOf(CHATTYPE, INT), listOf(INT, INT, STRING, STRING, STRING, INT)),
-        CHAT_GETHISTORY_BYUID(listOf(INT), listOf(CHATTYPE, INT, STRING, STRING, STRING, INT)),
-        CHAT_GETFILTER_PRIVATE(listOf(), listOf(INT)),
-        CHAT_SENDPUBLIC(listOf(STRING, INT), listOf()),
-        CHAT_SENDPRIVATE(listOf(STRING, STRING), listOf()),
-        CHAT_PLAYERNAME(listOf(), listOf(STRING)),
-        CHAT_GETFILTER_TRADE(listOf(), listOf(INT)),
-        CHAT_GETHISTORYLENGTH(listOf(CHATTYPE), listOf(INT)),
-        CHAT_GETNEXTUID(listOf(INT), listOf(INT)),
-        CHAT_GETPREVUID(listOf(INT), listOf(INT)),
+        CHAT_GETHISTORY_BYTYPEANDLINE(listOf(CHATTYPE, INT), listOf(MESUID, CLOCK, USERNAME, STRING, _MES, INT)),
+        CHAT_GETHISTORY_BYUID(listOf(MESUID), listOf(CHATTYPE, CLOCK, USERNAME, STRING, _MES, INT)),
+        CHAT_GETFILTER_PRIVATE(listOf(), listOf(CHATFILTER)),
+        CHAT_SENDPUBLIC(listOf(_MES, INT), listOf()),
+        CHAT_SENDPRIVATE(listOf(USERNAME, _MES), listOf()),
+        CHAT_PLAYERNAME(listOf(), listOf(USERNAME)),
+        CHAT_GETFILTER_TRADE(listOf(), listOf(CHATFILTER)),
+        CHAT_GETHISTORYLENGTH(listOf(CHATTYPE), listOf(LENGTH)),
+        CHAT_GETNEXTUID(listOf(MESUID), listOf(MESUID)),
+        CHAT_GETPREVUID(listOf(MESUID), listOf(MESUID)),
         DOCHEAT(listOf(STRING), listOf()),
         CHAT_SETMESSAGEFILTER(listOf(STRING), listOf()),
         CHAT_GETMESSAGEFILTER(listOf(), listOf(STRING)),
@@ -641,7 +675,7 @@ interface Command {
         VIEWPORT_SETFOV(listOf(INT, INT), listOf()),
         VIEWPORT_SETZOOM(listOf(INT, INT), listOf()),
         VIEWPORT_CLAMPFOV(listOf(INT, INT, INT, INT), listOf()),
-        VIEWPORT_GETEFFECTIVESIZE(listOf(), listOf(INT, INT)),
+        VIEWPORT_GETEFFECTIVESIZE(listOf(), listOf(WIDTH, HEIGHT)),
         VIEWPORT_GETZOOM(listOf(), listOf(INT, INT)),
         VIEWPORT_GETFOV(listOf(), listOf(INT, INT)),
         _6220(listOf(), listOf(INT)),
@@ -650,15 +684,15 @@ interface Command {
         _6223(listOf(), listOf(INT)),
 
         WORLDLIST_FETCH(listOf(), listOf(BOOLEAN)),
-        WORLDLIST_START(listOf(), listOf(INT, INT, STRING, INT, INT, STRING)),
-        WORLDLIST_NEXT(listOf(), listOf(INT, INT, STRING, INT, INT, STRING)),
-        WORLDLIST_SPECIFIC(listOf(INT), listOf(INT, INT, STRING, INT, INT, STRING)),
+        WORLDLIST_START(listOf(), listOf(WORLD, FLAGS, STRING, INT, COUNT, STRING)),
+        WORLDLIST_NEXT(listOf(), listOf(WORLD, FLAGS, STRING, INT, COUNT, STRING)),
+        WORLDLIST_SPECIFIC(listOf(WORLD), listOf(WORLD, FLAGS, STRING, INT, COUNT, STRING)),
         WORLDLIST_SORT(listOf(INT, BOOLEAN, INT, BOOLEAN), listOf()),
         _6511(listOf(INT), listOf(INT, INT, STRING, INT, INT, STRING)),
         SETFOLLOWEROPSLOWPRIORITY(listOf(BOOLEAN), listOf()),
 
         ON_MOBILE(listOf(), listOf(BOOLEAN)),
-        CLIENTTYPE(listOf(), listOf(Alias.CLIENTTYPE)),
+        CLIENTTYPE(listOf(), listOf(_CLIENTTYPE)),
         _6520(listOf(), listOf()),
         MOBILE_KEYBOARDHIDE(listOf(), listOf()),
         _6522(listOf(STRING, INT), listOf()),
@@ -673,10 +707,10 @@ interface Command {
         WORLDMAP_GETZOOM(listOf(), listOf(INT)),
         WORLDMAP_SETZOOM(listOf(INT), listOf()),
         WORLDMAP_ISLOADED(listOf(), listOf(BOOLEAN)),
-        WORLDMAP_JUMPTODISPLAYCOORD(listOf(Primitive.COORD), listOf()),
-        WORLDMAP_JUMPTODISPLAYCOORD_INSTANT(listOf(Primitive.COORD), listOf()),
-        WORLDMAP_JUMPTOSOURCECOORD(listOf(Primitive.COORD), listOf()),
-        WORLDMAP_JUMPTOSOURCECOORD_INSTANT(listOf(Primitive.COORD), listOf()),
+        WORLDMAP_JUMPTODISPLAYCOORD(listOf(_COORD), listOf()),
+        WORLDMAP_JUMPTODISPLAYCOORD_INSTANT(listOf(_COORD), listOf()),
+        WORLDMAP_JUMPTOSOURCECOORD(listOf(_COORD), listOf()),
+        WORLDMAP_JUMPTOSOURCECOORD_INSTANT(listOf(_COORD), listOf()),
         WORLDMAP_GETDISPLAYPOSITION(listOf(), listOf(INT, INT)),
         WORLDMAP_GETCONFIGORIGIN(listOf(MAPAREA), listOf(INT)),
         WORLDMAP_GETCONFIGSIZE(listOf(MAPAREA), listOf(INT, INT)),
@@ -684,13 +718,13 @@ interface Command {
         WORLDMAP_GETCONFIGZOOM(listOf(MAPAREA), listOf(INT)),
         _6615(listOf(), listOf(INT, INT)),
         WORLDMAP_GETCURRENTMAP(listOf(), listOf(MAPAREA)),
-        WORLDMAP_GETDISPLAYCOORD(listOf(Primitive.COORD), listOf(INT, INT)),
-        _6618(listOf(Primitive.COORD), listOf(INT, INT)),
-        _6619(listOf(INT, Primitive.COORD), listOf()),
-        _6620(listOf(INT, Primitive.COORD), listOf()),
-        WORLDMAP_COORDINMAP(listOf(MAPAREA, Primitive.COORD), listOf(BOOLEAN)),
+        WORLDMAP_GETDISPLAYCOORD(listOf(_COORD), listOf(INT, INT)),
+        _6618(listOf(_COORD), listOf(INT, INT)),
+        _6619(listOf(INT, _COORD), listOf()),
+        _6620(listOf(INT, _COORD), listOf()),
+        WORLDMAP_COORDINMAP(listOf(MAPAREA, _COORD), listOf(BOOLEAN)),
         WORLDMAP_GETSIZE(listOf(), listOf(INT, INT)),
-        _6623(listOf(Primitive.COORD), listOf(MAPAREA)),
+        _6623(listOf(_COORD), listOf(MAPAREA)),
         _6624(listOf(INT), listOf()),
         _6625(listOf(), listOf()),
         _6626(listOf(INT), listOf()),
@@ -705,39 +739,50 @@ interface Command {
         WORLDMAP_GETDISABLEELEMENTS(listOf(), listOf(BOOLEAN)),
         WORLDMAP_GETDISABLEELEMENT(listOf(INT), listOf(BOOLEAN)),
         WORLDMAP_GETDISABLEELEMENTCATEGORY(listOf(CATEGORY), listOf(BOOLEAN)),
-        _6638(listOf(INT, Primitive.COORD), listOf(INT)),
-        WORLDMAP_LISTELEMENT_START(listOf(), listOf(MAPELEMENT, Primitive.COORD)),
-        WORLDMAP_LISTELEMENT_NEXT(listOf(), listOf(MAPELEMENT, Primitive.COORD)),
-        MEC_TEXT(listOf(MAPELEMENT), listOf(STRING)),
+        _6638(listOf(INT, _COORD), listOf(INT)),
+        WORLDMAP_LISTELEMENT_START(listOf(), listOf(MAPELEMENT, _COORD)),
+        WORLDMAP_LISTELEMENT_NEXT(listOf(), listOf(MAPELEMENT, _COORD)),
+        MEC_TEXT(listOf(MAPELEMENT), listOf(TEXT)),
         MEC_TEXTSIZE(listOf(MAPELEMENT), listOf(INT)),
         MEC_CATEGORY(listOf(MAPELEMENT), listOf(CATEGORY)),
         MEC_SPRITE(listOf(MAPELEMENT), listOf(INT)),
         WORLDMAP_ELEMENT(listOf(), listOf(MAPELEMENT)),
-        _6698(listOf(), listOf(Primitive.COORD)),
-        WORLDMAP_ELEMENTCOORD(listOf(), listOf(Primitive.COORD)),
+        _6698(listOf(), listOf(_COORD)),
+        WORLDMAP_ELEMENTCOORD(listOf(), listOf(_COORD)),
         ;
 
-        override val id: Int = namesReverse.getValue(name)
+        override val id = opcodes.getValue(name)
 
-        override fun translate(state: Interpreter.State): Instruction {
-            var opArgs: List<Element> = state.pop(args)
-            if (o != null) opArgs = opArgs.plus(state.operand.asConstant(o))
-            val opDefs = state.push(defs)
-            return Instruction.Assignment(Expression(opDefs), Expression.Operation(defs.map { Typing.to(it) }, id, Expression(opArgs)))
+        private val defStackTypes = defs.map { it.stackType }
+
+        override fun translate(state: InterpreterState): Instruction {
+            val dot = o && state.operand.boolean
+            val opArgs = Expression(state.pop(args.size))
+            assign(state.typings.of(opArgs), state.typings.of(args))
+            val operation = Expression.Operation(defStackTypes, id, opArgs, dot)
+            val operationTyping = state.typings.of(operation)
+            for (i in defs.indices) {
+                operationTyping[i].freeze(defs[i])
+            }
+            val opDefs = Expression(state.push(defStackTypes))
+            assign(state.typings.of(operation), state.typings.of(opDefs))
+            return Instruction.Assignment(opDefs, operation)
         }
     }
 
     object JoinString : Command {
 
-        override val id = Opcodes.JOIN_STRING
+        override val id = JOIN_STRING
 
-        override fun translate(state: Interpreter.State): Instruction {
+        override fun translate(state: InterpreterState): Instruction {
             val args = state.pop(state.operand.int)
-            return Instruction.Assignment(state.push(STRING), Expression.Operation(listOf(Typing.to(STRING)), id, Expression(args)))
+            val operation = Expression.Operation(listOf(StackType.STRING), id, Expression(args))
+            val def = state.push(StackType.STRING)
+            return Instruction.Assignment(def, operation)
         }
     }
 
-    enum class SetOn : Command {
+    enum class ClientScript : Command {
 
         CC_SETONCLICK,
         CC_SETONHOLD,
@@ -792,47 +837,61 @@ interface Command {
         IF_SETONSUBCHANGE,
         IF_SETONSTOCKTRANSMIT,
         _2426,
-        IF_SETONRESIZE;
+        IF_SETONRESIZE,
+        ;
 
-        override val id = namesReverse.getValue(name)
+        override val id = opcodes.getValue(name)
 
-        override fun translate(state: Interpreter.State): Instruction {
-            val args = ArrayList<Element>()
+        override fun translate(state: InterpreterState): Instruction {
+            var component: Element? = null
+            var dot = false
             if (id >= 2000) {
-                args.add(state.pop(COMPONENT))
+                val c = state.pop(StackType.INT)
+                assign(state.typings.of(c), state.typings.of(COMPONENT))
+                component = c
             } else {
-                args.add(state.operand.asConstant(BOOLEAN))
+                dot = state.operand.boolean
             }
-            var s = checkNotNull(state.stack.pop().value).string
-            if (s.isNotEmpty() && s.last() == 'Y') {
-                val triggerType: Type.Stackable = when (id) {
-                    Opcodes.IF_SETONSTATTRANSMIT, Opcodes.CC_SETONSTATTRANSMIT -> STAT
-                    Opcodes.IF_SETONINVTRANSMIT, Opcodes.CC_SETONINVTRANSMIT -> INV
-                    Opcodes.IF_SETONVARTRANSMIT, Opcodes.CC_SETONVARTRANSMIT -> VAR
-                    else -> error(this)
+            val desc = ClientScriptDesc(state.popValue().string)
+            val triggers = ArrayList<Element>()
+            if (desc.triggers) {
+                val triggerCount = state.popValue().int
+                repeat(triggerCount) {
+                    val e = when (this) {
+                        IF_SETONSTATTRANSMIT, CC_SETONSTATTRANSMIT -> {
+                            state.pop(StackType.INT).also { assign(state.typings.of(it), state.typings.of(_STAT)) }
+                        }
+                        IF_SETONINVTRANSMIT, CC_SETONINVTRANSMIT -> {
+                            state.pop(StackType.INT).also { assign(state.typings.of(it), state.typings.of(INV)) }
+                        }
+                        IF_SETONVARTRANSMIT, CC_SETONVARTRANSMIT -> {
+                            Element.Pointer(Variable.varp(state.popValue().int))
+                        }
+                        else -> error(this)
+                    }
+                    triggers.add(e)
                 }
-                val n = checkNotNull(state.stack.pop().value)
-                args.add(n.asConstant(INT))
-                repeat(n.int) {
-                    args.add(state.pop(triggerType))
-                }
-                s = s.dropLast(1)
-            } else {
-                args.add(Value(0).asConstant(INT))
+                triggers.reverse()
             }
-            for (i in s.lastIndex downTo 0) {
-                val ep = state.stack.peek().value?.let { EventProperty.of(it) }
-                val t = Type.of(s[i])
-                val pop = state.pop(t)
-                args.add(ep ?: pop)
+            val args = ArrayList<Element>(desc.argumentTypes.size)
+            for (t in desc.argumentTypes.asReversed()) {
+                val ep = state.peekValue()?.let { EventProperty.of(it) }
+                val p = state.pop(t.stackType)
+                args.add(ep ?: p)
             }
-            val scriptId = checkNotNull(state.stack.pop().value).int
+            val scriptId = state.popValue().int
             args.reverse()
-            return Instruction.Assignment(Expression(), Expression.Operation.AddHook(id, scriptId, Expression(args)))
+            val argsExpr = Expression(args)
+            val argsTyping = state.typings.args(scriptId, args.map { it.stackType })
+            for (i in desc.argumentTypes.indices) {
+                argsTyping[i].freeze(desc.argumentTypes[i])
+            }
+            assign(state.typings.of(argsExpr), argsTyping)
+            return Instruction.Assignment(Expression.ClientScript(id, scriptId, argsExpr, Expression(triggers), dot, component))
         }
     }
 
-    enum class Param(val type: Primitive) : Command {
+    enum class Param(val prototype: Prototype) : Command {
 
         NC_PARAM(NPC),
         LC_PARAM(LOC),
@@ -840,14 +899,21 @@ interface Command {
         STRUCT_PARAM(STRUCT),
         ;
 
-        override val id = namesReverse.getValue(name)
+        override val id = opcodes.getValue(name)
 
-        override fun translate(state: Interpreter.State): Instruction {
-            val paramId = checkNotNull(state.stack.peek().value).int
-            val param = state.pop(PARAM)
-            val recv = state.pop(type)
+        override fun translate(state: InterpreterState): Instruction {
+            val paramId = checkNotNull(state.peekValue()).int
             val paramType = state.paramTypes.loadNotNull(paramId)
-            return Instruction.Assignment(state.push(paramType), Expression.Operation(listOf(Typing.to(paramType)), id, Expression(recv, param)))
+            val param = state.pop(StackType.INT)
+            assign(state.typings.of(param), state.typings.of(PARAM))
+            val recv = state.pop(StackType.INT)
+            assign(state.typings.of(recv), state.typings.of((prototype)))
+            val operation = Expression.Operation(listOf(paramType.stackType), id, Expression(recv, param))
+            val operationTyping = state.typings.of(operation).single()
+            operationTyping.freeze(paramType)
+            val def = state.push(paramType.stackType)
+            assign(operationTyping, state.typings.of(def))
+            return Instruction.Assignment(def, operation)
         }
     }
 }

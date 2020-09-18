@@ -1,6 +1,6 @@
 package org.runestar.cs2.util
 
-internal class LinkedGraph<N : Any> : DirectedGraph<N> {
+class LinkedGraph<N : Any> : DirectedGraph<N> {
 
     private val map = HashMap<N, Node<N>>()
 
@@ -19,12 +19,10 @@ internal class LinkedGraph<N : Any> : DirectedGraph<N> {
         get(successor).predecessors.add(n)
     }
 
-    override fun toString(): String {
-        val sb = StringBuilder()
-        for (n in this) {
-            sb.append(n).append(", s=").append(immediateSuccessors(n)).append(", p=").append(immediatePredecessors(n)).appendln()
+    override fun toString() = buildString {
+        for (n in this@LinkedGraph) {
+            append(n).append(", s=").append(immediateSuccessors(n)).append(", p=").append(immediatePredecessors(n)).appendLine()
         }
-        return sb.toString()
     }
 
     private class Node<N : Any>(

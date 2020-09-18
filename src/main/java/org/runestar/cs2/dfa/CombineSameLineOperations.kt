@@ -3,13 +3,14 @@ package org.runestar.cs2.dfa
 import org.runestar.cs2.ir.Element
 import org.runestar.cs2.ir.Expression
 import org.runestar.cs2.ir.Function
+import org.runestar.cs2.ir.FunctionSet
 import org.runestar.cs2.ir.Instruction
-import org.runestar.cs2.ir.VarSource
+import org.runestar.cs2.ir.Variable
 import org.runestar.cs2.ir.plus
 
-internal object CombineSameLineOperations : Phase.Individual() {
+object CombineSameLineOperations : Phase.Individual() {
 
-    override fun transform(f: Function) {
+    override fun transform(f: Function, fs: FunctionSet) {
         val itr = f.instructions.iterator()
         for (start in itr) {
             if (!isStackAssign(start)) continue
@@ -33,6 +34,6 @@ internal object CombineSameLineOperations : Phase.Individual() {
     private fun isStackAssign(insn: Instruction): Boolean {
         if (insn !is Instruction.Assignment) return false
         val expr = insn.expression
-        return expr is Element.Variable && expr.varId.source == VarSource.STACK
+        return expr is Element.Access && expr.variable is Variable.Stack
     }
 }

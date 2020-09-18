@@ -1,6 +1,6 @@
 package org.runestar.cs2.util
 
-internal fun <N : Any> dominatorTree(graph: DirectedGraph<N>): DirectedGraph<N> {
+fun <N : Any> dominatorTree(graph: DirectedGraph<N>): DirectedGraph<N> {
     // A Simple, Fast Dominance Algorithm. Cooper, Harvey, Kennedy. 2001
     val postOrderList = ArrayList<N>()
     val postOrderMap = HashMap<N, Int>()

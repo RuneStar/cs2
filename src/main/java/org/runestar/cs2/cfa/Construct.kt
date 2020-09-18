@@ -8,27 +8,21 @@ interface Construct {
 
     var next: Construct?
 
-    class Seq(
-            val instructions: MutableList<Instruction> = ArrayList()
-    ) : Construct {
+    class Seq(val instructions: MutableList<Instruction> = ArrayList()) : Construct {
 
         override var next: Construct? = null
     }
 
     class Branch(var condition: Expression.Operation, var body: Construct)
 
-    class If(
-            val branches: MutableList<Branch> = ArrayList()
-    ) : Construct {
+    class If(val branches: MutableList<Branch> = ArrayList()) : Construct {
 
         var elze: Construct? = null
 
         override var next: Construct? = null
     }
 
-    class While(
-            val condition: Expression.Operation
-    ): Construct {
+    class While(val condition: Expression.Operation): Construct {
 
         lateinit var body: Construct
 

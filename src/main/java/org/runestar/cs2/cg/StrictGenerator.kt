@@ -1,19 +1,23 @@
 package org.runestar.cs2.cg
 
-import org.runestar.cs2.ArrayType
 import org.runestar.cs2.ir.EventProperty
-import org.runestar.cs2.Loader
-import org.runestar.cs2.Opcodes.*
-import org.runestar.cs2.StackType
-import org.runestar.cs2.Trigger
+import org.runestar.cs2.bin.*
+import org.runestar.cs2.SCRIPT_NAMES
+import org.runestar.cs2.bin.StackType
+import org.runestar.cs2.bin.Trigger
 import org.runestar.cs2.cfa.Construct
+import org.runestar.cs2.bin.int
 import org.runestar.cs2.ir.Element
 import org.runestar.cs2.ir.Expression
 import org.runestar.cs2.ir.Function
+import org.runestar.cs2.ir.FunctionSet
 import org.runestar.cs2.ir.Instruction
-import org.runestar.cs2.ir.VarSource
-import org.runestar.cs2.ir.list
-import org.runestar.cs2.names
+import org.runestar.cs2.ir.Variable
+import org.runestar.cs2.ir.asList
+import org.runestar.cs2.ir.prototype
+import org.runestar.cs2.bin.string
+import org.runestar.cs2.ir.identifier
+import org.runestar.cs2.ir.literal
 
 fun StrictGenerator(writer: (scriptName: String, script: String) -> Unit) = object : StrictGenerator() {
     override fun write(scriptName: String, script: String) = writer(scriptName, script)
@@ -21,9 +25,9 @@ fun StrictGenerator(writer: (scriptName: String, script: String) -> Unit) = obje
 
 abstract class StrictGenerator : Generator {
 
-    final override fun write(f: Function, root: Construct) {
-        val name = Loader.SCRIPT_NAMES.load(f.id)?.toString() ?: "script${f.id}"
-        write(name, Writer(name, f, root).write())
+    final override fun write(f: Function, fs: FunctionSet, root: Construct) {
+        val name = SCRIPT_NAMES.load(f.id)?.toString() ?: "script${f.id}"
+        write(name, Writer(name, f, fs, root).write())
     }
 
     abstract fun write(scriptName: String, script: String)
@@ -32,7 +36,8 @@ abstract class StrictGenerator : Generator {
 private class Writer(
         private val name: String,
         private val f: Function,
-        private val root: Construct
+        private val fs: FunctionSet,
+        private val root: Construct,
 ) {
 
     private val buf = StringBuilder()
@@ -43,7 +48,7 @@ private class Writer(
 
     private var endingLine = true
 
-    private val definedLocalVariables = HashSet<Element.Variable>(f.arguments)
+    private val definedLocalVariables = HashSet<Variable>(f.arguments)
 
     fun write(): String {
         append("// ").append(f.id).nextLine()
@@ -61,10 +66,10 @@ private class Writer(
         }
         if (f.returnTypes.isNotEmpty()) {
             append('(')
-            val returnTypes = f.returnTypes.iterator()
-            append(returnTypes.next().finalType.literal)
+            val returnTypes = fs.typings.returns(f.id, f.returnTypes).iterator()
+            append(returnTypes.next().literal)
             for (returnType in returnTypes) {
-                append(", ").append(returnType.finalType.literal)
+                append(", ").append(returnType.literal)
             }
             append(')')
         }
@@ -73,8 +78,12 @@ private class Writer(
         return buf.toString()
     }
 
-    private fun appendArg(arg: Element.Variable) {
-        append(arg.typing.finalType.literal).append(' ').appendVar(arg)
+    private fun appendArg(arg: Variable) {
+        append(fs.typings.of(arg).literal)
+        if (arg is Variable.array) {
+            append("array")
+        }
+        append(" $").appendVarIdentifier(arg)
     }
 
     private fun appendConstruct(construct: Construct) {
@@ -137,15 +146,15 @@ private class Writer(
 
     private fun appendSwitch(construct: Construct.Switch) {
         nextLine()
-        val type = construct.expression.typings.single().finalType
-        append("switch_").append(type.literal).append(" (").appendExpr(construct.expression).append(") {")
+        val prototype = fs.typings.of(construct.expression).single().prototype
+        append("switch_").append(prototype.literal).append(" (").appendExpr(construct.expression).append(") {")
         for ((ns, body) in construct.cases) {
             indent {
                 nextLine()
                 val cases = ns.iterator()
-                append("case ").append(intValueToString(cases.next(), type))
+                append("case ").append(intConstantToString(cases.next(), prototype))
                 for (case in cases) {
-                    append(", ").append(intValueToString(case, type))
+                    append(", ").append(intConstantToString(case, prototype))
                 }
                 append(" :")
                 indent {
@@ -177,7 +186,7 @@ private class Writer(
                     return
                 } else {
                     append("return")
-                    val es = insn.expression.list<Expression>()
+                    val es = insn.expression.asList
                     if (es.isNotEmpty()) {
                         append('(').appendExprs(es).append(')')
                     }
@@ -188,14 +197,14 @@ private class Writer(
     }
 
     private fun appendAssignment(insn: Instruction.Assignment) {
-        val defs = insn.definitions.list<Element.Variable>()
+        val defs = insn.definitions.asList as List<Element.Access>
         if (defs.isNotEmpty()) {
             if (defs.size == 1) {
                 val def = defs.single()
-                if (def.varId.source.local && definedLocalVariables.add(def)) {
-                    append("def_").append(def.typing.finalType.literal).append(' ')
+                if (def.variable is Variable.Local && definedLocalVariables.add(def.variable)) {
+                    append("def_").append(fs.typings.of(def.variable).literal).append(' ')
                 }
-                appendVar(def)
+                appendVarAccess(def)
             } else {
                 appendExprs(defs)
             }
@@ -207,55 +216,71 @@ private class Writer(
     private fun appendExpr(expr: Expression): Writer = apply {
         when (expr) {
             is EventProperty -> append(expr.literal)
-            is Element.Variable -> appendVar(expr)
+            is Element.Access -> appendVarAccess(expr)
+            is Element.Pointer -> appendVarIdentifier(expr.variable)
             is Element.Constant -> appendConst(expr)
-            is Expression.Operation.AddHook -> appendHook(expr)
-            is Expression.Operation.Invoke -> appendInvoke(expr)
+            is Expression.ClientScript -> appendClientScript(expr)
+            is Expression.Proc -> appendProc(expr)
             is Expression.Operation -> appendOperation(expr)
             is Expression.Compound -> appendExprs(expr.expressions)
         }
     }
 
-    private fun appendVar(v: Element.Variable) = apply {
-        when (v.varId.source) {
-            VarSource.LOCALINT, VarSource.LOCALSTRING, VarSource.ARRAY -> append('$').append(v.typing.finalType.identifier).append(v.varId.id)
-            VarSource.VARP -> append("%var").append(v.varId.id)
-            VarSource.VARBIT -> append("%varbit").append(v.varId.id)
-            VarSource.VARCINT -> append("%varcint").append(v.varId.id)
-            VarSource.VARCSTRING -> append("%varcstring").append(v.varId.id)
+    private fun appendVarAccess(e: Element.Access) = apply {
+        when (e.variable) {
+            is Variable.Local -> append('$')
+            is Variable.Global -> append('%')
+            else -> error(e)
+        }
+        appendVarIdentifier(e.variable)
+    }
+
+    private fun appendVarIdentifier(v: Variable) = apply {
+        when (v) {
+            is Variable.int, is Variable.string, is Variable.array -> {
+                val identifier = fs.typings.of(v).identifier
+                append(identifier)
+                if (v is Variable.array) {
+                    append("array")
+                }
+                append(v.id)
+            }
+            is Variable.varp -> append("var").append(v.id)
+            is Variable.varbit -> append("varbit").append(v.id)
+            is Variable.varcint -> append("varcint").append(v.id)
+            is Variable.varcstring -> append("varcstring").append(v.id)
             else -> error(v)
         }
     }
 
-    private fun appendConst(expr: Element.Constant) {
-        when (expr.value.type) {
-            StackType.STRING -> append('"').append(expr.value.string).append('"')
-            StackType.INT -> append(intValueToString(expr.value.int, expr.typing.finalType))
+    private fun appendConst(const: Element.Constant) {
+        when (const.value.stackType) {
+            StackType.STRING -> append('"').append(const.value.string).append('"')
+            StackType.INT -> append(intConstantToString(const.value.int, fs.typings.of(const).prototype))
         }
     }
 
     private fun appendOperation(expr: Expression.Operation) {
-        val args = expr.arguments.list<Expression>()
-        val opcode = expr.id
+        val args = expr.arguments.asList
+        val opcode = expr.opcode
         when (opcode) {
             DEFINE_ARRAY -> {
-                val array = args[0] as Element.Variable
-                val elemType = (array.typing.type as ArrayType).elementType
-                append("def_").append(elemType.literal).append(' ').appendVar(array).append('(').appendExpr(args[1]).append(')')
+                val array = args[0] as Element.Access
+                append("def_").append(fs.typings.of(array).literal).append(' ').appendVarAccess(array).append('(').appendExpr(args[1]).append(')')
                 return
             }
             PUSH_ARRAY_INT -> {
-                appendVar(args[0] as Element.Variable).append('(').appendExpr(args[1]).append(')')
+                appendVarAccess(args[0] as Element.Access).append('(').appendExpr(args[1]).append(')')
                 return
             }
             POP_ARRAY_INT -> {
-                appendVar(args[0] as Element.Variable).append('(').appendExpr(args[1]).append(") = ").appendExpr(args[2])
+                appendVarAccess(args[0] as Element.Access).append('(').appendExpr(args[1]).append(") = ").appendExpr(args[2])
                 return
             }
             JOIN_STRING -> {
                 append('"')
                 for (a in args) {
-                    if (a is Element.Constant && a.value.type == StackType.STRING) {
+                    if (a is Element.Constant && a.value.stackType == StackType.STRING) {
                         append(a.value.string)
                     } else {
                         append('<').appendExpr(a).append('>')
@@ -265,8 +290,8 @@ private class Writer(
                 return
             }
         }
-        val branchInfix = BRANCH_INFIX_MAP[expr.id]
-        val calcInfix = CALC_INFIX_MAP[expr.id]
+        val branchInfix = BRANCH_INFIX_MAP[expr.opcode]
+        val calcInfix = CALC_INFIX_MAP[expr.opcode]
         if (branchInfix != null) {
             appendBinaryOperation(args[0], expr, args[1], branchInfix)
         } else if (calcInfix != null) {
@@ -279,16 +304,12 @@ private class Writer(
             inCalc = wasCalc
             if (!inCalc) append(')')
         } else {
-            var args2: List<Expression> = args
-            if (expr.id in DOT_OPCODES) {
-                if ((args2.last() as Element.Constant).value.int == 1) {
-                    append('.')
-                }
-                args2 = args2.dropLast(1)
+            if (expr.dot) {
+                append('.')
             }
-            append(names.getValue(opcode))
-            if (args2.isNotEmpty()) {
-                append('(').appendExprs(args2).append(')')
+            append(expr.opcodeName)
+            if (args.isNotEmpty()) {
+                append('(').appendExprs(args).append(')')
             }
         }
     }
@@ -300,10 +321,10 @@ private class Writer(
         append(' ')
         appendExpressionPrec(rhs, op, true)
     }
-    
+
     private fun appendExpressionPrec(expr: Expression, op: Expression.Operation, assoc: Boolean) {
-        val opPrec = PRECEDENCE_MAP[op.id] ?: error("Missing precedence for binary operation: ${op.id}")
-        val exprPrec = if (expr is Expression.Operation) PRECEDENCE_MAP[expr.id] ?: 0 else 0
+        val opPrec = PRECEDENCE_MAP[op.opcode] ?: error("Missing precedence for binary operation: ${op.opcode}")
+        val exprPrec = if (expr is Expression.Operation) PRECEDENCE_MAP[expr.opcode] ?: 0 else 0
         val parenthesis = exprPrec > opPrec || (assoc && opPrec == exprPrec)
         if (parenthesis) append('(')
         appendExpr(expr)
@@ -319,51 +340,47 @@ private class Writer(
         }
     }
 
-    private fun appendHook(operation: Expression.Operation.AddHook) {
-        val args = operation.arguments.list<Expression>().toMutableList()
-        val component = args.removeAt(args.lastIndex)
-
-        if (operation.id < 2000 && (component as Element.Constant).value.int == 1) {
+    private fun appendClientScript(cs: Expression.ClientScript) {
+        val args = cs.arguments.asList
+        val triggers = cs.triggers.asList
+        val component = cs.component
+        if (cs.dot) {
             append('.')
         }
-        append(names.getValue(operation.id)).append('(')
+        append(cs.opcodeName).append('(')
 
-        if (operation.scriptId == -1) {
+        if (cs.scriptId == -1) {
             append(null)
         } else {
-            val scriptName = Loader.SCRIPT_NAMES.load(operation.scriptId)
+            val scriptName = SCRIPT_NAMES.load(cs.scriptId)
             append('"')
             if (scriptName == null) {
-                append("script").append(operation.scriptId)
+                append("script").append(cs.scriptId)
             } else {
                 require(scriptName.trigger == Trigger.clientscript) { "$scriptName must be a ${Trigger.clientscript}" }
                 append(scriptName.name)
             }
-            val triggerCount = (args.removeAt(args.lastIndex) as Element.Constant).value.int
-            val triggers = args.takeLast(triggerCount)
-            repeat(triggerCount) { args.removeAt(args.lastIndex) }
 
             if (args.isNotEmpty()) {
                 append('(').appendExprs(args).append(')')
             }
-
             if (triggers.isNotEmpty()) {
                 append('{').appendExprs(triggers).append('}')
             }
             append('"')
         }
-        if (operation.id >= 2000) {
+        if (component != null) {
             append(", ").appendExpr(component)
         }
         append(')')
     }
 
-    private fun appendInvoke(invoke: Expression.Operation.Invoke) {
-        val args = invoke.arguments.list<Expression>()
+    private fun appendProc(proc: Expression.Proc) {
+        val args = proc.arguments.asList
         append('~')
-        val scriptName = Loader.SCRIPT_NAMES.load(invoke.scriptId)
+        val scriptName = SCRIPT_NAMES.load(proc.scriptId)
         if (scriptName == null) {
-            append("script").append(invoke.scriptId)
+            append("script").append(proc.scriptId)
         } else {
             require(scriptName.trigger == Trigger.proc) { "$scriptName must be a ${Trigger.proc}" }
             append(scriptName.name)
@@ -389,140 +406,45 @@ private class Writer(
     private fun append(c: Char) = apply { buf.append(c) }
 
     private fun append(n: Int) = apply { buf.append(n) }
-
-    private fun append(b: Boolean) = apply { buf.append(b) }
-
-    private companion object {
-
-        val CALC_INFIX_MAP = mapOf(
-                ADD to "+",
-                SUB to "-",
-                MULTIPLY to "*",
-                DIV to "/",
-                MOD to "%",
-                AND to "&",
-                OR to "|"
-        )
-
-        val BRANCH_INFIX_MAP = mapOf(
-                BRANCH_EQUALS to "=",
-                BRANCH_GREATER_THAN to ">",
-                BRANCH_GREATER_THAN_OR_EQUALS to ">=",
-                BRANCH_LESS_THAN to "<",
-                BRANCH_LESS_THAN_OR_EQUALS to "<=",
-                BRANCH_NOT to "!",
-                SS_OR to "|",
-                SS_AND to "&"
-        )
-
-        val PRECEDENCE_MAP = mapOf(
-                // Calc ops
-                MULTIPLY to 1,
-                DIV to 1,
-                MOD to 1,
-                ADD to 2,
-                SUB to 2,
-                // Branch ops
-                BRANCH_GREATER_THAN to 3,
-                BRANCH_GREATER_THAN_OR_EQUALS to 3,
-                BRANCH_LESS_THAN to 3,
-                BRANCH_LESS_THAN_OR_EQUALS to 3,
-                BRANCH_EQUALS to 4,
-                BRANCH_NOT to 4,
-                AND to 5,
-                OR to 6,
-                SS_AND to 7,
-                SS_OR to 8
-        )
-
-        val DOT_OPCODES = setOf(
-                CC_CREATE,
-                CC_DELETE,
-                CC_FIND,
-                IF_FIND,
-                CC_SETPOSITION,
-                CC_SETSIZE,
-                CC_SETHIDE,
-                CC_SETNOCLICKTHROUGH,
-                CC_SETNOSCROLLTHROUGH,
-                CC_SETSCROLLPOS,
-                CC_SETCOLOUR,
-                CC_SETFILL,
-                CC_SETTRANS,
-                CC_SETLINEWID,
-                CC_SETGRAPHIC,
-                CC_SET2DANGLE,
-                CC_SETTILING,
-                CC_SETMODEL,
-                CC_SETMODELANGLE,
-                CC_SETMODELANIM,
-                CC_SETMODELORTHOG,
-                CC_SETTEXT,
-                CC_SETTEXTFONT,
-                CC_SETTEXTALIGN,
-                CC_SETTEXTSHADOW,
-                CC_SETOUTLINE,
-                CC_SETGRAPHICSHADOW,
-                CC_SETVFLIP,
-                CC_SETHFLIP,
-                CC_SETSCROLLSIZE,
-                CC_RESUME_PAUSEBUTTON,
-                _1122,
-                CC_SETFILLCOLOUR,
-                _1124,
-                _1125,
-                CC_SETLINEDIRECTION,
-                CC_SETMODELTRANSPARENT,
-                CC_SETOBJECT,
-                CC_SETNPCHEAD,
-                CC_SETPLAYERHEAD_SELF,
-                CC_SETOBJECT_NONUM,
-                CC_SETOBJECT_ALWAYS_NUM,
-                CC_SETOP,
-                CC_SETDRAGGABLE,
-                CC_SETDRAGGABLEBEHAVIOR,
-                CC_SETDRAGDEADZONE,
-                CC_SETDRAGDEADTIME,
-                CC_SETOPBASE,
-                CC_SETTARGETVERB,
-                CC_CLEAROPS,
-                _1308,
-                CC_SETOPKEY,
-                CC_SETOPTKEY,
-                CC_SETOPKEYRATE,
-                CC_SETOPTKEYRATE,
-                CC_SETOPKEYIGNOREHELD,
-                CC_SETOPTKEYIGNOREHELD,
-                CC_GETX,
-                CC_GETY,
-                CC_GETWIDTH,
-                CC_GETHEIGHT,
-                CC_GETHIDE,
-                CC_GETLAYER,
-                CC_GETSCROLLX,
-                CC_GETSCROLLY,
-                CC_GETTEXT,
-                CC_GETSCROLLWIDTH,
-                CC_GETSCROLLHEIGHT,
-                CC_GETMODELZOOM,
-                CC_GETMODELANGLE_X,
-                CC_GETMODELANGLE_Z,
-                CC_GETMODELANGLE_Y,
-                CC_GETTRANS,
-                _1610,
-                CC_GETCOLOUR,
-                CC_GETFILLCOLOUR,
-                _1613,
-                CC_GETMODELTRANSPARENT,
-                CC_GETINVOBJECT,
-                CC_GETINVCOUNT,
-                CC_GETID,
-                CC_GETTARGETMASK,
-                CC_GETOP,
-                CC_GETOPBASE,
-                IF_CALLONRESIZE,
-                CC_DRAGPICKUP,
-                _3140
-        )
-    }
 }
+
+val CALC_INFIX_MAP = mapOf(
+        ADD to "+",
+        SUB to "-",
+        MULTIPLY to "*",
+        DIV to "/",
+        MOD to "%",
+        AND to "&",
+        OR to "|"
+)
+
+val BRANCH_INFIX_MAP = mapOf(
+        BRANCH_EQUALS to "=",
+        BRANCH_GREATER_THAN to ">",
+        BRANCH_GREATER_THAN_OR_EQUALS to ">=",
+        BRANCH_LESS_THAN to "<",
+        BRANCH_LESS_THAN_OR_EQUALS to "<=",
+        BRANCH_NOT to "!",
+        SS_OR to "|",
+        SS_AND to "&"
+)
+
+val PRECEDENCE_MAP = mapOf(
+        // Calc ops
+        MULTIPLY to 1,
+        DIV to 1,
+        MOD to 1,
+        ADD to 2,
+        SUB to 2,
+        // Branch ops
+        BRANCH_GREATER_THAN to 3,
+        BRANCH_GREATER_THAN_OR_EQUALS to 3,
+        BRANCH_LESS_THAN to 3,
+        BRANCH_LESS_THAN_OR_EQUALS to 3,
+        BRANCH_EQUALS to 4,
+        BRANCH_NOT to 4,
+        AND to 5,
+        OR to 6,
+        SS_AND to 7,
+        SS_OR to 8
+)

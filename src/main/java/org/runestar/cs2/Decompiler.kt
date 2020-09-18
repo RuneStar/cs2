@@ -1,19 +1,21 @@
 package org.runestar.cs2
 
+import org.runestar.cs2.bin.Script
+import org.runestar.cs2.bin.Type
 import org.runestar.cs2.cfa.reconstruct
 import org.runestar.cs2.cg.Generator
 import org.runestar.cs2.dfa.Phase
 import org.runestar.cs2.ir.Command
-import org.runestar.cs2.ir.Interpreter
+import org.runestar.cs2.ir.interpret
+import org.runestar.cs2.util.Loader
 
 fun decompile(
         scripts: Loader.Keyed<Script>,
         generator: Generator,
         commands: Loader<Command> = Command.LOADER,
-        paramTypes: Loader<Primitive> = Loader.PARAM_TYPES
+        paramTypes: Loader<Type> = PARAM_TYPES,
 ) {
-    val interpreter = Interpreter(scripts, commands, paramTypes)
-    val fs = scripts.ids.associateWith { interpreter.interpret(it) }
+    val fs = interpret(scripts, commands, paramTypes)
     Phase.DEFAULT.transform(fs)
-    fs.values.forEach { generator.write(it, reconstruct(it)) }
+    fs.functions.values.forEach { generator.write(it, fs, reconstruct(it)) }
 }

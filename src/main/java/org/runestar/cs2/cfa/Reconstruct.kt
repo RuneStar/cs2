@@ -5,7 +5,7 @@ import org.runestar.cs2.ir.Function
 import org.runestar.cs2.ir.Instruction
 import org.runestar.cs2.util.isSuccessorAcyclic
 
-internal fun reconstruct(f: Function): Construct {
+fun reconstruct(f: Function): Construct {
     val fg = FlowGraph(f)
     val root = Construct.Seq()
     reconstructBlock(fg, root, fg.graph.head, fg.graph.head)

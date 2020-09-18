@@ -1,6 +1,6 @@
 package org.runestar.cs2.util
 
-internal class HashChain<E : Any> : Chain<E> {
+class HashChain<E : Any> : Chain<E> {
 
     private val map = HashMap<E, Link>()
 

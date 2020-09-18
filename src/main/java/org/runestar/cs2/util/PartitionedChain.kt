@@ -1,6 +1,6 @@
 package org.runestar.cs2.util
 
-internal class PartitionedChain<E : Any>(
+class PartitionedChain<E : Any>(
         private val delegate: Chain<E>,
         heads: List<E>
 ) : Iterable<PartitionedChain<E>.Block> {
