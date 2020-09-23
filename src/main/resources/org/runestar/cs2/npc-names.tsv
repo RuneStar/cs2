@@ -373,8 +373,6 @@
 374	pheasant
 375	rick_turpentine
 376	rick_turpentine
-377	bee_keeper
-378	bees
 379	quiz_master
 380	pillory_guard
 381	tramp
@@ -3201,6 +3199,7 @@
 3232	wizard
 3233	leech
 3234	feral_vampyre
+3235	bee_keeper
 3236	mist
 3237	feral_vampyre
 3238	vampyric_hound
@@ -10288,3 +10287,4 @@
 10441	sheepdog_multi
 10442	spider
 10443	spider
+10444	bees

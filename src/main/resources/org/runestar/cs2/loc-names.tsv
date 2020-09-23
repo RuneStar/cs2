@@ -12122,17 +12122,6 @@
 20843	exit_portal
 20844	tree
 20845	tree
-20846	beehive_part
-20847	beehive_part
-20848	beehive_part
-20849	beehive_part
-20850	interface_surround
-20851	button_up
-20852	button_down
-20853	button_left
-20854	button_right
-20855	button_build
-20856	beehive
 20870	compost_bin
 20871	compost_bin
 20872	compost_bin
@@ -22225,3 +22214,6 @@
 40352	pile_of_rope_multi
 40355	crumbling_wall
 40356	rocks
+40357	lectern
+40358	lectern
+40359	picture

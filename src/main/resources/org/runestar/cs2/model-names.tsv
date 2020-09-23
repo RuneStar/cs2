@@ -233,7 +233,7 @@
 269	pillory_guard
 270	genie
 271	male_legs
-273	bee_keeper
+273	emerald_benedict
 274	male_legs
 275	male_legs
 276	guard
@@ -9660,14 +9660,8 @@
 16022	item
 16024	item
 16025	item
-16026	button_build
-16027	button_down
-16028	button_left
-16029	button_right
-16030	button_up
 16031	item
 16032	item
-16033	interface_surround
 16034	balloon_animal
 16035	item
 16036	appendage
@@ -16147,8 +16141,6 @@
 28416	female_hair
 28418	female_hair
 28425	appendage
-28431	beehive_part
-28432	beehive_part
 28434	varrock_armour_3
 28435	varrock_armour_4
 28436	magma_helm_uncharged
@@ -16435,9 +16427,6 @@
 28799	big_pirate_hat
 28800	deerstalker
 28801	cat_mask
-28806	beehive_part
-28807	beehive
-28808	beehive_part
 28809	rangers_tunic
 28810	rangers_tunic
 28811	holy_sandals
@@ -22988,3 +22977,7 @@
 40899	sourhog
 40900	reinforced_goggles
 40901	sourhog_foot
+40903	moonclan_teleport
+40904	lectern
+40905	lectern
+40906	picture
