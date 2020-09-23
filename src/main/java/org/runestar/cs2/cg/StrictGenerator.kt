@@ -19,18 +19,26 @@ import org.runestar.cs2.bin.string
 import org.runestar.cs2.ir.identifier
 import org.runestar.cs2.ir.literal
 
-fun StrictGenerator(writer: (scriptName: String, script: String) -> Unit) = object : StrictGenerator() {
-    override fun write(scriptName: String, script: String) = writer(scriptName, script)
+fun StrictGenerator(writer: (scriptId: Int, scriptName: String, script: String) -> Unit) = object : StrictGenerator() {
+    override fun write(scriptId: Int, scriptName: String, script: String) = writer(scriptId, scriptName, script)
 }
 
 abstract class StrictGenerator : Generator {
 
     final override fun write(f: Function, fs: FunctionSet, root: Construct) {
-        val name = SCRIPT_NAMES.load(f.id)?.toString() ?: "script${f.id}"
-        write(name, Writer(name, f, fs, root).write())
+        var scriptName = SCRIPT_NAMES.load(f.id)
+        if (scriptName == null) {
+            var trigger = fs.callGraph.triggers[f.id]
+            if (trigger == null) {
+                trigger = if (f.returnTypes.isNotEmpty()) Trigger.proc else Trigger.clientscript
+            }
+            scriptName = ScriptName(trigger, "script${f.id}")
+        }
+        val name = scriptName.toString()
+        write(f.id, name, Writer(name, f, fs, root).write())
     }
 
-    abstract fun write(scriptName: String, script: String)
+    abstract fun write(scriptId: Int, scriptName: String, script: String)
 }
 
 private class Writer(

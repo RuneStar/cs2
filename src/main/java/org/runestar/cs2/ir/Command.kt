@@ -68,6 +68,7 @@ interface Command {
 
         override fun translate(state: InterpreterState): Instruction {
             val invokeId = state.operand.int
+            state.callGraph.call(state.scriptId, invokeId, Trigger.proc)
             val invoked = state.scripts.loadNotNull(invokeId)
             val args = Expression(state.pop(invoked.intArgumentCount + invoked.stringArgumentCount))
             assign(state.typings.of(args), state.typings.args(invokeId, args.stackTypes))
@@ -880,6 +881,7 @@ interface Command {
                 args.add(ep ?: p)
             }
             val scriptId = state.popValue().int
+            state.callGraph.call(state.scriptId, scriptId, Trigger.clientscript)
             args.reverse()
             val argsExpr = Expression(args)
             val argsTyping = state.typings.args(scriptId, args.map { it.stackType })

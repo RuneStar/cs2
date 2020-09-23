@@ -1,16 +1,16 @@
 package org.runestar.cs2.ir
 
-import org.runestar.cs2.util.Loader
 import org.runestar.cs2.bin.Script
 import org.runestar.cs2.bin.StackType
 import org.runestar.cs2.bin.Type
 import org.runestar.cs2.bin.Value
 import org.runestar.cs2.bin.int
-import org.runestar.cs2.util.loadNotNull
 import org.runestar.cs2.util.Chain
 import org.runestar.cs2.util.HashChain
 import org.runestar.cs2.util.ListStack
+import org.runestar.cs2.util.Loader
 import org.runestar.cs2.util.counter
+import org.runestar.cs2.util.loadNotNull
 import org.runestar.cs2.util.toUnsignedInt
 
 fun interpret(
@@ -29,7 +29,9 @@ private class Interpreter(
 
     private val typings = Typings()
 
-    fun interpret() = FunctionSet(scripts.ids.associateWith { interpret(it) }, typings)
+    private val callGraph = CallGraph()
+
+    fun interpret() = FunctionSet(scripts.ids.associateWith { interpret(it) }, typings, callGraph)
 
     private fun interpret(scriptId: Int): Function {
         val state = state(scriptId)
@@ -44,7 +46,7 @@ private class Interpreter(
         return Function(scriptId, args, instructions, state.script.returnTypes)
     }
 
-    private fun state(scriptId: Int) = InterpreterState(scripts, paramTypes, scriptId, scripts.loadNotNull(scriptId), typings)
+    private fun state(scriptId: Int) = InterpreterState(scripts, paramTypes, scriptId, scripts.loadNotNull(scriptId), typings, callGraph)
 
     private fun interpretInstructions(state: InterpreterState): Array<Instruction> {
         return Array(state.script.opcodes.size) {
@@ -85,6 +87,7 @@ class InterpreterState(
         val scriptId: Int,
         val script: Script,
         val typings: Typings,
+        val callGraph: CallGraph,
 ) {
 
     var pc: Int = 0
