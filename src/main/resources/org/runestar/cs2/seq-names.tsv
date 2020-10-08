@@ -480,6 +480,7 @@
 2273	gardener_gunnhild_ready
 2297	evil_chicken_walk_f
 2298	evil_chicken_ready
+2308	headless_beast_hard_walk_f
 2313	tree
 2331	gnome_on_a_rack
 2333	mysterious_ghost_walk_f
@@ -658,6 +659,8 @@
 3070	stone_block
 3073	boneguard_ready
 3078	boneguard_walk_f
+3079	avatar_of_destruction_ready
+3082	avatar_of_destruction_walk_f
 3095	magic_barrier
 3097	magic_spell
 3099	statue
@@ -2159,3 +2162,9 @@
 8766	smolcano
 8767	sourhog_ready
 8768	sourhog_walk_f
+8775	magical_pumpkin
+8790	archway
+8791	waystone
+8842	avatar_of_creation_ready
+8843	avatar_of_creation_walk_f
+8851	soul_obelisk
