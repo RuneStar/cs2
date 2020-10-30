@@ -26,6 +26,7 @@ enum class Type(desc: Char = 0.toChar()) {
     OBJ('o'),
     PARAM,
     SEQ('A'),
+    SPOTANIM('t'),
     STAT('S'),
     STRING('s'),
     STRUCT('J'),
