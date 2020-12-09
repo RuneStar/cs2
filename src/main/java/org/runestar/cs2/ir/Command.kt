@@ -672,6 +672,9 @@ interface Command {
         CAM_GETFOLLOWHEIGHT(listOf(), listOf(INT)),
 
         LOGOUT(listOf(), listOf()),
+        _5631(listOf(STRING, STRING), listOf()),
+        _5632(listOf(), listOf(INT)),
+        _5633(listOf(STRING, STRING), listOf()),
 
         VIEWPORT_SETFOV(listOf(INT, INT), listOf()),
         VIEWPORT_SETZOOM(listOf(INT, INT), listOf()),
