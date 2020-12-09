@@ -74,7 +74,7 @@ private val INTERFACES = unique(INTERFACE, INTERFACE_NAMES)
 
 private val COMPONENTS = Loader { INTERFACES.loadNotNull(it shr 16) + ':' + (it and 0xFFFF) }
 
-private fun cst(prefix: String, loader: Loader<String>) = loader.prefix('^' + prefix + '_').orElse(NULL)
+private fun cst(prefix: String, loader: Loader<String>) = loader.prefix('^' + prefix + '_').orElse(NULL).orElse(VALUE)
 
 private fun Loader<String>.idSuffix() = mapIndexed { id, n -> n + '_' + id }
 
