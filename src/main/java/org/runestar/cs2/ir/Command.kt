@@ -427,6 +427,7 @@ interface Command {
         IF_GETOPBASE(listOf(COMPONENT), listOf(OPBASE)),
 
         IF_CALLONRESIZE(listOf(COMPONENT), listOf(), true),
+        IF_TRIGGEROP(listOf(COMPONENT, COMSUBID, OPINDEX), listOf()),
 
         MES(listOf(_MES), listOf()),
         ANIM(listOf(SEQ, INT), listOf()),
@@ -563,6 +564,10 @@ interface Command {
         _3656(listOf(BOOLEAN), listOf()),
         _3657(listOf(BOOLEAN), listOf()),
 
+        _3700(listOf(STRING, INT, INT), listOf(INT)),
+        _3701(listOf(STRING, INT, INT), listOf(INT)),
+        _3702(listOf(), listOf(INT)),
+
         STOCKMARKET_GETOFFERTYPE(listOf(INT), listOf(INT)),
         STOCKMARKET_GETOFFERITEM(listOf(INT), listOf(OBJ)),
         STOCKMARKET_GETOFFERPRICE(listOf(INT), listOf(INT)),
@@ -682,6 +687,7 @@ interface Command {
         VIEWPORT_GETEFFECTIVESIZE(listOf(), listOf(WIDTH, HEIGHT)),
         VIEWPORT_GETZOOM(listOf(), listOf(INT, INT)),
         VIEWPORT_GETFOV(listOf(), listOf(INT, INT)),
+        _6210(listOf(INT), listOf()),
         _6220(listOf(), listOf(INT)),
         _6221(listOf(), listOf(INT)),
         _6222(listOf(), listOf(INT)),
@@ -704,6 +710,7 @@ interface Command {
         MOBILE_BATTERYLEVEL(listOf(), listOf(INT)),
         MOBILE_BATTERYCHARGING(listOf(), listOf(BOOLEAN)),
         MOBILE_WIFIAVAILABLE(listOf(), listOf(BOOLEAN)),
+        _6527(listOf(), listOf(BOOLEAN)),
 
         _6600(listOf(), listOf()),
         WORLDMAP_GETMAPNAME(listOf(MAPAREA), listOf(STRING)),
