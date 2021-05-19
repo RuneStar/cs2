@@ -208,6 +208,8 @@ interface Command {
         POP_VARC_INT,
         PUSH_VARC_STRING,
         POP_VARC_STRING,
+        PUSH_VARCLANSETTING,
+        PUSH_VARCLAN,
         ;
 
         override val id = opcodes.getValue(name)
@@ -228,6 +230,8 @@ interface Command {
                 POP_VARC_INT -> Instruction.Assignment(Element.Access(Variable.varcint(state.operand.int)), state.pop(StackType.INT))
                 PUSH_VARC_STRING -> Instruction.Assignment(state.push(StackType.STRING), Element.Access(Variable.varcstring(state.operand.int)))
                 POP_VARC_STRING -> Instruction.Assignment(Element.Access(Variable.varcstring(state.operand.int)), state.pop(StackType.STRING))
+                PUSH_VARCLANSETTING -> Instruction.Assignment(state.push(StackType.INT), Element.Access(Variable.varclansetting(state.operand.int)))
+                PUSH_VARCLAN -> Instruction.Assignment(state.push(StackType.INT), Element.Access(Variable.varclan(state.operand.int)))
             }
             assign(state.typings.of(a.expression), state.typings.of(a.definitions))
             return a
@@ -568,6 +572,44 @@ interface Command {
         _3701(listOf(STRING, INT, INT), listOf(INT)),
         _3702(listOf(), listOf(INT)),
 
+        ACTIVECLANSETTINGS_FIND_LISTENED(listOf(), listOf(BOOLEAN)),
+        ACTIVECLANSETTINGS_FIND_AFFINED(listOf(CLANSLOT), listOf(BOOLEAN)),
+        ACTIVECLANSETTINGS_GETCLANNAME(listOf(), listOf(STRING)),
+        ACTIVECLANSETTINGS_GETALLOWUNAFFINED(listOf(), listOf(BOOLEAN)),
+        ACTIVECLANSETTINGS_GETRANKTALK(listOf(), listOf(INT)),
+        ACTIVECLANSETTINGS_GETRANKKICK(listOf(), listOf(INT)),
+        ACTIVECLANSETTINGS_GETRANKLOOTSHARE(listOf(), listOf(INT)),
+        ACTIVECLANSETTINGS_GETCOINSHARE(listOf(), listOf(INT)),
+        ACTIVECLANSETTINGS_GETAFFINEDCOUNT(listOf(), listOf(INT)),
+        ACTIVECLANSETTINGS_GETAFFINEDDISPLAYNAME(listOf(CLANSLOT), listOf(STRING)),
+        ACTIVECLANSETTINGS_GETAFFINEDRANK(listOf(CLANSLOT), listOf(INT)),
+        ACTIVECLANSETTINGS_GETBANNEDCOUNT(listOf(), listOf(INT)),
+        ACTIVECLANSETTINGS_GETBANNEDDISPLAYNAME(listOf(CLANSLOT), listOf(STRING)),
+        ACTIVECLANSETTINGS_GETAFFINEDEXTRAINFO(listOf(CLANSLOT, INT, INT), listOf(INT)),
+        ACTIVECLANSETTINGS_GETCURRENTOWNER_SLOT(listOf(), listOf(CLANSLOT)),
+        ACTIVECLANSETTINGS_GETREPLACEMENTOWNER_SLOT(listOf(), listOf(CLANSLOT)),
+        ACTIVECLANSETTINGS_GETAFFINEDSLOT(listOf(STRING), listOf(CLANSLOT)),
+        ACTIVECLANSETTINGS_GETSORTEDAFFINEDSLOT(listOf(INT), listOf(CLANSLOT)),
+        AFFINEDCLANSETTINGS_ADDBANNED_FROMCHANNEL(listOf(CLANSLOT, INT), listOf()),
+        ACTIVECLANSETTINGS_GETAFFINEDJOINRUNEDAY(listOf(CLANSLOT), listOf(INT)),
+        AFFINEDCLANSETTINGS_SETMUTED_FROMCHANNEL(listOf(CLANSLOT, BOOLEAN, INT), listOf()),
+        ACTIVECLANSETTINGS_GETAFFINEDMUTED(listOf(CLANSLOT), listOf(BOOLEAN)),
+
+        ACTIVECLANCHANNEL_FIND_LISTENED(listOf(), listOf(BOOLEAN)),
+        ACTIVECLANCHANNEL_FIND_AFFINED(listOf(CLANSLOT), listOf(BOOLEAN)),
+        ACTIVECLANCHANNEL_GETCLANNAME(listOf(), listOf(STRING)),
+        ACTIVECLANCHANNEL_GETRANKKICK(listOf(), listOf(INT)),
+        ACTIVECLANCHANNEL_GETRANKTALK(listOf(), listOf(INT)),
+        ACTIVECLANCHANNEL_GETUSERCOUNT(listOf(), listOf(INT)),
+        ACTIVECLANCHANNEL_GETUSERDISPLAYNAME(listOf(CLANSLOT), listOf(STRING)),
+        ACTIVECLANCHANNEL_GETUSERRANK(listOf(CLANSLOT), listOf(INT)),
+        ACTIVECLANCHANNEL_GETUSERWORLD(listOf(CLANSLOT), listOf(INT)),
+        ACTIVECLANCHANNEL_KICKUSER(listOf(CLANSLOT), listOf()),
+        ACTIVECLANCHANNEL_GETUSERSLOT(listOf(STRING), listOf(CLANSLOT)),
+        ACTIVECLANCHANNEL_GETSORTEDUSERSLOT(listOf(INT), listOf(CLANSLOT)),
+
+        CLANPROFILE_FIND(listOf(), listOf(BOOLEAN)),
+
         STOCKMARKET_GETOFFERTYPE(listOf(INT), listOf(INT)),
         STOCKMARKET_GETOFFERITEM(listOf(INT), listOf(OBJ)),
         STOCKMARKET_GETOFFERPRICE(listOf(INT), listOf(INT)),
@@ -610,6 +652,12 @@ interface Command {
         AND(listOf(INT, INT), listOf(INT)),
         OR(listOf(INT, INT), listOf(INT)),
         SCALE(listOf(INT, INT, INT), listOf(INT)),
+        BITCOUNT(listOf(INT), listOf(INT)),
+        TOGGLEBIT(listOf(INT, INT), listOf(INT)),
+        SETBIT_RANGE(listOf(INT, INT, INT), listOf(INT)),
+        CLEARBIT_RANGE(listOf(INT, INT, INT), listOf(INT)),
+        GETBIT_RANGE(listOf(INT, INT, INT), listOf(INT)),
+        _4030(listOf(INT, INT, INT, INT), listOf(INT)),
         APPEND_NUM(listOf(STRING, INT), listOf(STRING)),
         APPEND(listOf(STRING, STRING), listOf(STRING)),
         APPEND_SIGNNUM(listOf(STRING, INT), listOf(STRING)),
@@ -655,6 +703,7 @@ interface Command {
         CHAT_GETFILTER_PRIVATE(listOf(), listOf(CHATFILTER)),
         CHAT_SENDPUBLIC(listOf(_MES, INT), listOf()),
         CHAT_SENDPRIVATE(listOf(USERNAME, _MES), listOf()),
+        CHAT_SENDCLAN(listOf(_MES, INT, INT), listOf()),
         CHAT_PLAYERNAME(listOf(), listOf(USERNAME)),
         CHAT_GETFILTER_TRADE(listOf(), listOf(CHATFILTER)),
         CHAT_GETHISTORYLENGTH(listOf(CHATTYPE), listOf(LENGTH)),
@@ -822,6 +871,8 @@ interface Command {
         CC_SETONSTOCKTRANSMIT,
         _1426,
         CC_SETONRESIZE,
+        CC_SETONCLANSETTINGSTRANSMIT,
+        CC_SETONCLANCHANNELTRANSMIT,
         IF_SETONCLICK,
         IF_SETONHOLD,
         IF_SETONRELEASE,
@@ -849,6 +900,8 @@ interface Command {
         IF_SETONSTOCKTRANSMIT,
         _2426,
         IF_SETONRESIZE,
+        IF_SETONCLANSETTINGSTRANSMIT,
+        IF_SETONCLANCHANNELTRANSMIT,
         ;
 
         override val id = opcodes.getValue(name)

@@ -257,6 +257,8 @@ private class Writer(
             is Variable.varbit -> append("varbit").append(v.id)
             is Variable.varcint -> append("varcint").append(v.id)
             is Variable.varcstring -> append("varcstring").append(v.id)
+            is Variable.varclansetting -> append("varclansetting").append(v.id)
+            is Variable.varclan -> append("varclan").append(v.id)
             else -> error(v)
         }
     }

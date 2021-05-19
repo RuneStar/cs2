@@ -49,4 +49,8 @@ interface Variable {
     data class string(override val script: Int, override val id: Int) : Base(), Local, OfString
 
     data class array(override val script: Int, override val id: Int) : Base(), Local, OfInt
+
+    data class varclansetting(override val id: Int) : Base(), Global, OfInt
+
+    data class varclan(override val id: Int) : Base(), Global, OfInt
 }
