@@ -34,9 +34,7 @@
 166	hobgoblin
 168	imp_walk_f
 171	imp_ready
-177	bamboo_monkey_trap
-178	caged_monkey_bob
-180	monkey_on_cow_ready
+180	cow_ready
 181	magic_axe_walk_f
 187	magic_axe_ready
 189	tool_leprechaun_walk_f
@@ -47,7 +45,7 @@
 222	monkey_ready
 225	cave_crawler_walk_f
 226	cave_crawler_ready
-229	monkey_on_cow_walk_f
+229	cow_walk_f
 232	sheep_ready
 233	sheep_walk_f
 239	crypt_rat_walk_f
@@ -1031,7 +1029,6 @@
 4635	king_black_dragon_walk_f
 4636	monkey_on_unicorn_ready
 4637	monkey_on_unicorn_walk_f
-4645	bob_ready
 4649	cyclops_walk_f
 4650	cyclops_ready
 4654	moss_guardian_walk_f
@@ -2038,6 +2035,7 @@
 8222	hespori_ready
 8227	flower_ready
 8230	flower_ready
+8231	hannibal
 8232	ikkle_hydra_walk_f
 8233	ikkle_hydra_ready
 8239	ikkle_hydra_walk_f
@@ -2176,3 +2174,19 @@
 8847	lil_destructor_walk_f
 8851	soul_obelisk
 8857	jalrek_jad_walk_f
+8863	crashed_star
+8864	star_sprite_ready
+8867	empty_pool
+8873	inactive_spirit_pool_ready
+8875	lightning_cloud_ready
+8883	electrified_harpoonfish_cannon
+8884	electrified_harpoonfish_cannon
+8895	tiny_tempor_ready
+8899	tempoross_ready
+8933	sacred_forge
+8934	security_barrier
+8939	ancient_guardian_walk_f
+8941	ancient_guardian_ready
+8945	rubble_ready
+8968	enormous_tentacle_ready
+9016	portal
