@@ -391,7 +391,7 @@ interface Command {
         IF_CLEAROPS(listOf(COMPONENT), listOf()),
         _2308(listOf(BOOLEAN, COMPONENT), listOf()),
         _2309(listOf(INT, COMPONENT), listOf()),
-        IF_SETOPKEY(listOf(INT, INT, INT, COMPONENT), listOf()),
+        IF_SETOPKEY(listOf(OPINDEX, KEY, FLAGS, COMPONENT), listOf()),
         IF_SETOPTKEY(listOf(INT, INT, COMPONENT), listOf()),
         IF_SETOPKEYRATE(listOf(INT, INT, INT, COMPONENT), listOf()),
         IF_SETOPTKEYRATE(listOf(INT, INT, COMPONENT), listOf()),
@@ -759,7 +759,7 @@ interface Command {
         MOBILE_BATTERYLEVEL(listOf(), listOf(INT)),
         MOBILE_BATTERYCHARGING(listOf(), listOf(BOOLEAN)),
         MOBILE_WIFIAVAILABLE(listOf(), listOf(BOOLEAN)),
-        _6527(listOf(), listOf(BOOLEAN)),
+        _6527(listOf(), listOf(INT)),
 
         _6600(listOf(), listOf()),
         WORLDMAP_GETMAPNAME(listOf(MAPAREA), listOf(STRING)),
