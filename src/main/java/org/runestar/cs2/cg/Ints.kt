@@ -94,6 +94,7 @@ private val PROTOTYPES = HashMap<Prototype, Loader<String>>().apply {
     this[TYPE] = Loader { Type.of(it.toByte()).literal }
     this[BOOL] = BOOLEAN_NAMES.prefix("^").orElse(NULL)
     this[GRAPHIC] = NULL.orElse(GRAPHIC_NAMES.orElse(Loader(GRAPHIC.identifier).idSuffix()).quote())
+    this[NPC_UID] = VALUE
 
     this[ENUM] = unknown(ENUM)
     this[CATEGORY] = unknown(CATEGORY)

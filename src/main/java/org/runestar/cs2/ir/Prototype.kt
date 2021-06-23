@@ -44,6 +44,8 @@ val SEQ = Prototype(Type.SEQ)
 val INTERFACE = Prototype(Type.INTERFACE)
 val TYPE = Prototype(Type.TYPE)
 val PARAM = Prototype(Type.PARAM)
+val NEWVAR = Prototype(Type.NEWVAR)
+val NPC_UID = Prototype(Type.NPC_UID)
 
 val OPBASE = Prototype(Type.STRING, "opbase")
 val MOUSEX = Prototype(Type.INT, "mousex")

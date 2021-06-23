@@ -31,6 +31,8 @@ enum class Type(desc: Char = 0.toChar()) {
     STRING('s'),
     STRUCT('J'),
     SYNTH('P'),
+    NEWVAR('-'),
+    NPC_UID('u'),
     TYPE,
     ;
 
