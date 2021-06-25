@@ -657,7 +657,7 @@ interface Command {
         SETBIT_RANGE(listOf(INT, INT, INT), listOf(INT)),
         CLEARBIT_RANGE(listOf(INT, INT, INT), listOf(INT)),
         GETBIT_RANGE(listOf(INT, INT, INT), listOf(INT)),
-        _4030(listOf(INT, INT, INT, INT), listOf(INT)),
+        SETBIT_RANGE_TOINT(listOf(INT, INT, INT, INT), listOf(INT)),
         APPEND_NUM(listOf(STRING, INT), listOf(STRING)),
         APPEND(listOf(STRING, STRING), listOf(STRING)),
         APPEND_SIGNNUM(listOf(STRING, INT), listOf(STRING)),
