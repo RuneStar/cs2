@@ -7,7 +7,7 @@ class CalcIdentifiers(private val fs: FunctionSet) {
     companion object : Phase {
         override fun transform(fs: FunctionSet) = CalcIdentifiers(fs).transform()
 
-        private val STRONG = setOf(MESUID, CHATFILTER, BOOL, RANK, WORLD, COLOUR, KEY, IFTYPE, SETSIZE, SETPOSH, SETPOSV, SETTEXTALIGNH, SETTEXTALIGNV, CHATTYPE, WINDOWMODE, CLIENTTYPE)
+        private val STRONG = setOf(MESUID, CHATFILTER, RANK, WORLD, KEY, IFTYPE, SETSIZE, SETPOSH, SETPOSV, SETTEXTALIGNH, SETTEXTALIGNV, CHATTYPE, WINDOWMODE, CLIENTTYPE)
     }
 
     private val unidentified = fs.typings.all().filterTo(LinkedHashSet()) { it._identifier == null }

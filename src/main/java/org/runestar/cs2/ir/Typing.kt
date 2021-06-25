@@ -54,6 +54,7 @@ fun Typing(prototype: Prototype) = Typing(prototype.stackType).apply { freeze(pr
 
 fun assign(from: Typing, to: Typing) {
     require(from != to)
+    require(from.stackType == to.stackType)
     from.to.add(to)
     to.from.add(from)
 }
@@ -67,6 +68,7 @@ fun assign(from: List<Typing>, to: List<Typing>) {
 
 fun compare(a: Typing, b: Typing) {
     require(a != b)
+    require(a.stackType == b.stackType)
     a.compare.add(b)
     b.compare.add(a)
 }
@@ -79,6 +81,7 @@ fun remove(t: Typing) {
 
 fun replace(t: Typing, by: Typing) {
     require(t != by)
+    require(t.stackType == by.stackType)
     check(t._type == null && t._identifier == null)
     t.from.forEach {
         it.to.remove(t)
