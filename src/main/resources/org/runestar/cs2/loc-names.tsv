@@ -18588,10 +18588,6 @@
 33014	strategy_table
 33016	small_chest
 33020	weapon_rack
-33033	tile
-33034	tile
-33035	tile
-33036	tile
 33037	portal
 33081	vyre_well
 33082	vyre_well
@@ -23058,12 +23054,6 @@
 41745	rewards_chest
 41746	monumental_chest
 41747	acid_pool
-41748	tile
-41749	tile
-41750	tile_multi
-41751	tile_multi
-41752	tile_multi
-41753	tile_multi
 41754	iron_pickaxe
 41755	silk_stall
 41756	gem_stall

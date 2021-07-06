@@ -2005,7 +2005,6 @@
 8136	sotetseg_walk_f
 8137	sotetseg_ready
 8142	portal
-8143	tile
 8146	blue_banner
 8148	portal
 8150	captain_tock_walk_f
@@ -2108,7 +2107,7 @@
 8534	sleepwalker_walk_f
 8551	shura_ready
 8552	shura_walk_f
-8553	parasite_ready
+8553	little_parasaite_ready
 8562	husk_ready
 8563	husk_walk_f
 8569	sleepwalker_ready
