@@ -526,8 +526,8 @@ interface Command {
         PLAYERMOD(listOf(), listOf(BOOLEAN)),
         WORLDFLAGS(listOf(), listOf(FLAGS)),
         MOVECOORD(listOf(_COORD, X, Y, Z), listOf(_COORD)),
-        _3326(listOf(), listOf(INT)),
-        _3327(listOf(), listOf(INT)),
+        MOUSE_GETX(listOf(), listOf(X)),
+        MOUSE_GETY(listOf(), listOf(Y)),
 
         ENUM_STRING(listOf(_ENUM, INT), listOf(STRING)),
         ENUM_GETOUTPUTCOUNT(listOf(_ENUM), listOf(COUNT)),
