@@ -2107,7 +2107,7 @@
 8534	sleepwalker_walk_f
 8551	shura_ready
 8552	shura_walk_f
-8553	little_parasaite_ready
+8553	little_parasite_ready
 8562	husk_ready
 8563	husk_walk_f
 8569	sleepwalker_ready
@@ -2221,3 +2221,8 @@
 9095	boar_ready
 9096	boar_walk_f
 9100	protester
+9137	spider_ready
+9138	spider_walk_f
+9139	spider_walk_f
+9142	verzik_vitur_ready
+9143	verzik_vitur_walk_f

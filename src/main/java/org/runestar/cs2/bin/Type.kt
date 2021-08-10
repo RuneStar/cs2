@@ -33,6 +33,7 @@ enum class Type(desc: Char = 0.toChar()) {
     SYNTH('P'),
     NEWVAR('-'),
     NPC_UID('u'),
+    PLAYER_UID('p'),
     TYPE,
     ;
 

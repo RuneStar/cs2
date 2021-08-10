@@ -10,6 +10,9 @@ enum class Trigger(val id: Int) {
     worldmapelementmouseover(15),
     worldmapelementmouseleave(16),
     worldmapelementmouserepeat(17),
+    trigger_47(47),
+    trigger_48(48),
+    trigger_49(49),
     proc(73),
     clientscript(76),
     ;
