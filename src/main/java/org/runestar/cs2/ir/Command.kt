@@ -487,6 +487,7 @@ interface Command {
         SETREMEMBERUSERNAME(listOf(BOOLEAN), listOf()),
         GETREMEMBERUSERNAME(listOf(), listOf(BOOLEAN)),
         SHOW_IOS_REVIEW(listOf(), listOf()),
+        _3157(listOf(INT, INT), listOf()),
         SETBRIGHTNESS(listOf(INT), listOf()),
         GETBRIGHTNESS(listOf(), listOf(INT)),
         SETANTIDRAG(listOf(BOOLEAN), listOf()),
